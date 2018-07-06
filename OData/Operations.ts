@@ -1,3 +1,4 @@
+import { MemSet } from './MemArrayVisitor';
 import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method } from './Expressions';
 
 export class EqBinaryExtend extends EqBinary {
@@ -794,6 +795,10 @@ export var othis = new ThisExtend();
 
 export var $root = new RootExtend();
 
+export function count(){
+    return new Count(null);
+}
+
 export function o(left: any, op: Operation | string, right: any): EqBinaryExtend {
     let opValue = op;
     let leftValue = left;
@@ -971,4 +976,13 @@ export class GlobalExtend {
         return new GlobalMethod("now");
     }
 
+}
+
+/**
+ * creates memory data set for operations
+ * @param {Array} source is array for operations
+ */
+export function memset(source){
+    let r = source == null?[]:source;
+    return new MemSet(r);
 }
