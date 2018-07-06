@@ -1,4 +1,3 @@
-import { EqBinaryExtend } from './Operations';
 import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method } from './Expressions';
 
 export class EqBinaryExtend extends EqBinary {
