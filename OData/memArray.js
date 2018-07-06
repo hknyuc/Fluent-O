@@ -148,6 +148,9 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
             current = current[name];
         });
         return {
+            /**
+             * sets value to created property
+             */
             set: (value) => {
                 let current = source;
                 for (let i = 0; i < props.length; i++) {
@@ -312,13 +315,24 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
         this.result = value.value;
     }
     expand(expand) {
-        expand.args.forEach(function (arg) {
-            this.result = this.__createPropertyNested(this.source, arg.property);
-            if (arg.expressions != null) {
-                let memVisitor = this.createMemVisitor(this.result);
-                memVisitor.visit(arg.expressions);
-                this.result = memVisitor.result;
-            }
+        this.source.forEach(element => {
+            expand.args.forEach((arg) => {
+                let oldValue = this.__getNestedProperty(element, arg.property);
+                let applier = this.__createNestedProperty(element, arg.property);
+                if (arg.expressions != null && arg.expressions.length != 0) {
+                    let resultValue = oldValue;
+                    arg.expressions.forEach((expression) => {
+                        let memVisitor = this.createMemVisitor(resultValue);
+                        memVisitor.visit(expression);
+                        resultValue = memVisitor.result;
+                        return true;
+                    });
+                    applier.set(resultValue);
+                }
+                else
+                    applier.set(oldValue);
+            });
+            this.result = this.source;
         });
     }
     operation(operation) {
