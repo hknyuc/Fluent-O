@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const MemArrayVisitor_1 = require("./MemArrayVisitor");
 const Expressions_1 = require("./Expressions");
 class EqBinaryExtend extends Expressions_1.EqBinary {
     constructor(eqBinary) {
@@ -634,6 +635,10 @@ class ItExtend extends Expressions_1.It {
 exports.ItExtend = ItExtend;
 exports.othis = new ThisExtend();
 exports.$root = new RootExtend();
+function count() {
+    return new Expressions_1.Count(null);
+}
+exports.count = count;
 function o(left, op, right) {
     let opValue = op;
     let leftValue = left;
@@ -810,4 +815,13 @@ class GlobalExtend {
     }
 }
 exports.GlobalExtend = GlobalExtend;
+/**
+ * creates memory data set for operations
+ * @param {Array} source is array for operations
+ */
+function memset(source) {
+    let r = source == null ? [] : source;
+    return new MemArrayVisitor_1.MemSet(r);
+}
+exports.memset = memset;
 //# sourceMappingURL=Operations.js.map
