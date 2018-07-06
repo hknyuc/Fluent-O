@@ -1,3 +1,4 @@
+import { EqBinaryExtend } from './Operations';
 import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method } from './Expressions';
 
 export class EqBinaryExtend extends EqBinary {
@@ -36,6 +37,9 @@ export class EqBinaryExtend extends EqBinary {
 
     gt(value: any): EqBinaryExtend {
         return this.create('gt', value);
+    }
+    ge(value:any):EqBinaryExtend{
+        return this.create("ge",value);
     }
 
     ne(value: any): EqBinaryExtend {
@@ -296,6 +300,10 @@ export class SelectManyExtend extends SelectMany{
         return this.create('gt', value);
     }
 
+    ge(value:any):EqBinaryExtend{
+        return this.create("ge",value);
+    }
+
     ne(value: any): EqBinaryExtend {
         return this.create('ne', value);
     }
@@ -456,6 +464,10 @@ export class CountExtend extends Count{
         return this.create('gt', value);
     }
 
+    ge(value:any):EqBinaryExtend{
+        return this.create("ge",value);
+    }
+
     ne(value: any): EqBinaryExtend {
         return this.create('ne', value);
     }
@@ -495,6 +507,10 @@ export class RootExtend extends Root{
 
     gt(value: any): EqBinaryExtend {
         return this.create('gt', value);
+    }
+
+    ge(value:any):EqBinaryExtend{
+        return this.create("ge",value);
     }
 
 
@@ -652,6 +668,10 @@ export class ItExtend extends It{
 
     gt(value: any): EqBinaryExtend {
         return this.create('gt', value);
+    }
+
+    ge(value:any):EqBinaryExtend{
+        return this.create("ge",value);
     }
 
 
