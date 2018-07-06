@@ -68,6 +68,16 @@ class ModelMethodExtend extends Expressions_1.ModelMethod {
     }
 }
 exports.ModelMethodExtend = ModelMethodExtend;
+const method = function (name, ...properties) {
+    let props = [];
+    properties.forEach((elem) => {
+        if (Expressions_1.Value.isValid(elem))
+            props.push(new Expressions_1.Value(elem));
+        else
+            props.push(elem);
+    });
+    return new ModelMethodExtend(name, this, props);
+};
 class PropertyExtend extends Expressions_1.Property {
     create(op, value) {
         let v = value;
@@ -77,7 +87,7 @@ class PropertyExtend extends Expressions_1.Property {
         return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
     }
     createMethod(name, ...properties) {
-        return new ModelMethodExtend(name, this, properties);
+        return method.apply(this, arguments);
     }
     and(value) {
         return this.create('and', value);
@@ -202,7 +212,7 @@ class SelectManyExtend extends Expressions_1.SelectMany {
         return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
     }
     createMethod(name, ...properties) {
-        return new ModelMethodExtend(name, this, properties);
+        return method.apply(this, arguments);
     }
     and(value) {
         return this.create('and', value);
@@ -364,7 +374,7 @@ class RootExtend extends Expressions_1.Root {
         return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
     }
     createMethod(name, ...properties) {
-        return new ModelMethodExtend(name, this, properties);
+        return method.apply(this, arguments);
     }
     and(value) {
         return this.create('and', value);
@@ -490,7 +500,7 @@ class ItExtend extends Expressions_1.It {
         return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
     }
     createMethod(name, ...properties) {
-        return new ModelMethodExtend(name, this, properties);
+        return method.apply(this, arguments);
     }
     and(value) {
         return this.create('and', value);
@@ -632,7 +642,7 @@ function prop(name) {
         let current = null;
         name.split('.').forEach(function (item) {
             if (current == null)
-                current = new PropertyExtend(current);
+                current = new PropertyExtend(item);
             else
                 current = new PropertyExtend(item, current);
         });
@@ -650,13 +660,13 @@ function select(...args) {
     let appendAsString = function () {
         args.forEach(function (arg) {
             results.push({
-                property: arg instanceof Expressions_1.Property ? arg : new Expressions_1.Property(arg)
+                property: arg instanceof Expressions_1.Property ? arg : prop(arg)
             });
         });
     };
     let singleProperty = function () {
         results.push({
-            property: args[0] instanceof Expressions_1.Property ? args[0] : new Expressions_1.Property(args[0]),
+            property: args[0] instanceof Expressions_1.Property ? args[0] : prop(args[0]),
             expression: args[1]
         });
     };
@@ -708,43 +718,42 @@ class FindExtend extends Expressions_1.Find {
 }
 exports.FindExtend = FindExtend;
 exports.$it = it();
-function selectMany(name, prop) {
+function selectMany(name, parent) {
     /*
     if(name == null) throw new Error('selectMany:name is invalid');
     if(prop == null) throw new Error('selectMany:property is invalid');
     if(typeof name !== "string") throw new Error('selectMany:name is invalid type');
     */
-    let property = prop;
     if (name == null) {
-        throw new Error('selectMany:name is invalid');
+        throw new Error('selectMany: name is invalid');
     }
     if (name.indexOf('/') >= 0) {
         let sp = name.split('/');
         let current;
         sp.forEach(function (elem) {
             if (current == null)
-                current = new SelectManyExtend(elem, property);
+                current = new SelectManyExtend(elem, parent);
             else
                 current = new SelectManyExtend(elem, current);
         });
         return current;
     }
-    return new SelectManyExtend(name, property); //single
+    return new SelectManyExtend(name, parent); //single
 }
 exports.selectMany = selectMany;
 function order(property, type) {
-    let prop = property;
+    let propem = property;
     if (typeof property == "string")
-        prop = new Expressions_1.Property(property);
-    if (!(prop instanceof Expressions_1.Property))
+        propem = prop(property);
+    if (!(propem instanceof Expressions_1.Property))
         throw new Error('order :property is not valid');
     if (type == null)
-        return new Expressions_1.Order(prop);
+        return new Expressions_1.Order(propem);
     let validTypes = ["asc", "desc"];
     if (!validTypes.some(x => x == type)) {
         throw new Error('order: type is not valid');
     }
-    return new Expressions_1.Order(prop, type);
+    return new Expressions_1.Order(propem, type);
 }
 exports.order = order;
 function orderDesc(propery) {
@@ -771,4 +780,16 @@ function find(value) {
     return new FindExtend(value);
 }
 exports.find = find;
+class GlobalExtend {
+    get maxdatetime() {
+        return new Expressions_1.GlobalMethod("maxdatetime");
+    }
+    get mindatetime() {
+        return new Expressions_1.GlobalMethod("mindatetime");
+    }
+    get now() {
+        return new Expressions_1.GlobalMethod("now");
+    }
+}
+exports.GlobalExtend = GlobalExtend;
 //# sourceMappingURL=Operations.js.map

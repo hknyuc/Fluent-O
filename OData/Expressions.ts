@@ -134,6 +134,13 @@ export class ModelMethod {
     }
 }
 
+export class GlobalMethod{
+    public args:Array<any> = [];
+    constructor(public name:string,...args:Array<any>){
+        this.args = args;
+    }
+}
+
 export class Property {
     constructor(public name: string,public parent?:Property) {
 
@@ -196,6 +203,8 @@ export class ExpressionVisitor {
             this.eqBinary(host);
         else if(host instanceof It)
             this.it(host);
+        else if(host instanceof GlobalMethod)
+            this.globalMethod(host);
           
    
     }
@@ -278,5 +287,9 @@ export class ExpressionVisitor {
 
     this($this:This):void{
 
+    }
+
+    globalMethod(globalMethod:GlobalMethod):void{
+        
     }
 }

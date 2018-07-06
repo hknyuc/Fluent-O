@@ -137,6 +137,14 @@ class ModelMethod {
     }
 }
 exports.ModelMethod = ModelMethod;
+class GlobalMethod {
+    constructor(name, ...args) {
+        this.name = name;
+        this.args = [];
+        this.args = args;
+    }
+}
+exports.GlobalMethod = GlobalMethod;
 class Property {
     constructor(name, parent) {
         this.name = name;
@@ -202,6 +210,8 @@ class ExpressionVisitor {
             this.eqBinary(host);
         else if (host instanceof It)
             this.it(host);
+        else if (host instanceof GlobalMethod)
+            this.globalMethod(host);
     }
     operation(op) {
     }
@@ -242,6 +252,8 @@ class ExpressionVisitor {
     root(root) {
     }
     this($this) {
+    }
+    globalMethod(globalMethod) {
     }
 }
 exports.ExpressionVisitor = ExpressionVisitor;

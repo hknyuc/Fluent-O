@@ -1,4 +1,4 @@
-export enum Edm {
+/*export enum Edm {
     Null,
     Binary,
     Boolean,
@@ -14,6 +14,7 @@ export enum Edm {
     String,
     Time
 }
+*/
 
 export class Guid{
     constructor(public value:string){
@@ -34,4 +35,8 @@ export class Guid{
           }
           return new Guid(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
     }
+}
+
+export class Float{
+    
 }

@@ -1,4 +1,4 @@
-import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find } from './Expressions';
+import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method } from './Expressions';
 
 export class EqBinaryExtend extends EqBinary {
 
@@ -89,6 +89,16 @@ export class ModelMethodExtend extends ModelMethod{
 }
 
 
+ const method = function(name:string,...properties:Array<any>){
+    let props = [];
+    properties.forEach((elem)=>{
+        if(Value.isValid(elem))
+          props.push(new Value(elem));
+        else props.push(elem);
+    })
+    return new ModelMethodExtend(name,this,props);
+}
+
 export class PropertyExtend extends Property {
     
     private create(op: string, value):EqBinaryExtend {
@@ -100,7 +110,7 @@ export class PropertyExtend extends Property {
     }
 
     private createMethod(name:string,...properties:Array<any>):ModelMethodExtend{
-        return new ModelMethodExtend(name,this,properties);
+       return method.apply(this,arguments);
     }
     and(value: any): EqBinaryExtend {
         return this.create('and', value);
@@ -256,7 +266,7 @@ export class SelectManyExtend extends SelectMany{
     }
 
     private createMethod(name:string,...properties:Array<any>):ModelMethodExtend{
-        return new ModelMethodExtend(name,this,properties);
+        return method.apply(this,arguments);
     }
     and(value: any): EqBinaryExtend {
         return this.create('and', value);
@@ -457,7 +467,7 @@ export class RootExtend extends Root{
     }
 
     private createMethod(name:string,...properties:Array<any>):ModelMethodExtend{
-        return new ModelMethodExtend(name,this,properties);
+        return method.apply(this,arguments);
     }
     and(value: any): EqBinaryExtend {
         return this.create('and', value);
@@ -614,7 +624,7 @@ export class ItExtend extends It{
     }
 
     private createMethod(name:string,...properties:Array<any>):ModelMethodExtend{
-        return new ModelMethodExtend(name,this,properties);
+        return method.apply(this,arguments);
     }
     and(value: any): EqBinaryExtend {
         return this.create('and', value);
@@ -786,9 +796,10 @@ export function prop(name): PropertyExtend {
         let current = null;
         name.split('.').forEach(function (item){
            if(current == null)
-              current = new PropertyExtend(current);
+              current = new PropertyExtend(item);
             else current = new PropertyExtend(item,current);
         });
+
         return current;
     }
     return new PropertyExtend(name);
@@ -804,14 +815,14 @@ export function select(...args: any[]): Select {
    let appendAsString = function (){
        args.forEach(function (arg){
           results.push({
-              property:arg instanceof Property?arg:new Property(arg)
+              property:arg instanceof Property?arg:prop(arg)
           });
        });
    }
 
    let singleProperty = function (){
      results.push({
-         property: args[0] instanceof Property?args[0]:new Property(args[0]),
+         property: args[0] instanceof Property?args[0]:prop(args[0]),
          expression:args[1] 
      });
    }
@@ -863,41 +874,40 @@ export class FindExtend extends Find{
 
 export var $it = it();
 
-export function selectMany(name:string,prop:any){
+export function selectMany(name:string,parent:any){
     /*
     if(name == null) throw new Error('selectMany:name is invalid');
     if(prop == null) throw new Error('selectMany:property is invalid');
     if(typeof name !== "string") throw new Error('selectMany:name is invalid type');
     */
-    let property = prop;
     if(name == null){
-        throw new Error('selectMany:name is invalid');
+        throw new Error('selectMany: name is invalid');
     }
    if(name.indexOf('/')>=0){
      let sp = name.split('/');
      let current;
      sp.forEach(function (elem){
          if(current == null)
-          current = new SelectManyExtend(elem,property);
+          current = new SelectManyExtend(elem,parent);
          else current = new SelectManyExtend(elem,current);
      });
      return current;
    }
-   return new SelectManyExtend(name,property);//single
+   return new SelectManyExtend(name,parent);//single
 }
 
 export function order(property: string | Property, type?: 'asc' | 'desc'): Order {
-    let prop = property;
+    let propem = property;
     if (typeof property == "string")
-        prop = new Property(property);
-    if (!(prop instanceof Property))
+        propem = prop(property)
+    if (!(propem instanceof Property))
         throw new Error('order :property is not valid');
-    if(type == null) return new Order(prop);
+    if(type == null) return new Order(propem);
     let validTypes = ["asc", "desc"];
     if (!validTypes.some(x => x == type)) {
         throw new Error('order: type is not valid');
     }
-    return new Order(prop, type);
+    return new Order(propem, type);
 }
 
 
@@ -926,3 +936,16 @@ export function find(value:any):FindExtend{
 }
 
 
+export class GlobalExtend {
+   get maxdatetime():GlobalMethod{
+      return new GlobalMethod("maxdatetime");
+    }
+    get mindatetime():GlobalMethod{
+        return new GlobalMethod("mindatetime");
+    }
+   
+    get now():GlobalMethod{
+        return new GlobalMethod("now");
+    }
+
+}

@@ -19,6 +19,7 @@ var $it = operations.$it;
 var selectMany = operations.selectMany;
 var entity = odata.entity;
 
+console.log(describe);
 describe('odata', function () {
     describe('select', function () {
         it("only", function () {
