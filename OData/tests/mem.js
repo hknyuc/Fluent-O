@@ -1,7 +1,11 @@
+var easyAssert = require("./extends").EasyAssert;
 var assert = require('assert');
 var memset = require('../memArray').MemSet;
 var schema = require('../Schema');
 var operations = require('../Operations');
+
+easyAssert.use(assert);
+
 var select = operations.select;
 var filter = operations.filter;
 var order = operations.order;
@@ -23,7 +27,8 @@ describe("memArray",function(){
         it("single",function(){
             let result =  memset.get(self.createArray(),select("id"));
             assert.equal(Array.isArray(result),true);
-            assert.notEqual(result.lenght,0);
+            assert.notEqual(result.length,null);
+            assert.notEqual(result.length,0);
             assert.equal(result.every((elem)=>elem.name == null),true);
             assert.equal(result.every((elem)=>elem.id != null),true);
         });
@@ -206,16 +211,9 @@ describe("memArray",function(){
        it("nested array-object",function(){
          let result = memset.get(self.createArray(),find(2),selectMany("users/age"));
          assert.equal(Array.isArray(result),true);
-         assert.equal(result.length,2);
+         assert.equal(result.length,3);
        });
        
-
-       it("nested all array in filter",function (){
-        let result = memset.get(self.createArray(),filter($it.selectMany("users/numbers").count().eq(4)));
-        assert.equal(Array.isArray(result),true);
-        assert.equal(result.length,1);
-       });
-
        it("with property in filter",function (){
            let result = memset.get(self.createArray(),filter(prop("company").selectMany("phones").count().eq(2)));
            assert.equal(Array.isArray(result),true);
@@ -232,7 +230,7 @@ describe("memArray",function(){
        it("complex example 2",function (){
         let result = memset.get(self.createArray(),filter(prop("company").selectMany("phones").count().gt(prop("users").count())));
         assert.equal(Array.isArray(result),true);
-        assert.equal(result.length,3);
+        assert.equal(result.length,2);
        });
 
        it("complex example 3",function (){
@@ -257,12 +255,63 @@ describe("memArray",function(){
             assert.equal(result.length,1);
         });
 
-        it("two binary",function (){
-            let result = memset.get(self.createArray(),filter(prop("id").ge(2).and(prop("state").eq("even"))));
+        it("two binary [ge,eq]",function (){
+            let result = memset.get(self.createArray(),filter(prop("id").ge(1).and(prop("state").eq("even"))));
+            assert.equal(Array.isArray(result),true);
+            assert.equal(result.length,1);
+        });
+
+        it("three binary]ge,eq,or,and]",function (){
+            let result = memset.get(self.createArray(),filter(prop("id").ge(1).and(prop("state").eq("even").or(prop("state").eq("odd")))));
             assert.equal(Array.isArray(result),true);
             assert.equal(result.length,3);
         });
-    })
+   
+    });
+
+    describe("expand",function(){
+      it("single",function (){
+        let source = self.createArray();
+        let result = memset.get(source,expand("users"));
+        assert.equal(Array.isArray(result),true);
+        assert.equal(result.every((elem,index)=>elem.users == source[index].users),true);
+      });
+      it("filter 1",function (){
+        let source = self.createArray();
+        let result = memset.get(source,expand("users",filter(prop("id").gt(2))));
+         assert.equal(source.length,result.length);
+         assert.equal(result.every((elem)=>elem.users.every((user)=>user.id > 2)),true);
+      });
+      it("filter 2",function (){
+        let source = self.createArray();
+        let result = memset.get(source,expand("users",filter(prop("id").lt(2))));
+         assert.equal(source.length,result.length);
+         assert.equal(result.every((elem)=>elem.users.every((user)=>user.id < 2)),true);
+      });
+
+      it("filter with select",function(){
+          let source = self.createArray();
+          assert.equal(Array.isArray(source),true);
+          assert.notEqual(source.length,0);
+          let result = memset.get(source,expand("users",filter(prop("id").gt(2)),select("id")));
+          assert.equal(source.length,result.length);
+          assert.equal(result.filter((elem)=>elem.users.length === 0).length,3);
+          assert.equal(result.filter((elem)=>elem.users.length !== 0).length,1);
+          assert.true(result.every((elem)=>elem.users.every((user)=>self.onlyContains(user,"id")))); // only i
+      });
+    });
+
+
+
+    this.onlyContains = function(obj,...params){
+      return Object.keys(obj)
+            .every((elem)=>params.some((t)=>t === elem));
+    }
+
+    this.notContains = function(obj,...params){
+        return Object.keys(obj)
+        .every((elem)=>params.some((t)=>t !== elem));
+    }
 
     this.timesMap = function(number,fn){
         let result = [];
@@ -285,7 +334,7 @@ describe("memArray",function(){
               company:{
                   phones: self.timesMap(i*2,(p)=>p)
               },
-              users:self.timesMap(i,(x)=>{
+              users:self.timesMap(i+1,(x)=>{
                   return {
                       id:x,
                       name:"user_"+x,
