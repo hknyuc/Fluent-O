@@ -1,6 +1,6 @@
 var easyAssert = require("./extends").EasyAssert;
 var assert = require('assert');
-var memset = require('../memArray').MemSet;
+var memset = require('../MemArrayVisitor').MemSet;
 var schema = require('../Schema');
 var operations = require('../Operations');
 
@@ -19,6 +19,7 @@ var Guid = schema.Guid;
 var o = operations.o;
 var $root = operations.$root;
 var $it = operations.$it;
+var count = operations.count;
 var selectMany = operations.selectMany;
 
 describe("memArray",function(){
@@ -300,6 +301,14 @@ describe("memArray",function(){
           assert.true(result.every((elem)=>elem.users.every((user)=>self.onlyContains(user,"id")))); // only i
       });
     });
+
+    describe("count",function(){
+       it("single",function(){
+        let source = self.createArray();
+        let result = memset.get(source,count());
+        assert.equal(result,source.length);
+       })
+    })
 
 
 
