@@ -204,13 +204,9 @@ describe("memArray",function(){
        });
 
        it("nested array-object",function(){
-         let n = memset.get(self.createArray(),find(2));
-         console.log({n});
          let result = memset.get(self.createArray(),find(2),selectMany("users/age"));
-         console.log({result});
          assert.equal(Array.isArray(result),true);
          assert.equal(result.length,2);
-
        });
        
 
@@ -253,6 +249,21 @@ describe("memArray",function(){
 
     });
 
+
+    describe("filter",function(){
+        it("single",function (){
+            let result = memset.get(self.createArray(),filter(prop("id").eq(1)));
+            assert.equal(Array.isArray(result),true);
+            assert.equal(result.length,1);
+        });
+
+        it("two binary",function (){
+            let result = memset.get(self.createArray(),filter(prop("id").ge(2).and(prop("state").eq("even"))));
+            assert.equal(Array.isArray(result),true);
+            assert.equal(result.length,3);
+        });
+    })
+
     this.timesMap = function(number,fn){
         let result = [];
         for(let i=0;i<number;i++){
@@ -269,6 +280,7 @@ describe("memArray",function(){
        return  self.timesMap(4,i=>{return{
               id:i,
               name:"test"+i,
+              state:i % 2 == 0?"even":"odd",
               fields:self.timesMap(i,(f)=>"fields_"+f),
               company:{
                   phones: self.timesMap(i*2,(p)=>p)

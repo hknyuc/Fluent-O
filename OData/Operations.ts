@@ -136,6 +136,10 @@ export class PropertyExtend extends Property {
         return this.create('gt', value);
     }
 
+    ge(value:any):EqBinaryExtend{
+        return this.create("ge",value);
+    }
+
     ne(value: any): EqBinaryExtend {
         return this.create('ne', value);
     }
