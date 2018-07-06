@@ -419,7 +419,7 @@ export class MemSet implements DataSet<any>{
 
     }
     get(...expressions: any[]): Promise<any> {
-        return Promise.resolve(MemSet.get(this.source,expressions));
+        return Promise.resolve(MemSet._get(this.source,expressions));
     }    
     add(element: any): Promise<any> {
        this.source.push(element);
@@ -437,12 +437,16 @@ export class MemSet implements DataSet<any>{
     }
 
     static get(source,...expressions: any[]){
-      let result = source;
-      expressions.forEach((expression)=>{
-        let visitor = new MemArrayVisitor(result,source);
-        visitor.visit(expression);
-         result = visitor.result;
-      });
-      return result;
+       return this._get(source,expressions);
+    }
+
+    private static _get(source,expressions:any[]){
+        let result = source;
+        expressions.forEach((expression)=>{
+          let visitor = new MemArrayVisitor(result,source);
+          visitor.visit(expression);
+           result = visitor.result;
+        });
+        return result;
     }
 }

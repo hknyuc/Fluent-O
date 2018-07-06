@@ -396,7 +396,7 @@ class MemSet {
         this.source = source;
     }
     get(...expressions) {
-        return Promise.resolve(MemSet.get(this.source, expressions));
+        return Promise.resolve(MemSet._get(this.source, expressions));
     }
     add(element) {
         this.source.push(element);
@@ -415,6 +415,9 @@ class MemSet {
         this.source[indexOfItem] = element;
     }
     static get(source, ...expressions) {
+        return this._get(source, expressions);
+    }
+    static _get(source, expressions) {
         let result = source;
         expressions.forEach((expression) => {
             let visitor = new MemArrayVisitor(result, source);
@@ -425,4 +428,4 @@ class MemSet {
     }
 }
 exports.MemSet = MemSet;
-//# sourceMappingURL=memArray.js.map
+//# sourceMappingURL=MemArrayVisitor.js.map
