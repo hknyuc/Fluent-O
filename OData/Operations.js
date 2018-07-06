@@ -30,6 +30,9 @@ class EqBinaryExtend extends Expressions_1.EqBinary {
     gt(value) {
         return this.create('gt', value);
     }
+    ge(value) {
+        return this.create("ge", value);
+    }
     ne(value) {
         return this.create('ne', value);
     }
@@ -106,6 +109,9 @@ class PropertyExtend extends Expressions_1.Property {
     }
     gt(value) {
         return this.create('gt', value);
+    }
+    ge(value) {
+        return this.create("ge", value);
     }
     ne(value) {
         return this.create('ne', value);
@@ -231,6 +237,9 @@ class SelectManyExtend extends Expressions_1.SelectMany {
     }
     gt(value) {
         return this.create('gt', value);
+    }
+    ge(value) {
+        return this.create("ge", value);
     }
     ne(value) {
         return this.create('ne', value);
@@ -360,6 +369,9 @@ class CountExtend extends Expressions_1.Count {
     gt(value) {
         return this.create('gt', value);
     }
+    ge(value) {
+        return this.create("ge", value);
+    }
     ne(value) {
         return this.create('ne', value);
     }
@@ -393,6 +405,9 @@ class RootExtend extends Expressions_1.Root {
     }
     gt(value) {
         return this.create('gt', value);
+    }
+    ge(value) {
+        return this.create("ge", value);
     }
     ne(value) {
         return this.create('ne', value);
@@ -519,6 +534,9 @@ class ItExtend extends Expressions_1.It {
     }
     gt(value) {
         return this.create('gt', value);
+    }
+    ge(value) {
+        return this.create("ge", value);
     }
     ne(value) {
         return this.create('ne', value);
