@@ -128,7 +128,7 @@ export class MemArrayVisitor extends ExpressionVisitor{
 
     order(order:Order){
         if(!Array.isArray(this.source)) throw new Error("order: order support only array");
-        this.result = this.source.sort((left,right)=>{
+        this.result = this.source.map(x=>x).sort((left,right)=>{
             let leftVisitor = this.createMemVisitor(left);
             let rightVisitor = this.createMemVisitor(right);
             leftVisitor.visit(order.property);
