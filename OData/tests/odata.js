@@ -24,43 +24,43 @@ describe('odata', function () {
     describe('select', function () {
         it("only", function () {
             let result = QuerySet.get(select('ID'));
-            assert.equal(result,'$select=ID');
+            assert.equal(result,'?$select=ID');
         });
 
         it('series', function () {
             let result = QuerySet.get(select('ID', 'NAME'));
-            assert.equal(result,'$select=ID,NAME');
+            assert.equal(result,'?$select=ID,NAME');
         });
 
         it('nested', function () {
             let result = QuerySet.get(select('COMPANY.NAME', 'NAME'));
-            assert.equal(result,'$select=COMPANY.NAME,NAME');
+            assert.equal(result,'?$select=COMPANY.NAME,NAME');
         });
 
 
         it('select with expression',function (){
            let result = QuerySet.get(select('Customers',filter($root.eq(5))));
-           assert.equal(result,'$select=Customers($filter=$root eq 5)');
+           assert.equal(result,'?$select=Customers($filter=$root eq 5)');
         });
 
         it('select with with expression 2',function (){
             let result = QuerySet.get(select('Customers',filter($root.selectMany('People').eq(5))));
-            assert.equal(result,'$select=Customers($filter=$root/People eq 5)');
+            assert.equal(result,'?$select=Customers($filter=$root/People eq 5)');
         });
 
         it('select with with expression 3',function (){
             let result = QuerySet.get(select('Customers',filter($root.selectMany('People/Names').eq(5))));
-            assert.equal(result,'$select=Customers($filter=$root/People/Names eq 5)');
+            assert.equal(result,'?$select=Customers($filter=$root/People/Names eq 5)');
         });
 
         it('more than one select are converted one',function (){
             let result = QuerySet.get(select('ID','NAME'),select('VALUE'));
-            assert.equal(result,'$select=ID,NAME,VALUE');
+            assert.equal(result,'?$select=ID,NAME,VALUE');
         });
 
         it('more than one select are converted one2',function (){
             let result = QuerySet.get(select('Customers',filter($root.selectMany('People').eq(5))),select('VALUE'));
-            assert.equal(result,'$select=Customers($filter=$root/People eq 5),VALUE');
+            assert.equal(result,'?$select=Customers($filter=$root/People eq 5),VALUE');
         })
     });
 
@@ -69,29 +69,29 @@ describe('odata', function () {
             describe('types', function () {
                 it('eq int', function () {
                     let result = QuerySet.get(filter(prop('ID').eq(5)));
-                    assert.equal(result,'$filter=ID eq 5');
+                    assert.equal(result,'?$filter=ID eq 5');
                 });
 
                 it('ne int', function () {
                     let result = QuerySet.get(filter(prop('ID').ne(5)));
-                    assert.equal(result,'$filter=ID ne 5');
+                    assert.equal(result,'?$filter=ID ne 5');
                 });
 
                 it('eq string', function () {
                     let result = QuerySet.get(filter(prop('ID').eq('hakan')));
-                    assert.equal(result,"$filter=ID eq 'hakan'");
+                    assert.equal(result,"?$filter=ID eq 'hakan'");
                 });
 
                 it('eq date', function () {
                     let date = new Date();
                     let result = QuerySet.get(filter(prop('ID').eq(date)));
-                    assert.equal(result,"$filter=ID eq d'" + date + "'");
+                    assert.equal(result,"?$filter=ID eq d'" + date + "'");
                 });
 
                 it('eq guid', function () {
                     let guid = Guid.new();
                     let result = QuerySet.get(filter(prop('ID').eq(guid)));
-                    assert.equal(result,"$filter=ID eq g'" + guid + "'");
+                    assert.equal(result,"?$filter=ID eq g'" + guid + "'");
                 });
 
                 it('prop must string', function () {
@@ -116,17 +116,17 @@ describe('odata', function () {
             describe('multi', function () {
                 it('eq-or-eq', function () {
                     let result = QuerySet.get(filter(prop('ID').eq(5).or(prop('ID').eq(7))));
-                    assert.equal(result,"$filter=ID eq 5 or ID eq 7");
+                    assert.equal(result,"?$filter=ID eq 5 or ID eq 7");
                 });
 
                 it('eq-or-ne', function () {
                     let result = QuerySet.get(filter(prop('ID').eq(5).or(prop('ID').ne(4))));
-                    assert.equal(result,"$filter=ID eq 5 or ID ne 4");
+                    assert.equal(result,"?$filter=ID eq 5 or ID ne 4");
                 });
 
                 it('eq-or-ne-and-eq', function () {
                     let result = QuerySet.get(filter(prop('ID').eq(5).or(prop('ID').ne(4)).and(o('ID', 'eq', 4))));
-                    assert.equal(result,"$filter=ID eq 5 or ID ne 4 and ID eq 4");
+                    assert.equal(result,"?$filter=ID eq 5 or ID ne 4 and ID eq 4");
                 });
             });
         });
@@ -134,7 +134,7 @@ describe('odata', function () {
         describe('properties',function (){
             it('more than one filter are converted one',function (){
                let result = QuerySet.get(filter(prop('ID').eq(5)),filter(prop('NAME').eq('Hakan')));
-               assert.equal(result,"$filter=ID eq 5 or NAME eq 'Hakan'");
+               assert.equal(result,"?$filter=ID eq 5 or NAME eq 'Hakan'");
             });
         });
     });
@@ -154,22 +154,22 @@ describe('odata', function () {
     describe('order', function () {
         it('single', function () {
             let result = QuerySet.get(order('ID'));
-            assert.equal(result,'$orderby=ID');
+            assert.equal(result,'?$orderby=ID');
         });
 
         it('asc', function () {
             let result = QuerySet.get(order('ID', 'asc'));
-            assert.equal(result,'$orderby=ID asc');
+            assert.equal(result,'?$orderby=ID asc');
         });
 
         it('desc', function () {
             let result = QuerySet.get(order('ID', 'desc'));
-            assert.equal(result,'$orderby=ID desc');
+            assert.equal(result,'?$orderby=ID desc');
         });
 
         it('more than one order are converted one',function (){
             let result = QuerySet.get(order('ID'),order('NAME'));
-            assert.equal(result,'$orderby=NAME');
+            assert.equal(result,'?$orderby=NAME');
         })
 
         it('argument is not string throw exception', function () {
@@ -192,7 +192,7 @@ describe('odata', function () {
     describe('top', function () {
         it('single', function () {
             let result = QuerySet.get(top(5));
-            assert.equal(result,'$top=5');
+            assert.equal(result,'?$top=5');
         });
 
         it('argument not null', function () {
@@ -215,7 +215,7 @@ describe('odata', function () {
     describe('skip', function () {
         it('single', function () {
             let result = QuerySet.get(skip(5));
-            assert.equal(result,'$skip=5');
+            assert.equal(result,'?$skip=5');
         });
 
         it('argument could not null', function () {
@@ -238,29 +238,29 @@ describe('odata', function () {
     describe('expand', function () {
         it('single', function () {
             let result = QuerySet.get(expand('Customers'));
-            assert.equal(result,'$expand=Customers');
+            assert.equal(result,'?$expand=Customers');
         });
 
         it('supports two entities',function (){
           let result = QuerySet.get(expand('Customers,Personnels'));
-          assert.equal(result,'$expand=Customers,Personnels');
+          assert.equal(result,'?$expand=Customers,Personnels');
         });
 
         it('supports nested query : select',function (){
            let result = QuerySet.get(expand('Customers',select('ID')));
-           assert.equal(result,'$expand=Customers($select=ID)');
+           assert.equal(result,'?$expand=Customers($select=ID)');
         });
 
         it('supports nested query: filter',function (){
            let result = QuerySet.get(expand('Customers',filter(prop('ID').eq(5))));
-           assert.equal(result,'$expand=Customers($filter=ID eq 5)');
+           assert.equal(result,'?$expand=Customers($filter=ID eq 5)');
         });
 
         it('supports nested multi query: filter,select',function (){
            let result = QuerySet.get(expand('Customers',
                filter(prop('ID').eq(5)),
                select('ID','NAME')));
-            assert.equal(result,'$expand=Customers($filter=ID eq 5;$select=ID,NAME)');
+            assert.equal(result,'?$expand=Customers($filter=ID eq 5;$select=ID,NAME)');
         });
 
         it('supports nested multi query: filter,select,top',function (){
@@ -268,7 +268,7 @@ describe('odata', function () {
             filter(prop('ID').eq(5)),
             select('ID','NAME'),
             top(5)));
-         assert.equal(result,'$expand=Customers($filter=ID eq 5;$select=ID,NAME;$top=5)');
+         assert.equal(result,'?$expand=Customers($filter=ID eq 5;$select=ID,NAME;$top=5)');
         });
 
         it('more than one expand are converted one',function (){
@@ -276,7 +276,7 @@ describe('odata', function () {
               expand('Customers',select('ID','NAME')),
               expand('Products',select('ID','VALUE'))
             );
-          assert.equal(result,'$expand=Customers($select=ID,NAME),Products($select=ID,VALUE)');
+          assert.equal(result,'?$expand=Customers($select=ID,NAME),Products($select=ID,VALUE)');
         });
 
         it('when argument is null throwns exception', function () {
@@ -298,7 +298,7 @@ describe('odata', function () {
     describe('inlineCount',function (){
         it('it works',function (){
            let result = QuerySet.get(inlineCount());
-           assert.equal(result,'$inlineCount');
+           assert.equal(result,'?$inlineCount');
         });
     });
 
@@ -328,6 +328,7 @@ describe('odata', function () {
         });
     });
 
+    /*
     describe('count',function (){
        it('single',function (){
          let result = QuerySet.get(selectMany('Names').count());
@@ -339,6 +340,7 @@ describe('odata', function () {
          assert.equal(result,'/Names/$count eq 5');
        });
     });
+    */
 
     describe('expression examples',function (){
         it('example 1',function (){

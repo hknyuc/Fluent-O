@@ -136,7 +136,7 @@ export class MemArrayVisitor extends ExpressionVisitor{
             if(order.type === null || order.type === "asc")
                 return leftVisitor.result - rightVisitor.result;
             return rightVisitor.result - leftVisitor.result; 
-        })
+        });
     }
 
     property(property:Property){

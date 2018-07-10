@@ -67,12 +67,14 @@ export class ODataVisitor extends ExpressionVisitor {
     }
 
     count(count: Count): void {
-        if (count.expression == null)
-            throw new Error('count: expression is undefined');
-        let visitor = new ODataVisitor();
-        visitor.visit(count.expression);
-        if (!visitor.visited) throw new Error('count: inner expression could not be resolved');
-        this.set(visitor.result + '/$count');
+        if(count.expression != null){
+          let visitor = new ODataVisitor();
+          visitor.visit(count.expression);
+          if (!visitor.visited) throw new Error('count: inner expression could not be resolved');
+          this.set(visitor.result + '/$count');
+          return;
+        }
+        this.set('$count=true&$top=0');
     }
 
     select(select: Select): void {
@@ -348,32 +350,46 @@ export class ODataCombineVisitor extends ExpressionVisitor {
     }
 }
 
-export class ODataDataSet<T> implements DataSet<T> {
-    constructor(public source: string) {
+export class ODataSet<T> implements DataSet<T> {
+    constructor(private options:{source:string,rest?:RestClient,arrayable?:boolean}) {
 
     }
     get(...expressions: any[]): Promise<any> {
-        let all = [];
-        for (let expression in expressions) {
-            let visitor = new ODataVisitor();
-            visitor.visit(expression);
-            if (visitor.visited) {
-                all.push(visitor.result);
-            }
+        let result =  this.createHttp().get(this.options.source + QuerySet.get.apply(QuerySet,arguments));
+        if(this.options.arrayable == null || this.options.arrayable === false) return result;
+        if(expressions.length === 1 && expressions[0] instanceof Count){
+            return result.then((response)=>{
+                return response.json()["@odata.count"];
+            });
+        }else{
+            return result.then((response)=>{
+                let r = response.json();
+                let isArray = function(){
+                    for(let i in r){
+                        if(!(i.startsWith("@odata") || i === "value")) return false;
+                    }
+                    return r["value"] != null && Array.isArray(r["value"]);
+                }
+                if(isArray){
+                    return r.value;
+                }
+                return r;
+            });
         }
-        return this.createHttp().get(this.source + "?" + all.join('&'));
     }
     add(element: T): Promise<any> {
-        return this.createHttp().post(this.source, element);
+        return this.createHttp().post(this.options.source, element);
     }
     delete(element: T): Promise<any> {
-        return this.createHttp().delete(this.source, element);
+        return this.createHttp().delete(this.options.source, element);
     }
     update(element: T): Promise<any> {
-        return this.createHttp().put(this.source, element);
+        return this.createHttp().put(this.options.source, element);
     }
 
+
     private createHttp(): RestClient {
+        if(this.options.rest != null) return this.options.rest;
         return ODataConfig.createHttp();
     }
 }
@@ -396,9 +412,9 @@ export class QuerySet {
             }
         });
         if (left.length == 0 && right.length != 0)
-            return right.join('&');
+            return "?"+right.join('&');
         if (left.length != 0 && right.length != 0)
-            return left.join('') + "?" + right.join('&');
+            return left.join('') +"?" + right.join('&');
         if (left.length == 0 && right.length == 0) return "";
         if (left.length != 0 && right.length == 0)
             return left.join('');

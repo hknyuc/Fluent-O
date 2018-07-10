@@ -54,6 +54,10 @@ export class ModelMethodExtend extends ModelMethod{
       super(name,property,args);
     }
 
+    private createMethod(name:string,...properties:Array<any>):ModelMethodExtend{
+        return method.apply(this,arguments);
+     }
+
     private create(op:string,value:any):EqBinaryExtend{
       return o(this,op,value);
     }
@@ -88,6 +92,117 @@ export class ModelMethodExtend extends ModelMethod{
 
     ne(value:any):EqBinaryExtend{
         return this.create('ne',value);
+    }
+
+    count():CountExtend{
+        return new CountExtend(this);
+    }
+
+    concat(value:any):ModelMethodExtend{
+        return this.createMethod('concat',value);
+    }
+
+    selectMany(name:string):SelectManyExtend{
+        return selectMany(name,this);
+    }
+
+    contains(value:any):ModelMethodExtend{
+        return this.createMethod('contains',value);
+    }
+
+    endsWith(value:any):ModelMethodExtend{
+        return this.createMethod('endswith',value);
+    }
+    indexof(value:any):ModelMethodExtend{
+        return this.createMethod('indexof',value);
+    }
+
+    length(value:any):ModelMethodExtend{
+        return this.createMethod('length',value);
+    }
+    startsWith(value:any):ModelMethodExtend{
+        return this.createMethod('startswith',value);
+    }
+    substring(start:any,end?:any):ModelMethodExtend{
+        if(end == null)
+         return this.createMethod('substring',start);
+        return this.createMethod('substring',start,end);
+    }
+
+    toLower():ModelMethodExtend{
+        return this.createMethod('tolower');
+    }
+
+    toUpper():ModelMethodExtend{
+        return this.createMethod('toupper');
+    }
+
+    trim():ModelMethodExtend{
+        return this.createMethod('trim');
+    }
+
+    date():ModelMethodExtend{
+        return this.createMethod('date');
+    }
+
+    day():ModelMethodExtend{
+        return this.createMethod('day');
+    }
+    fractionalseconds():ModelMethodExtend{
+        return this.createMethod('fractionalseconds');
+    }
+
+    hour():ModelMethodExtend{
+        return this.createMethod('hour');
+    }
+
+    maxdatetime():ModelMethodExtend{
+        return this.createMethod('maxdatetime');
+    }
+    mindatetime():ModelMethodExtend{
+        return this.createMethod('mindatetime')
+    }
+
+    minute():ModelMethodExtend{
+        return this.createMethod('minute');
+    }
+    month():ModelMethodExtend{
+        return this.createMethod('month');
+    }
+
+    now():ModelMethodExtend{
+        return this.createMethod('now');
+    }
+
+    second():ModelMethodExtend{
+        return this.createMethod('second');
+    }
+
+    time():ModelMethodExtend{
+        return this.createMethod('time');
+    }
+
+    totaloffsetminutes():ModelMethodExtend{
+        return this.createMethod('totaloffsetminutes');
+    }
+    totalseconds():ModelMethodExtend{
+        return this.createMethod('totalseconds');
+    }
+
+    year():ModelMethodExtend{
+        return this.createMethod('year');
+    }
+
+    ceiling():ModelMethodExtend{
+        return this.createMethod('ceiling');
+    }
+
+    floor():ModelMethodExtend{
+        return this.createMethod('floor');
+    }
+
+    round():ModelMethodExtend{
+        return this.createMethod('round');
     }
 
 }
@@ -164,7 +279,7 @@ export class PropertyExtend extends Property {
         return this.createMethod('contains',value);
     }
 
-    endswith(value:any):ModelMethodExtend{
+    endsWith(value:any):ModelMethodExtend{
         return this.createMethod('endswith',value);
     }
     indexof(value:any):ModelMethodExtend{
@@ -174,7 +289,7 @@ export class PropertyExtend extends Property {
     length(value:any):ModelMethodExtend{
         return this.createMethod('length',value);
     }
-    startswith(value:any):ModelMethodExtend{
+    startsWith(value:any):ModelMethodExtend{
         return this.createMethod('startswith',value);
     }
     substring(start:any,end?:any):ModelMethodExtend{
@@ -183,11 +298,11 @@ export class PropertyExtend extends Property {
         return this.createMethod('substring',start,end);
     }
 
-    tolower():ModelMethodExtend{
+    toLower():ModelMethodExtend{
         return this.createMethod('tolower');
     }
 
-    toupper():ModelMethodExtend{
+    toUpper():ModelMethodExtend{
         return this.createMethod('toupper');
     }
 
@@ -324,7 +439,7 @@ export class SelectManyExtend extends SelectMany{
         return this.createMethod('contains',value);
     }
 
-    endswith(value:any):ModelMethodExtend{
+    endsWith(value:any):ModelMethodExtend{
         return this.createMethod('endswith',value);
     }
     indexof(value:any):ModelMethodExtend{
@@ -334,7 +449,7 @@ export class SelectManyExtend extends SelectMany{
     length(value:any):ModelMethodExtend{
         return this.createMethod('length',value);
     }
-    startswith(value:any):ModelMethodExtend{
+    startSwith(value:any):ModelMethodExtend{
         return this.createMethod('startswith',value);
     }
     substring(start:any,end?:any):ModelMethodExtend{
@@ -343,11 +458,11 @@ export class SelectManyExtend extends SelectMany{
         return this.createMethod('substring',start,end);
     }
 
-    tolower():ModelMethodExtend{
+    toLower():ModelMethodExtend{
         return this.createMethod('tolower');
     }
 
-    toupper():ModelMethodExtend{
+    toUpper():ModelMethodExtend{
         return this.createMethod('toupper');
     }
 
@@ -535,7 +650,7 @@ export class RootExtend extends Root{
         return this.createMethod('contains',value);
     }
 
-    endswith(value:any):ModelMethodExtend{
+    endsWith(value:any):ModelMethodExtend{
         return this.createMethod('endswith',value);
     }
     indexof(value:any):ModelMethodExtend{
@@ -545,7 +660,7 @@ export class RootExtend extends Root{
     length(value:any):ModelMethodExtend{
         return this.createMethod('length',value);
     }
-    startswith(value:any):ModelMethodExtend{
+    startsWith(value:any):ModelMethodExtend{
         return this.createMethod('startswith',value);
     }
     substring(start:any,end?:any):ModelMethodExtend{
@@ -554,11 +669,11 @@ export class RootExtend extends Root{
         return this.createMethod('substring',start,end);
     }
 
-    tolower():ModelMethodExtend{
+    toLower():ModelMethodExtend{
         return this.createMethod('tolower');
     }
 
-    toupper():ModelMethodExtend{
+    toUpper():ModelMethodExtend{
         return this.createMethod('toupper');
     }
 
@@ -695,7 +810,7 @@ export class ItExtend extends It{
         return this.createMethod('contains',value);
     }
 
-    endswith(value:any):ModelMethodExtend{
+    endsWith(value:any):ModelMethodExtend{
         return this.createMethod('endswith',value);
     }
     indexof(value:any):ModelMethodExtend{
@@ -705,7 +820,7 @@ export class ItExtend extends It{
     length(value:any):ModelMethodExtend{
         return this.createMethod('length',value);
     }
-    startswith(value:any):ModelMethodExtend{
+    startsWith(value:any):ModelMethodExtend{
         return this.createMethod('startswith',value);
     }
     substring(start:any,end?:any):ModelMethodExtend{
@@ -714,11 +829,11 @@ export class ItExtend extends It{
         return this.createMethod('substring',start,end);
     }
 
-    tolower():ModelMethodExtend{
+    toLower():ModelMethodExtend{
         return this.createMethod('tolower');
     }
 
-    toupper():ModelMethodExtend{
+    toUpper():ModelMethodExtend{
         return this.createMethod('toupper');
     }
 

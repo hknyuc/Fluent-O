@@ -43,6 +43,9 @@ class ModelMethodExtend extends Expressions_1.ModelMethod {
     constructor(name, property, args) {
         super(name, property, args);
     }
+    createMethod(name, ...properties) {
+        return method.apply(this, arguments);
+    }
     create(op, value) {
         return o(this, op, value);
     }
@@ -69,6 +72,95 @@ class ModelMethodExtend extends Expressions_1.ModelMethod {
     }
     ne(value) {
         return this.create('ne', value);
+    }
+    count() {
+        return new CountExtend(this);
+    }
+    concat(value) {
+        return this.createMethod('concat', value);
+    }
+    selectMany(name) {
+        return selectMany(name, this);
+    }
+    contains(value) {
+        return this.createMethod('contains', value);
+    }
+    endsWith(value) {
+        return this.createMethod('endswith', value);
+    }
+    indexof(value) {
+        return this.createMethod('indexof', value);
+    }
+    length(value) {
+        return this.createMethod('length', value);
+    }
+    startsWith(value) {
+        return this.createMethod('startswith', value);
+    }
+    substring(start, end) {
+        if (end == null)
+            return this.createMethod('substring', start);
+        return this.createMethod('substring', start, end);
+    }
+    toLower() {
+        return this.createMethod('tolower');
+    }
+    toUpper() {
+        return this.createMethod('toupper');
+    }
+    trim() {
+        return this.createMethod('trim');
+    }
+    date() {
+        return this.createMethod('date');
+    }
+    day() {
+        return this.createMethod('day');
+    }
+    fractionalseconds() {
+        return this.createMethod('fractionalseconds');
+    }
+    hour() {
+        return this.createMethod('hour');
+    }
+    maxdatetime() {
+        return this.createMethod('maxdatetime');
+    }
+    mindatetime() {
+        return this.createMethod('mindatetime');
+    }
+    minute() {
+        return this.createMethod('minute');
+    }
+    month() {
+        return this.createMethod('month');
+    }
+    now() {
+        return this.createMethod('now');
+    }
+    second() {
+        return this.createMethod('second');
+    }
+    time() {
+        return this.createMethod('time');
+    }
+    totaloffsetminutes() {
+        return this.createMethod('totaloffsetminutes');
+    }
+    totalseconds() {
+        return this.createMethod('totalseconds');
+    }
+    year() {
+        return this.createMethod('year');
+    }
+    ceiling() {
+        return this.createMethod('ceiling');
+    }
+    floor() {
+        return this.createMethod('floor');
+    }
+    round() {
+        return this.createMethod('round');
     }
 }
 exports.ModelMethodExtend = ModelMethodExtend;
@@ -129,7 +221,7 @@ class PropertyExtend extends Expressions_1.Property {
     contains(value) {
         return this.createMethod('contains', value);
     }
-    endswith(value) {
+    endsWith(value) {
         return this.createMethod('endswith', value);
     }
     indexof(value) {
@@ -138,7 +230,7 @@ class PropertyExtend extends Expressions_1.Property {
     length(value) {
         return this.createMethod('length', value);
     }
-    startswith(value) {
+    startsWith(value) {
         return this.createMethod('startswith', value);
     }
     substring(start, end) {
@@ -146,10 +238,10 @@ class PropertyExtend extends Expressions_1.Property {
             return this.createMethod('substring', start);
         return this.createMethod('substring', start, end);
     }
-    tolower() {
+    toLower() {
         return this.createMethod('tolower');
     }
-    toupper() {
+    toUpper() {
         return this.createMethod('toupper');
     }
     trim() {
@@ -257,7 +349,7 @@ class SelectManyExtend extends Expressions_1.SelectMany {
     contains(value) {
         return this.createMethod('contains', value);
     }
-    endswith(value) {
+    endsWith(value) {
         return this.createMethod('endswith', value);
     }
     indexof(value) {
@@ -266,7 +358,7 @@ class SelectManyExtend extends Expressions_1.SelectMany {
     length(value) {
         return this.createMethod('length', value);
     }
-    startswith(value) {
+    startSwith(value) {
         return this.createMethod('startswith', value);
     }
     substring(start, end) {
@@ -274,10 +366,10 @@ class SelectManyExtend extends Expressions_1.SelectMany {
             return this.createMethod('substring', start);
         return this.createMethod('substring', start, end);
     }
-    tolower() {
+    toLower() {
         return this.createMethod('tolower');
     }
-    toupper() {
+    toUpper() {
         return this.createMethod('toupper');
     }
     trim() {
@@ -425,7 +517,7 @@ class RootExtend extends Expressions_1.Root {
     contains(value) {
         return this.createMethod('contains', value);
     }
-    endswith(value) {
+    endsWith(value) {
         return this.createMethod('endswith', value);
     }
     indexof(value) {
@@ -434,7 +526,7 @@ class RootExtend extends Expressions_1.Root {
     length(value) {
         return this.createMethod('length', value);
     }
-    startswith(value) {
+    startsWith(value) {
         return this.createMethod('startswith', value);
     }
     substring(start, end) {
@@ -442,10 +534,10 @@ class RootExtend extends Expressions_1.Root {
             return this.createMethod('substring', start);
         return this.createMethod('substring', start, end);
     }
-    tolower() {
+    toLower() {
         return this.createMethod('tolower');
     }
-    toupper() {
+    toUpper() {
         return this.createMethod('toupper');
     }
     trim() {
@@ -554,7 +646,7 @@ class ItExtend extends Expressions_1.It {
     contains(value) {
         return this.createMethod('contains', value);
     }
-    endswith(value) {
+    endsWith(value) {
         return this.createMethod('endswith', value);
     }
     indexof(value) {
@@ -563,7 +655,7 @@ class ItExtend extends Expressions_1.It {
     length(value) {
         return this.createMethod('length', value);
     }
-    startswith(value) {
+    startsWith(value) {
         return this.createMethod('startswith', value);
     }
     substring(start, end) {
@@ -571,10 +663,10 @@ class ItExtend extends Expressions_1.It {
             return this.createMethod('substring', start);
         return this.createMethod('substring', start, end);
     }
-    tolower() {
+    toLower() {
         return this.createMethod('tolower');
     }
-    toupper() {
+    toUpper() {
         return this.createMethod('toupper');
     }
     trim() {

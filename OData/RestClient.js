@@ -6,6 +6,9 @@ class HttpResponse {
         this.headers = headers;
         this.status = status;
     }
+    get isSuccess() {
+        return this.status >= 200 && this.status < 300;
+    }
     json() {
         return JSON.parse(this.responseText);
     }
@@ -14,6 +17,15 @@ exports.HttpResponse = HttpResponse;
 class RestClient {
     constructor(creator) {
         this.creator = creator;
+        this.headers = {};
+        this.pipes = [];
+    }
+    /**
+     * manipules Response
+     */
+    pipe(fn) {
+        this.pipes.push(fn);
+        return this;
     }
     get(url, headers) {
         return this.create('GET', url, null, headers);
@@ -29,29 +41,36 @@ class RestClient {
     }
     cloneHeaderOrEmpty(headers) {
         if (headers == null)
-            return {};
-        return Object.assign({}, headers);
+            return Object.assign({}, this.headers);
+        return Object.assign(Object.assign({}, this.headers), headers);
+    }
+    invokePipe(response) {
+        let result = response;
+        this.pipes.forEach((fn) => {
+            result = fn(this, result);
+        });
+        return result;
     }
     create(method, url, data, headers) {
+        let self = this;
         return new Promise((resolve, reject) => {
             let xhttp = '';
             if (this.creator != null)
                 xhttp = this.creator.create();
-            let self = this;
-            let clone = self.cloneHeaderOrEmpty(headers);
             try {
                 xhttp.open(method, url, true);
-                for (let i in this.cloneHeaderOrEmpty(headers)) {
-                    xhttp.setRequestHeader(i, headers[i]);
+                let cloneHeader = this.cloneHeaderOrEmpty(headers);
+                for (let i in cloneHeader) {
+                    xhttp.setRequestHeader(i, cloneHeader[i]);
                 }
                 xhttp.onreadystatechange = function () {
                     if (this.readyState != 4)
                         return;
-                    if (this.status >= 200 && this.status < 400) {
-                        resolve(new HttpResponse(this.responseText, self.getHeaders(this.getAllResponseHeaders()), this.status));
+                    if (this.status >= 200 && this.status < 300) {
+                        resolve(self.invokePipe(new HttpResponse(this.responseText, self.getHeaders(this.getAllResponseHeaders()), this.status)));
                         return;
                     }
-                    reject(new HttpResponse(this.responseText, self.getHeaders(this.getAllResponseHeaders()), this.status));
+                    reject(self.invokePipe(new HttpResponse(this.responseText, self.getHeaders(this.getAllResponseHeaders()), this.status)));
                 };
                 xhttp.send(data);
             }
