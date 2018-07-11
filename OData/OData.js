@@ -324,7 +324,8 @@ class ODataSet {
         let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, arguments));
         if (this.options.arrayable == null || this.options.arrayable === false)
             return result;
-        if (expressions.length === 1 && expressions[0] instanceof Expressions_1.Count) {
+        let anyCount = expressions.some((exp) => exp instanceof Expressions_1.Count);
+        if (anyCount) {
             return result.then((response) => {
                 return response.json()["@odata.count"];
             });
