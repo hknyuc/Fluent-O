@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const MemArrayVisitor_1 = require("./MemArrayVisitor");
+const OData_1 = require("./OData");
 const Expressions_1 = require("./Expressions");
 class EqBinaryExtend extends Expressions_1.EqBinary {
     constructor(eqBinary) {
@@ -164,6 +165,17 @@ class ModelMethodExtend extends Expressions_1.ModelMethod {
     }
 }
 exports.ModelMethodExtend = ModelMethodExtend;
+/**
+ * creates odata data set
+ * @param {Object} options options options of data
+ * @param {String} options.url url of source.
+ * @param {Object} options.http http provider. default is {XMLHttpRequest}
+ * @param {Boolean} options.arrayable it changes behaviour of get methods. likes array data structure. Default is false
+ * @returns {ODataSet} OData data set
+ */
+exports.odataset = function (options) {
+    return new OData_1.ODataSet(options);
+};
 const method = function (name, ...properties) {
     let props = [];
     properties.forEach((elem) => {

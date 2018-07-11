@@ -1,8 +1,8 @@
 import { MemSet } from './MemArrayVisitor';
+import {ODataSet} from './OData';
 import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method } from './Expressions';
 
 export class EqBinaryExtend extends EqBinary {
-
     constructor(eqBinary: EqBinary) {
         super(eqBinary.left, eqBinary.op, eqBinary.right);
 
@@ -207,6 +207,17 @@ export class ModelMethodExtend extends ModelMethod{
 
 }
 
+/**
+ * creates odata data set
+ * @param {Object} options options options of data
+ * @param {String} options.url url of source. 
+ * @param {Object} options.http http provider. default is {XMLHttpRequest}
+ * @param {Boolean} options.arrayable it changes behaviour of get methods. likes array data structure. Default is false
+ * @returns {ODataSet} OData data set
+ */
+export const odataset = function(options){
+    return new ODataSet(options);
+}
 
  const method = function(name:string,...properties:Array<any>){
     let props = [];
