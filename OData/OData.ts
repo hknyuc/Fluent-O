@@ -3,6 +3,7 @@ import { DataSet } from './Context';
 import { Guid } from './Schema';
 
 import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It } from './Expressions';
+import { Http } from './Http';
 export class ODataVisitor extends ExpressionVisitor {
     private _result: string = null;
 
@@ -351,11 +352,11 @@ export class ODataCombineVisitor extends ExpressionVisitor {
 }
 
 export class ODataSet<T> implements DataSet<T> {
-    constructor(private options:{source:string,rest?:RestClient,arrayable?:boolean}) {
+    constructor(private options:{url:string,http?:RestClient,arrayable?:boolean}) {
 
     }
     get(...expressions: any[]): Promise<any> {
-        let result =  this.createHttp().get(this.options.source + QuerySet.get.apply(QuerySet,arguments));
+        let result =  this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet,arguments));
         if(this.options.arrayable == null || this.options.arrayable === false) return result;
         if(expressions.length === 1 && expressions[0] instanceof Count){
             return result.then((response)=>{
@@ -378,18 +379,18 @@ export class ODataSet<T> implements DataSet<T> {
         }
     }
     add(element: T): Promise<any> {
-        return this.createHttp().post(this.options.source, element);
+        return this.createHttp().post(this.options.url, element);
     }
     delete(element: T): Promise<any> {
-        return this.createHttp().delete(this.options.source, element);
+        return this.createHttp().delete(this.options.url, element);
     }
     update(element: T): Promise<any> {
-        return this.createHttp().put(this.options.source, element);
+        return this.createHttp().put(this.options.url, element);
     }
 
 
     private createHttp(): RestClient {
-        if(this.options.rest != null) return this.options.rest;
+        if(this.options.http != null) return this.options.http;
         return ODataConfig.createHttp();
     }
 }
@@ -439,7 +440,7 @@ export var entity = function (name) {
 
 export class ODataConfig {
     static createHttp(): RestClient {
-        return new RestClient();
+        return new Http();
     }
 }
 

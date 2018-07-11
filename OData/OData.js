@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const RestClient_1 = require("./RestClient");
 const Schema_1 = require("./Schema");
 const Expressions_1 = require("./Expressions");
+const Http_1 = require("./Http");
 class ODataVisitor extends Expressions_1.ExpressionVisitor {
     constructor() {
         super(...arguments);
@@ -321,7 +321,7 @@ class ODataSet {
         this.options = options;
     }
     get(...expressions) {
-        let result = this.createHttp().get(this.options.source + QuerySet.get.apply(QuerySet, arguments));
+        let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, arguments));
         if (this.options.arrayable == null || this.options.arrayable === false)
             return result;
         if (expressions.length === 1 && expressions[0] instanceof Expressions_1.Count) {
@@ -347,17 +347,17 @@ class ODataSet {
         }
     }
     add(element) {
-        return this.createHttp().post(this.options.source, element);
+        return this.createHttp().post(this.options.url, element);
     }
     delete(element) {
-        return this.createHttp().delete(this.options.source, element);
+        return this.createHttp().delete(this.options.url, element);
     }
     update(element) {
-        return this.createHttp().put(this.options.source, element);
+        return this.createHttp().put(this.options.url, element);
     }
     createHttp() {
-        if (this.options.rest != null)
-            return this.options.rest;
+        if (this.options.http != null)
+            return this.options.http;
         return ODataConfig.createHttp();
     }
 }
@@ -408,7 +408,7 @@ exports.entity = function (name) {
 };
 class ODataConfig {
     static createHttp() {
-        return new RestClient_1.RestClient();
+        return new Http_1.Http();
     }
 }
 exports.ODataConfig = ODataConfig;
