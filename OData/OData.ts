@@ -357,7 +357,8 @@ export class ODataSet<T> implements DataSet<T> {
     get(...expressions: any[]): Promise<any> {
         let result =  this.createHttp().get(this.options.source + QuerySet.get.apply(QuerySet,arguments));
         if(this.options.arrayable == null || this.options.arrayable === false) return result;
-        if(expressions.length === 1 && expressions[0] instanceof Count){
+        let anyCount = expressions.some((exp)=> exp instanceof Count);
+        if(anyCount){
             return result.then((response)=>{
                 return response.json()["@odata.count"];
             });
