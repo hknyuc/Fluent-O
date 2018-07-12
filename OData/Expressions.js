@@ -204,6 +204,8 @@ class ExpressionVisitor {
             this.method(host);
         else if (host instanceof Value)
             this.value(host);
+        else if (Value.isValid(host))
+            this.value(new Value(host));
         else if (host instanceof ModelMethod)
             this.modelMethod(host);
         else if (host instanceof EqBinary)

@@ -145,12 +145,14 @@ class ODataVisitor extends Expressions_1.ExpressionVisitor {
         let r = "";
         if (v == null)
             r = "null";
+        else if (type === "boolean")
+            r = v ? "true" : "false";
         else if (type === "string")
             r = "'" + v + "'";
         else if (type === "number")
             r = v;
         else if (v instanceof Date)
-            r = "d'" + v + "'";
+            r = v.toISOString();
         else if (v instanceof Schema_1.Guid)
             r = "g'" + v.toString() + "'";
         this.set(r);
