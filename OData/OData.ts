@@ -159,7 +159,7 @@ export class ODataVisitor extends ExpressionVisitor {
         else if (v instanceof Date)
             r = v.toISOString();
         else if (v instanceof Guid)
-            r = "g'" + v.toString() + "'";
+            r = "" + v.toString() + "";
         this.set(r);
     }
 
@@ -374,10 +374,19 @@ export class ODataSet<T> implements DataSet<T> {
                     }
                     return r["value"] != null && Array.isArray(r["value"]);
                 }
-                if(isArray){
+                if(isArray()){
                     return r.value;
                 }
-                return r;
+				
+				let prune = function (value){
+					let result = {};
+					for(let i in value){
+						if(i.startsWith('@odata.'))continue;
+						result[i] = value[i];
+					}
+					return result;
+				}
+                return prune(r);
             });
         }
     }
