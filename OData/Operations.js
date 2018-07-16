@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const Schema_1 = require("./Schema");
 const MemArrayVisitor_1 = require("./MemArrayVisitor");
 const OData_1 = require("./OData");
 const Expressions_1 = require("./Expressions");
@@ -928,4 +929,13 @@ function memset(source) {
     return new MemArrayVisitor_1.MemSet(r);
 }
 exports.memset = memset;
+/**
+ * creates new Guid
+ * @param {String} raw
+ * @returns {Guid}
+ */
+function guid(raw) {
+    return new Schema_1.Guid(raw);
+}
+exports.guid = guid;
 //# sourceMappingURL=Operations.js.map

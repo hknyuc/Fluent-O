@@ -1,3 +1,4 @@
+import { Guid } from './Schema';
 import { MemSet } from './MemArrayVisitor';
 import {ODataSet} from './OData';
 import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method } from './Expressions';
@@ -1111,4 +1112,14 @@ export class GlobalExtend {
 export function memset(source){
     let r = source == null?[]:source;
     return new MemSet(r);
+}
+
+
+/**
+ * creates new Guid
+ * @param {String} raw 
+ * @returns {Guid}
+ */
+export function guid(raw){
+   return new Guid(raw);
 }
