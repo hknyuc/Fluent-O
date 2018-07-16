@@ -392,11 +392,17 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
 }
 exports.MemArrayVisitor = MemArrayVisitor;
 class MemSet {
-    constructor(source) {
+    constructor(source, expressions) {
         this.source = source;
+        this.expressions = expressions;
+        this.expressions = expressions || [];
+    }
+    query(...expressions) {
+        return new MemSet(this.source, this.expressions.concat(expressions));
     }
     get(...expressions) {
-        return Promise.resolve(MemSet._get(this.source, expressions));
+        let expression = this.expressions.concat(expressions);
+        return Promise.resolve(MemSet._get(this.source, expression));
     }
     add(element) {
         this.source.push(element);

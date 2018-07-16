@@ -1107,11 +1107,12 @@ export class GlobalExtend {
 
 /**
  * creates memory data set for operations
- * @param {Array} source is array for operations
+ * @param {Array} source source is array
+ * @param baseFilter is start filter
  */
-export function memset(source){
+export function memset(source,baseFilter){
     let r = source == null?[]:source;
-    return new MemSet(r);
+    return new MemSet(r,baseFilter);
 }
 
 

@@ -318,12 +318,35 @@ class ODataCombineVisitor extends Expressions_1.ExpressionVisitor {
     }
 }
 exports.ODataCombineVisitor = ODataCombineVisitor;
+function idselector(ids) {
+    return {
+        apply: function (value) {
+            for (let i in value) {
+                if (ids.some((elem) => elem === i))
+                    return value[i];
+            }
+            return null;
+        }
+    };
+}
+exports.idselector = idselector;
 class ODataSet {
     constructor(options) {
         this.options = options;
     }
+    query(...expressions) {
+        let newOptions = {
+            url: this.options.url,
+            http: this.options.http,
+            arrayable: this.options.arrayable,
+            expressions: Array.isArray(this.options.expressions) ? this.options.expressions.concat(expressions) : expressions,
+            primary: this.options.primary
+        };
+        return new ODataSet(newOptions);
+    }
     get(...expressions) {
-        let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, arguments));
+        expressions = Array.isArray(this.options.expressions) ? this.options.expressions.concat(expressions) : expressions;
+        let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, expressions));
         if (this.options.arrayable == null || this.options.arrayable === false)
             return result;
         let anyCount = expressions.some((exp) => exp instanceof Expressions_1.Count);
@@ -359,13 +382,38 @@ class ODataSet {
         }
     }
     add(element) {
-        return this.createHttp().post(this.options.url, element);
+        return this.createHttp().post(this.options.url + this.getPrimaryValue(element), element);
     }
     delete(element) {
-        return this.createHttp().delete(this.options.url, element);
+        return this.createHttp().delete(this.options.url + this.getPrimaryValue(element));
     }
     update(element) {
-        return this.createHttp().put(this.options.url, element);
+        return this.createHttp().put(this.options.url + this.getPrimaryValue(element), element);
+    }
+    getIdsValue(element) {
+        let valids = ["id", "ID", "Id", "iD"];
+        for (let i in element)
+            if (valids.some((elem) => elem === i))
+                return element[i];
+        return null;
+    }
+    getPrimaryValue(element) {
+        if (this.options.primary == null) {
+            let visitor = new ODataVisitor();
+            visitor.visit(new Expressions_1.Value(this.getIdsValue(element)));
+            return "(" + visitor.result + ")";
+        }
+        let v = element[this.options.primary.name];
+        let type = this.options.primary.type;
+        if (type === Schema_1.Guid && typeof v === "string") {
+            v = new Schema_1.Guid(v);
+        }
+        else if (type === Date && typeof v === "string") {
+            v = new Date(v);
+        }
+        let visitor = new ODataVisitor();
+        visitor.visit(new Expressions_1.Value(v));
+        return "(" + visitor.result + ")";
     }
     createHttp() {
         if (this.options.http != null)

@@ -61,19 +61,19 @@ export class ODataVisitor extends ExpressionVisitor {
             let parentVisitor = new ODataVisitor();
             parentVisitor.visit(selectMany.parent);
             if (!parentVisitor.visited) throw new Error('selectMany: property is undefined');
-            this.set(parentVisitor.result +'/'+ selectMany.name);
+            this.set(parentVisitor.result + '/' + selectMany.name);
             return;
         }
-        else this.set("/"+selectMany.name);
+        else this.set("/" + selectMany.name);
     }
 
     count(count: Count): void {
-        if(count.expression != null){
-          let visitor = new ODataVisitor();
-          visitor.visit(count.expression);
-          if (!visitor.visited) throw new Error('count: inner expression could not be resolved');
-          this.set(visitor.result + '/$count');
-          return;
+        if (count.expression != null) {
+            let visitor = new ODataVisitor();
+            visitor.visit(count.expression);
+            if (!visitor.visited) throw new Error('count: inner expression could not be resolved');
+            this.set(visitor.result + '/$count');
+            return;
         }
         this.set('$count=true&$top=0');
     }
@@ -120,8 +120,8 @@ export class ODataVisitor extends ExpressionVisitor {
         visitor.visit(filter.expression);
         if (!visitor.visited) throw new Error('filter: expression could not be resolved');
         let right = visitor.result;
-         if(right.indexOf('/') === 0)
-           right = right.substring(1,right.length);
+        if (right.indexOf('/') === 0)
+            right = right.substring(1, right.length);
         this.set("$filter=" + right);
     }
 
@@ -150,8 +150,8 @@ export class ODataVisitor extends ExpressionVisitor {
         let r = "";
         if (v == null)
             r = "null";
-        else if(type === "boolean")
-            r = v?"true":"false";
+        else if (type === "boolean")
+            r = v ? "true" : "false";
         else if (type === "string")
             r = "'" + v + "'";
         else if (type === "number")
@@ -353,56 +353,106 @@ export class ODataCombineVisitor extends ExpressionVisitor {
     }
 }
 
+export function idselector(ids: Array<string>) {
+    return {
+        apply: function (value) {
+            for (let i in value) {
+                if (ids.some((elem) => elem === i)) return value[i];
+            }
+            return null;
+        }
+    }
+}
+
 export class ODataSet<T> implements DataSet<T> {
-    constructor(private options:{url:string,http?:RestClient,arrayable?:boolean}) {
+
+    constructor(private options: { url: string, http?: RestClient, arrayable?: boolean, expressions?: Array<any>, primary: { type: Object, name: string } }) {
 
     }
+
+    query(...expressions: any[]): DataSet<T> {
+        let newOptions = {
+            url: this.options.url,
+            http: this.options.http,
+            arrayable: this.options.arrayable,
+            expressions: Array.isArray(this.options.expressions) ? this.options.expressions.concat(expressions) : expressions,
+            primary: this.options.primary
+        }
+        return new ODataSet(newOptions);
+    }
+
     get(...expressions: any[]): Promise<any> {
-        let result =  this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet,arguments));
-        if(this.options.arrayable == null || this.options.arrayable === false) return result;
-        let anyCount = expressions.some((exp)=> exp instanceof Count);
-        if(anyCount){
-            return result.then((response)=>{
+        expressions = Array.isArray(this.options.expressions) ? this.options.expressions.concat(expressions) : expressions;
+        let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, expressions));
+        if (this.options.arrayable == null || this.options.arrayable === false) return result;
+        let anyCount = expressions.some((exp) => exp instanceof Count);
+        if (anyCount) {
+            return result.then((response) => {
                 return response.json()["@odata.count"];
             });
-        }else{
-            return result.then((response)=>{
+        } else {
+            return result.then((response) => {
                 let r = response.json();
-                let isArray = function(){
-                    for(let i in r){
-                        if(!(i.startsWith("@odata") || i === "value")) return false;
+                let isArray = function () {
+                    for (let i in r) {
+                        if (!(i.startsWith("@odata") || i === "value")) return false;
                     }
                     return r["value"] != null && Array.isArray(r["value"]);
                 }
-                if(isArray()){
+                if (isArray()) {
                     return r.value;
                 }
-				
-				let prune = function (value){
-					let result = {};
-					for(let i in value){
-						if(i.startsWith('@odata.'))continue;
-						result[i] = value[i];
-					}
-					return result;
-				}
+
+                let prune = function (value) {
+                    let result = {};
+                    for (let i in value) {
+                        if (i.startsWith('@odata.')) continue;
+                        result[i] = value[i];
+                    }
+                    return result;
+                }
                 return prune(r);
             });
         }
     }
     add(element: T): Promise<any> {
-        return this.createHttp().post(this.options.url, element);
+        return this.createHttp().post(this.options.url + this.getPrimaryValue(element), element);
     }
     delete(element: T): Promise<any> {
-        return this.createHttp().delete(this.options.url, element);
+        return this.createHttp().delete(this.options.url + this.getPrimaryValue(element));
     }
     update(element: T): Promise<any> {
-        return this.createHttp().put(this.options.url, element);
+        return this.createHttp().put(this.options.url + this.getPrimaryValue(element), element);
+    }
+
+    private getIdsValue(element){
+        let valids = ["id","ID","Id","iD"];
+        for(let i in element)
+            if(valids.some((elem)=>elem === i)) return element[i];
+        return null;
+    }
+
+    private getPrimaryValue(element) {
+        if (this.options.primary == null) {
+            let visitor = new ODataVisitor();
+            visitor.visit(new Value(this.getIdsValue(element)));
+            return "(" + visitor.result + ")";
+        }
+        let v = element[this.options.primary.name];
+        let type = this.options.primary.type;
+        if (type === Guid && typeof v === "string") {
+            v = new Guid(v);
+        } else if (type === Date && typeof v === "string") {
+            v = new Date(v);
+        }
+        let visitor = new ODataVisitor();
+        visitor.visit(new Value(v));
+        return "(" + visitor.result + ")";
     }
 
 
     private createHttp(): RestClient {
-        if(this.options.http != null) return this.options.http;
+        if (this.options.http != null) return this.options.http;
         return ODataConfig.createHttp();
     }
 }
@@ -425,9 +475,9 @@ export class QuerySet {
             }
         });
         if (left.length == 0 && right.length != 0)
-            return "?"+right.join('&');
+            return "?" + right.join('&');
         if (left.length != 0 && right.length != 0)
-            return left.join('') +"?" + right.join('&');
+            return left.join('') + "?" + right.join('&');
         if (left.length == 0 && right.length == 0) return "";
         if (left.length != 0 && right.length == 0)
             return left.join('');

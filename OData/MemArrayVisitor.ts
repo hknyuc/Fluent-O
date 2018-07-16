@@ -415,11 +415,17 @@ export class MemArrayVisitor extends ExpressionVisitor{
 
 
 export class MemSet implements DataSet<any>{
-    constructor(private source){
 
+    constructor(private source,private expressions:Array<any>){
+     this.expressions = expressions || [];
+    }
+
+    query(...expressions: any[]): DataSet<any> {
+        return new MemSet(this.source,this.expressions.concat(expressions));
     }
     get(...expressions: any[]): Promise<any> {
-        return Promise.resolve(MemSet._get(this.source,expressions));
+        let expression = this.expressions.concat(expressions);
+        return Promise.resolve(MemSet._get(this.source,expression));
     }    
     add(element: any): Promise<any> {
        this.source.push(element);

@@ -922,11 +922,12 @@ class GlobalExtend {
 exports.GlobalExtend = GlobalExtend;
 /**
  * creates memory data set for operations
- * @param {Array} source is array for operations
+ * @param {Array} source source is array
+ * @param baseFilter is start filter
  */
-function memset(source) {
+function memset(source, baseFilter) {
     let r = source == null ? [] : source;
-    return new MemArrayVisitor_1.MemSet(r);
+    return new MemArrayVisitor_1.MemSet(r, baseFilter);
 }
 exports.memset = memset;
 /**
