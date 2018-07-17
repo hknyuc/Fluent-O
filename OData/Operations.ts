@@ -1,7 +1,7 @@
 import { Guid } from './Schema';
 import { MemSet } from './MemArrayVisitor';
 import {ODataSet} from './OData';
-import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method } from './Expressions';
+import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method, Action, Func } from './Expressions';
 
 export class EqBinaryExtend extends EqBinary {
     constructor(eqBinary: EqBinary) {
@@ -1123,4 +1123,30 @@ export function memset(source,baseFilter){
  */
 export function guid(raw){
    return new Guid(raw);
+}
+
+export function action(name:string,...params){
+    let args = [];
+    params.forEach((param)=>{
+        if(param instanceof Value) {
+            args.push(param);
+            return true;
+        }
+        args.push(new Value(param));
+        return true;
+    });
+    return new Action(name,args);
+}
+
+export function func(name:string,...params){
+    let args = [];
+    params.forEach((param)=>{
+        if(param instanceof Value) {
+            args.push(param);
+            return true;
+        }
+        args.push(new Value(param));
+        return true;
+    });
+    return new Func(name,args);
 }
