@@ -20,6 +20,30 @@ class ODataVisitor extends Expressions_1.ExpressionVisitor {
     method(method) {
         // console.log(method["prototype"]["consructor"]["name"]);
     }
+    action(action) {
+        let result = "/" + action.name;
+        let params = [];
+        action.parameters.forEach((param) => {
+            let visitor = new ODataVisitor();
+            visitor.visit(visitor.result);
+            params.push(param);
+        });
+        if (params.length != 0)
+            result += "(" + params.join(',') + ")";
+        this.set(result);
+    }
+    func(func) {
+        let result = "/" + func.name;
+        let params = [];
+        func.parameters.forEach((param) => {
+            let visitor = new ODataVisitor();
+            visitor.visit(param);
+            params.push(visitor.result);
+        });
+        if (params.length != 0)
+            result += "(" + params.join(',') + ")";
+        this.set(result);
+    }
     find(find) {
         if (find.value == null)
             throw new Error('find: value could not be null or undefined');
@@ -155,6 +179,18 @@ class ODataVisitor extends Expressions_1.ExpressionVisitor {
             r = v.toISOString();
         else if (v instanceof Schema_1.Guid)
             r = "" + v.toString() + "";
+        else if (v instanceof Object) {
+            let params = [];
+            for (let i in v) {
+                let value = v[i];
+                if (!(value instanceof Expressions_1.Value))
+                    value = new Expressions_1.Value(value);
+                let visitor = new ODataVisitor();
+                visitor.visit(value);
+                params.push(i + "=" + visitor.result);
+            }
+            r = params.join(',');
+        }
         this.set(r);
     }
     modelMethod(value) {
@@ -196,7 +232,7 @@ class ODataVisitor extends Expressions_1.ExpressionVisitor {
         rightVisitor.visit(eqBinary.right);
         if (!rightVisitor.visited)
             throw new Error('eqBinary: right expression could not be resolved');
-        this.set(leftVisitor.result + " " + eqBinary.op.type + " " + rightVisitor.result);
+        this.set("(" + leftVisitor.result + " " + eqBinary.op.type + " " + rightVisitor.result + ")");
     }
     it(it) {
         this.set('$it');
@@ -222,6 +258,12 @@ class ODataCombineVisitor extends Expressions_1.ExpressionVisitor {
             return elem.value;
         });
         return result;
+    }
+    action(action) {
+        this.set('action', () => action, () => action);
+    }
+    func(func) {
+        this.set('func', () => func, () => func);
     }
     distinct(arr) {
         return arr.filter((value, index, self) => {
@@ -286,7 +328,7 @@ class ODataCombineVisitor extends Expressions_1.ExpressionVisitor {
     }
     filter(filter) {
         this.set("filter", () => filter, (f) => {
-            return new Expressions_1.Filter(new Expressions_1.EqBinary(f.expression, new Expressions_1.Operation('or'), filter.expression));
+            return new Expressions_1.Filter(new Expressions_1.EqBinary(f.expression, new Expressions_1.Operation('and'), filter.expression));
         });
     }
     selectMany(selectMany) {
@@ -377,12 +419,14 @@ class ODataSet {
                     }
                     return result;
                 };
-                return prune(r);
+                let result = prune(r);
+                let onlyValue = Object.keys(result).length === 1 && result["value"] != null;
+                return onlyValue ? result["value"] : result;
             });
         }
     }
     add(element) {
-        return this.createHttp().post(this.options.url + this.getPrimaryValue(element), element);
+        return this.createHttp().post(this.options.url, element);
     }
     delete(element) {
         return this.createHttp().delete(this.options.url + this.getPrimaryValue(element));

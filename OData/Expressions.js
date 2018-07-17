@@ -52,6 +52,20 @@ class Skip extends Method {
     }
 }
 exports.Skip = Skip;
+class Action {
+    constructor(name, parameters) {
+        this.name = name;
+        this.parameters = parameters;
+    }
+}
+exports.Action = Action;
+class Func {
+    constructor(name, parameters) {
+        this.name = name;
+        this.parameters = parameters;
+    }
+}
+exports.Func = Func;
 class Find {
     constructor(value, expression) {
         this.value = value;
@@ -214,10 +228,18 @@ class ExpressionVisitor {
             this.it(host);
         else if (host instanceof GlobalMethod)
             this.globalMethod(host);
+        else if (host instanceof Action)
+            this.action(host);
+        else if (host instanceof Func)
+            this.func(host);
     }
     operation(op) {
     }
     find(find) {
+    }
+    action(action) {
+    }
+    func(func) {
     }
     count(count) {
     }

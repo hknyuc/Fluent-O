@@ -939,4 +939,30 @@ function guid(raw) {
     return new Schema_1.Guid(raw);
 }
 exports.guid = guid;
+function action(name, ...params) {
+    let args = [];
+    params.forEach((param) => {
+        if (param instanceof Expressions_1.Value) {
+            args.push(param);
+            return true;
+        }
+        args.push(new Expressions_1.Value(param));
+        return true;
+    });
+    return new Expressions_1.Action(name, args);
+}
+exports.action = action;
+function func(name, ...params) {
+    let args = [];
+    params.forEach((param) => {
+        if (param instanceof Expressions_1.Value) {
+            args.push(param);
+            return true;
+        }
+        args.push(new Expressions_1.Value(param));
+        return true;
+    });
+    return new Expressions_1.Func(name, args);
+}
+exports.func = func;
 //# sourceMappingURL=Operations.js.map

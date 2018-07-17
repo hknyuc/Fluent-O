@@ -1,6 +1,5 @@
 import { Guid } from "./Schema";
 
-
 export class Operation {
     constructor(public type: string) {
 
@@ -48,6 +47,18 @@ export class Top extends Method {
 export class Skip extends Method {
     constructor(public value: number) {
         super();
+    }
+}
+
+export class Action {
+    constructor(public name:String,public parameters:Array<any>){
+     
+    }
+}
+
+export class Func {
+    constructor(public name:String,public parameters:Array<any>){
+
     }
 }
 
@@ -207,8 +218,13 @@ export class ExpressionVisitor {
             this.it(host);
         else if(host instanceof GlobalMethod)
             this.globalMethod(host);
+        else if(host instanceof Action)
+            this.action(host);
+        else if(host instanceof Func)
+            this.func(host);
    
     }
+
 
 
     operation(op: Operation): void {
@@ -216,6 +232,14 @@ export class ExpressionVisitor {
     }
 
     find(find:Find):void{
+
+    }
+
+    action(action:Action):void{
+
+    }
+
+    func(func:Func):void{
 
     }
 
