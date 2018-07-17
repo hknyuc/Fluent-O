@@ -2,7 +2,7 @@ import { RestClient } from './RestClient';
 import { DataSet } from './Context';
 import { Guid } from './Schema';
 
-import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It } from './Expressions';
+import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It, Action, Func } from './Expressions';
 import { Http } from './Http';
 export class ODataVisitor extends ExpressionVisitor {
     private _result: string = null;
@@ -21,6 +21,33 @@ export class ODataVisitor extends ExpressionVisitor {
 
     method(method: Method): void {
         // console.log(method["prototype"]["consructor"]["name"]);
+    }
+
+    action(action:Action):void{
+        let result = "/"+action.name;
+        let params = [];
+        action.parameters.forEach((param)=>{
+            let visitor = new ODataVisitor();
+            visitor.visit(visitor.result);
+            params.push(param);
+        })
+        if(params.length != 0)
+           result += "("+ params.join(',') +")";
+        this.set(result);
+    }
+
+    func(func:Func):void{
+        let result = "/"+func.name;
+        let params = [];
+        func.parameters.forEach((param)=>{
+            let visitor = new ODataVisitor();
+            visitor.visit(param);
+            params.push(visitor.result);
+        });
+        if(params.length != 0)
+          result += "(" + params.join(',') +")";
+
+        this.set(result);
     }
 
     find(find: Find): void {
@@ -160,6 +187,18 @@ export class ODataVisitor extends ExpressionVisitor {
             r = v.toISOString();
         else if (v instanceof Guid)
             r = "" + v.toString() + "";
+        else if (v instanceof Object){
+            let params = [];
+            for(let i in v){
+                let value = v[i];
+                if(!(value instanceof Value))
+                    value = new Value(value);
+                let visitor = new ODataVisitor();
+                visitor.visit(value);
+                params.push(i+"="+visitor.result);
+            }
+            r = params.join(',');
+        }
         this.set(r);
     }
 
@@ -200,7 +239,7 @@ export class ODataVisitor extends ExpressionVisitor {
         let rightVisitor = new ODataVisitor();
         rightVisitor.visit(eqBinary.right);
         if (!rightVisitor.visited) throw new Error('eqBinary: right expression could not be resolved');
-        this.set(leftVisitor.result + " " + eqBinary.op.type + " " + rightVisitor.result);
+        this.set("("+leftVisitor.result + " " + eqBinary.op.type + " " + rightVisitor.result+")");
     }
 
     it(it: It): void {
@@ -227,6 +266,14 @@ export class ODataCombineVisitor extends ExpressionVisitor {
             return elem.value;
         });
         return result;
+    }
+
+    action(action){
+        this.set('action',()=>action,()=>action);
+    }
+
+    func(func){
+        this.set('func',()=>func,()=>func);
     }
 
     private distinct(arr: Array<any>): Array<any> {
@@ -311,7 +358,7 @@ export class ODataCombineVisitor extends ExpressionVisitor {
 
     filter(filter: Filter): void {
         this.set("filter", () => filter, (f: Filter) => {
-            return new Filter(new EqBinary(f.expression, new Operation('or'), filter.expression));
+            return new Filter(new EqBinary(f.expression, new Operation('and'), filter.expression));
         });
     }
 
@@ -411,12 +458,14 @@ export class ODataSet<T> implements DataSet<T> {
                     }
                     return result;
                 }
-                return prune(r);
+                let result = prune(r);
+                let onlyValue = Object.keys(result).length === 1 && result["value"] != null;
+                return onlyValue?result["value"]:result;
             });
         }
     }
     add(element: T): Promise<any> {
-        return this.createHttp().post(this.options.url + this.getPrimaryValue(element), element);
+        return this.createHttp().post(this.options.url, element);
     }
     delete(element: T): Promise<any> {
         return this.createHttp().delete(this.options.url + this.getPrimaryValue(element));
