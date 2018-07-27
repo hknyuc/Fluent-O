@@ -90,7 +90,6 @@ export class RestClient {
 
     private getHeaders(headers) {
         var arr = headers.trim().split(/[\r\n]+/);
-
         let headerMap = {};
         arr.forEach(function (line) {
             var parts = line.split(': ');

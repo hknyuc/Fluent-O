@@ -749,7 +749,7 @@ function o(left, op, right) {
     let leftValue = left;
     if (typeof op === "string")
         opValue = new Expressions_1.Operation(op);
-    if (typeof left == "string")
+    if (typeof left === "string")
         leftValue = new Expressions_1.Property(left);
     let r = right;
     if (Expressions_1.Value.isValid(right))

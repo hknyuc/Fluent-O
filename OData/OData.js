@@ -328,6 +328,8 @@ class ODataCombineVisitor extends Expressions_1.ExpressionVisitor {
     }
     filter(filter) {
         this.set("filter", () => filter, (f) => {
+            if (f.expression == null)
+                return new Expressions_1.Filter(filter.expression);
             return new Expressions_1.Filter(new Expressions_1.EqBinary(f.expression, new Expressions_1.Operation('and'), filter.expression));
         });
     }

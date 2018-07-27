@@ -35,7 +35,12 @@ export class Guid{
           }
           return new Guid(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
     }
+
+    static parse(value:string){
+        return new Guid(value);
+    }
 }
+
 
 export class Float{
     

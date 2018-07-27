@@ -36,6 +36,9 @@ class Guid {
         }
         return new Guid(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
     }
+    static parse(value) {
+        return new Guid(value);
+    }
 }
 exports.Guid = Guid;
 class Float {

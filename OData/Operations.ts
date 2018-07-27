@@ -931,7 +931,7 @@ export function o(left: any, op: Operation | string, right: any): EqBinaryExtend
     let leftValue = left;
     if (typeof op === "string")
         opValue = new Operation(op);
-    if (typeof left == "string")
+    if (typeof left === "string")
         leftValue = new Property(left);
     let r = right;
     if (Value.isValid(right))
