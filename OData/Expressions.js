@@ -187,51 +187,52 @@ exports.RefExpression = RefExpression;
 class ExpressionVisitor {
     visit(host) {
         if (host instanceof Root)
-            this.root(host);
-        else if (host instanceof This)
-            this.this(host);
-        else if (host instanceof Property)
-            this.property(host);
-        else if (host instanceof Operation)
-            this.operation(host);
-        else if (host instanceof Select)
-            this.select(host);
-        else if (host instanceof SelectMany)
-            this.selectMany(host);
-        else if (host instanceof Filter)
-            this.filter(host);
-        else if (host instanceof Find)
-            this.find(host);
-        else if (host instanceof Count)
-            this.count(host);
-        else if (host instanceof Order)
-            this.order(host);
-        else if (host instanceof Expand)
-            this.expand(host);
-        else if (host instanceof Top)
-            this.top(host);
-        else if (host instanceof Skip)
-            this.skip(host);
-        else if (host instanceof InlineCount)
-            this.inlineCount(host);
-        else if (host instanceof Method)
-            this.method(host);
-        else if (host instanceof Value)
-            this.value(host);
-        else if (Value.isValid(host))
-            this.value(new Value(host));
-        else if (host instanceof ModelMethod)
-            this.modelMethod(host);
-        else if (host instanceof EqBinary)
-            this.eqBinary(host);
-        else if (host instanceof It)
-            this.it(host);
-        else if (host instanceof GlobalMethod)
-            this.globalMethod(host);
-        else if (host instanceof Action)
-            this.action(host);
-        else if (host instanceof Func)
-            this.func(host);
+            return this.root(host);
+        if (host instanceof This)
+            return this.this(host);
+        if (host instanceof Property)
+            return this.property(host);
+        if (host instanceof Operation)
+            return this.operation(host);
+        if (host instanceof Select)
+            return this.select(host);
+        if (host instanceof SelectMany)
+            return this.selectMany(host);
+        if (host instanceof Filter)
+            return this.filter(host);
+        if (host instanceof Find)
+            return this.find(host);
+        if (host instanceof Count)
+            return this.count(host);
+        if (host instanceof Order)
+            return this.order(host);
+        if (host instanceof Expand)
+            return this.expand(host);
+        if (host instanceof Top)
+            return this.top(host);
+        if (host instanceof Skip)
+            return this.skip(host);
+        if (host instanceof InlineCount)
+            return this.inlineCount(host);
+        if (host instanceof Method)
+            return this.method(host);
+        if (host instanceof Value)
+            return this.value(host);
+        if (Value.isValid(host))
+            return this.value(new Value(host));
+        if (host instanceof ModelMethod)
+            return this.modelMethod(host);
+        if (host instanceof EqBinary)
+            return this.eqBinary(host);
+        if (host instanceof It)
+            return this.it(host);
+        if (host instanceof GlobalMethod)
+            return this.globalMethod(host);
+        if (host instanceof Action)
+            return this.action(host);
+        if (host instanceof Func)
+            return this.func(host);
+        return Promise.reject('not found');
     }
     operation(op) {
     }

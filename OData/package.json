@@ -4,7 +4,7 @@
   "description": "Queryable data structure",
   "main": "index.js",
   "scripts": {
-    "test": "mocha tests/mem.js"
+    "test": "mocha tests/lazyVisitor.js"
   },
   "author": "hakan yücel",
   "license": "ISC",

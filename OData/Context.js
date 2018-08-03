@@ -1,5 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+class DataSet {
+    get(...expressions) {
+        return Promise.reject('not implement');
+    }
+    add(element) {
+        return Promise.reject('not implement');
+    }
+    delete(element) {
+        return Promise.reject('not implement');
+    }
+    update(element) {
+        return Promise.reject('not implement');
+    }
+    query(...expressions) {
+        return this;
+    }
+}
+exports.DataSet = DataSet;
 class DecorateSet {
     constructor(dataSet, observer) {
         this.dataSet = dataSet;

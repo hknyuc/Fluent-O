@@ -1,9 +1,19 @@
-export interface DataSet<T>{
-    get(...expressions:Array<any>):Promise<any>;
-    add(element:T):Promise<any>;
-    delete(element:T):Promise<any>;
-    update(element:T):Promise<any>;
-    query(...expressions:Array<any>):DataSet<T>;
+export class DataSet<T>{
+    get(...expressions:Array<any>):Promise<any>{
+        return Promise.reject('not implement');
+    }
+    add(element:T):Promise<any>{
+        return Promise.reject('not implement');
+    }
+    delete(element:T):Promise<any>{
+        return Promise.reject('not implement');
+    }
+    update(element:T):Promise<any>{
+        return Promise.reject('not implement');
+    }
+    query(...expressions:Array<any>):DataSet<T>{
+        return this;
+    }
 }
 
 export class DecorateSet<T>{
