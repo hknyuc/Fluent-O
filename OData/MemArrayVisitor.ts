@@ -11,6 +11,7 @@ export class MemArrayVisitor extends ExpressionVisitor{
      this.result = [];
      this.rootValue = root;
     }
+
     select(select:Select){
      if(Array.isArray(this.source)){
      this.result = this.source.map(element => {
@@ -105,7 +106,18 @@ export class MemArrayVisitor extends ExpressionVisitor{
     }
 
     find(find:Find){
-        this.result = this.source.find((x=>x.id==find.value));
+        let value = find.value;
+        if(typeof value !== "object"){ 
+           this.result = this.source.find((x=>x.id===find.value || x.ID === find.value || x.Id === find.value));
+        }
+        else {
+           let firstValueofObject = null;
+           for(let i in find.value){
+               firstValueofObject = {name:i,value:find.value[i]}
+               break;
+           }
+           this.result = this.source.find((x=>x[firstValueofObject.name] == firstValueofObject.value));
+        }
         let visitor = new MemArrayVisitor(this.result,this.source);
         if(find.expression != null){
             visitor.visit(find.expression);
@@ -189,6 +201,7 @@ export class MemArrayVisitor extends ExpressionVisitor{
         let current = source;
         props.forEach((name)=>{
             if(current == null){
+                return null;
                 throw new Error("source is null for getting "+name +" property");
             }
              current = current[name];
@@ -295,7 +308,8 @@ export class MemArrayVisitor extends ExpressionVisitor{
            visitor.visit(elem);
            props.push(visitor.result);           
        })
-       this.result = methods[globalMethod.name].apply(null,props);    }
+       this.result = methods[globalMethod.name].apply(null,props);  
+    }
 
     modelMethod(modelMethod:ModelMethod){
         let visitor = this.createMemVisitor(this.source);
@@ -323,8 +337,11 @@ export class MemArrayVisitor extends ExpressionVisitor{
               return;
             }
         }
-         
-         if(visitor.result[modelMethod.name] == null) throw new Error(modelMethod.name +" method not found in context");
+          if(visitor.result == null) return;
+         if(visitor.result[modelMethod.name] == null) {
+             return;
+             throw new Error(modelMethod.name +" method not found in context");
+          }
          this.result = visitor.result[modelMethod.name].apply(visitor.result,props);
     }
 
@@ -348,7 +365,7 @@ export class MemArrayVisitor extends ExpressionVisitor{
                 applier.set(resultValue);
             }else applier.set(oldValue);
           });
-        this.result = this.source;
+        this.result = this.source.map(x=>x);
     });
     }
 
@@ -421,10 +438,10 @@ export class MemSet implements DataSet<any>{
     }
 
     query(...expressions: any[]): DataSet<any> {
-        return new MemSet(this.source,this.expressions.concat(expressions));
+        return new MemSet(this.source,this.expressions.map(x=>x).concat(expressions));
     }
     get(...expressions: any[]): Promise<any> {
-        let expression = this.expressions.concat(expressions);
+        let expression = this.expressions.map(x=>x).concat(expressions);
         return Promise.resolve(MemSet._get(this.source,expression));
     }    
     add(element: any): Promise<any> {
@@ -437,9 +454,10 @@ export class MemSet implements DataSet<any>{
         return Promise.resolve();
     }
     update(element: any): Promise<any> {
-        let indexOfItem = this.source.find((elem)=> elem === element);
+        let indexOfItem = this.source.findIndex((elem)=> elem === element);
         if(indexOfItem === -1) return Promise.reject('element not found');
         this.source[indexOfItem] = element;
+        return Promise.resolve();
     }
 
     static get(source,...expressions: any[]){

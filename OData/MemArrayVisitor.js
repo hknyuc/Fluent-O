@@ -97,7 +97,18 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
         this.result = this.source.slice(0, top.value);
     }
     find(find) {
-        this.result = this.source.find((x => x.id == find.value));
+        let value = find.value;
+        if (typeof value !== "object") {
+            this.result = this.source.find((x => x.id === find.value || x.ID === find.value || x.Id === find.value));
+        }
+        else {
+            let firstValueofObject = null;
+            for (let i in find.value) {
+                firstValueofObject = { name: i, value: find.value[i] };
+                break;
+            }
+            this.result = this.source.find((x => x[firstValueofObject.name] == firstValueofObject.value));
+        }
         let visitor = new MemArrayVisitor(this.result, this.source);
         if (find.expression != null) {
             visitor.visit(find.expression);
@@ -177,6 +188,7 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
         let current = source;
         props.forEach((name) => {
             if (current == null) {
+                return null;
                 throw new Error("source is null for getting " + name + " property");
             }
             current = current[name];
@@ -307,8 +319,12 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
                 return;
             }
         }
-        if (visitor.result[modelMethod.name] == null)
+        if (visitor.result == null)
+            return;
+        if (visitor.result[modelMethod.name] == null) {
+            return;
             throw new Error(modelMethod.name + " method not found in context");
+        }
         this.result = visitor.result[modelMethod.name].apply(visitor.result, props);
     }
     value(value) {
@@ -398,10 +414,10 @@ class MemSet {
         this.expressions = expressions || [];
     }
     query(...expressions) {
-        return new MemSet(this.source, this.expressions.concat(expressions));
+        return new MemSet(this.source, this.expressions.map(x => x).concat(expressions));
     }
     get(...expressions) {
-        let expression = this.expressions.concat(expressions);
+        let expression = this.expressions.map(x => x).concat(expressions);
         return Promise.resolve(MemSet._get(this.source, expression));
     }
     add(element) {
@@ -415,10 +431,11 @@ class MemSet {
         return Promise.resolve();
     }
     update(element) {
-        let indexOfItem = this.source.find((elem) => elem === element);
+        let indexOfItem = this.source.findIndex((elem) => elem === element);
         if (indexOfItem === -1)
             return Promise.reject('element not found');
         this.source[indexOfItem] = element;
+        return Promise.resolve();
     }
     static get(source, ...expressions) {
         return this._get(source, expressions);
