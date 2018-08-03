@@ -36,8 +36,19 @@ export class Guid{
           return new Guid(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
     }
 
-    static parse(value:string){
-        return new Guid(value);
+    static parse(value:any){
+        if(value instanceof Guid) return value;
+        let any = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
+        if(any)
+           return new Guid(value);
+        throw new Error(value +" is could not parse for guid");
+    }
+
+    static tryParse(value){
+        if(value instanceof Guid) return value;
+        let any = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
+        if(any) return new Guid(value);
+        return null;
     }
 }
 
