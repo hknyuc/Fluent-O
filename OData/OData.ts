@@ -226,7 +226,7 @@ export class ODataVisitor extends ExpressionVisitor {
             let visitor = new ODataVisitor();
             visitor.visit(property.parent);
             if (!visitor.visited) throw new Error('property : expression could not be resolved');
-            this.set(visitor.result + "." + property.name);
+            this.set(visitor.result + "/" + property.name);
             return;
         }
         this.set(property.name);
@@ -419,21 +419,35 @@ export class ODataSet<T> implements DataSet<T> {
     }
 
     query(...expressions: any[]): DataSet<T> {
+      
+        
         let newOptions = {
             url: this.options.url,
             http: this.options.http,
             arrayable: this.options.arrayable,
-            expressions: Array.isArray(this.options.expressions) ? this.options.expressions.concat(expressions) : expressions,
+            expressions:this.appylExpression(expressions),
             primary: this.options.primary
         }
         return new ODataSet(newOptions);
     }
 
+    toString(){
+      return QuerySet.get.apply(null,this.options.expressions);
+    }
+
+    private appylExpression(expressions:Array<any>){
+        let optExpressions = this.options.expressions || [];
+        if(expressions[0] instanceof Find){ // filter after find. filter is not necassary
+           optExpressions = optExpressions.filter(x=>!(x instanceof Filter));
+        };
+       return Array.isArray(optExpressions) ? optExpressions.map(x=>x).concat(expressions) : expressions.map(x=>x);
+    }
+
     get(...expressions: any[]): Promise<any> {
-        expressions = Array.isArray(this.options.expressions) ? this.options.expressions.concat(expressions) : expressions;
-        let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, expressions));
+        let optExpressions = this.appylExpression(expressions);
+        let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, optExpressions));
         if (this.options.arrayable == null || this.options.arrayable === false) return result;
-        let anyCount = expressions.some((exp) => exp instanceof Count);
+        let anyCount = optExpressions.some((exp) => exp instanceof Count);
         if (anyCount) {
             return result.then((response) => {
                 return response.json()["@odata.count"];
@@ -465,14 +479,68 @@ export class ODataSet<T> implements DataSet<T> {
             });
         }
     }
+    __convertObject(value){
+       let result = {} as any;
+          for(let i in value){
+            if(value[i] == null) continue;
+            if(this.__isEmptyObject(value[i])) continue;
+             result[i] = this.__convert(value[i]);
+         }
+       return result;
+    }
+
+    __isEmptyObject(obj){
+        if(obj == null) return true;
+        if(Array.isArray(obj) && obj.length == 0) return true;
+        if(Array.isArray(obj)) return false;
+        for(let i in obj){
+            if(obj[i] != null) return false;
+            if(this.__isEmptyObject(obj[i])) return true;
+        }
+        return false;
+    }
+
+    __convertArray(values){
+        let result = [];
+        values.forEach((elem)=>{
+              result.push(this.__convert(elem));
+        });
+        return result;
+    }
+
+    __convert(values){
+        if(values == null) return null;
+        if(values instanceof Guid) return values.value;
+        if(values instanceof Date) return  ODataSet.__dateToIsoUTC(values);
+       if(Array.isArray(values)) return this.__convertArray(values);
+       if(typeof values ==="object") return this.__convertObject(values);
+       return values;
+    }
+
+    private static __dateToIsoUTC(date:Date){
+        let tzo = -date.getTimezoneOffset(),
+            dif = tzo >= 0 ? '+' : '-',
+            pad = function(num) {
+                let norm = Math.floor(Math.abs(num));
+                return (norm < 10 ? '0' : '') + norm;
+            };
+        return date.getFullYear() +
+            '-' + pad(date.getMonth() + 1) +
+            '-' + pad(date.getDate()) +
+            'T' + pad(date.getHours()) +
+            ':' + pad(date.getMinutes()) +
+            ':' + pad(date.getSeconds()) +
+            dif + pad(tzo / 60) +
+            ':' + pad(tzo % 60);
+    }
     add(element: T): Promise<any> {
-        return this.createHttp().post(this.options.url, element);
+        return this.createHttp().post(this.options.url, this.__convert(element));
     }
     delete(element: T): Promise<any> {
         return this.createHttp().delete(this.options.url + this.getPrimaryValue(element));
     }
     update(element: T): Promise<any> {
-        return this.createHttp().put(this.options.url + this.getPrimaryValue(element), element);
+        return this.createHttp().put(this.options.url + this.getPrimaryValue(element), this.__convert(element));
     }
 
     private getIdsValue(element){
