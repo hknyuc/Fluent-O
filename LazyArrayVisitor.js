@@ -16,15 +16,14 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
     }
     select(select) {
         return this.getSource().then((source) => {
-            console.log("source");
             let fn = (source, result, property) => {
                 let baseValue = this.__getNestedProperty(source, property);
-                if (baseValue instanceof Context_1.DataSet) {
-                    return baseValue.get().then((response) => {
-                        this.__createNestedProperty(result, property)
-                            .set(response);
-                    });
+                /*
+                if(baseValue instanceof DataSet){
+                    this.__createNestedProperty(result, property)
+                    .set({});
                 }
+                */
                 if (baseValue instanceof Promise) {
                     return baseValue.then((response) => {
                         this.__createNestedProperty(result, property).set(response);
@@ -34,7 +33,6 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                     .set(this.__getNestedProperty(source, property)));
             };
             let allPromise = [];
-            console.log(Array.isArray(source));
             if (Array.isArray(source)) {
                 let newResult = [];
                 source.forEach(element => {
@@ -52,7 +50,6 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                 });
                 return Promise.all(allPromise).then(() => newResult);
             }
-            console.log("ye");
             //object
             let result = {};
             let args = select.args.length == 0 ? Object.keys(result).map(x => {
@@ -433,6 +430,8 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
     expand(expand) {
         return this.getSource().then((source) => {
             let all = [];
+            let sourceIsArray = Array.isArray(source);
+            source = sourceIsArray ? source : [source];
             let newSource = source.map(x => Object.assign({}, x));
             source.forEach((element, index) => {
                 let allExpands = [];
@@ -468,7 +467,7 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                 });
                 all.push(Promise.all(allExpands));
             });
-            return Promise.all(all).then(() => newSource);
+            return Promise.all(all).then(() => sourceIsArray ? newSource : newSource[0]);
         });
     }
     operation(operation) {

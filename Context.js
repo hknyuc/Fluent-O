@@ -26,7 +26,14 @@ class DecorateSet {
     get(...expressions) {
         if (this.observer.get == null)
             return this.dataSet.get.apply(this.dataSet, arguments);
-        return this.observer.get.apply(this.dataSet, arguments);
+        let self = this;
+        let arg = arguments;
+        return this.observer.get.apply({
+            dataset: this.dataSet,
+            next: function () {
+                return self.dataSet.get.apply(self.dataSet, arg);
+            }
+        }, arguments);
     }
     add(element) {
         if (this.observer.add == null && this.observer.addUpdate == null)
@@ -42,7 +49,14 @@ class DecorateSet {
     delete(element) {
         if (this.observer.delete == null)
             return this.dataSet.delete.apply(this.dataSet, arguments);
-        return this.observer.delete.apply(this.dataSet, arguments);
+        let self = this;
+        let arg = arguments;
+        return this.observer.delete.apply({
+            dataset: this.dataSet,
+            next: function () {
+                return self.dataSet.delete.apply(self.dataSet, arg);
+            }
+        }, arguments);
     }
     update(element) {
         if (this.observer.update == null && this.observer.addUpdate == null)
@@ -60,4 +74,14 @@ class DecorateSet {
     }
 }
 exports.DecorateSet = DecorateSet;
+class CacheSet extends DecorateSet {
+    constructor(dataset) {
+        super(dataset, {
+            get: function () {
+                return this;
+            }
+        });
+    }
+}
+exports.CacheSet = CacheSet;
 //# sourceMappingURL=Context.js.map

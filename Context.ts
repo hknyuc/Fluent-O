@@ -17,12 +17,19 @@ export class DataSet<T>{
 }
 
 export class DecorateSet<T>{
-    constructor(public dataSet,public observer:{get:Function,add:Function,delete:Function,query:Function,update:Function,addUpdate:Function}){
+    constructor(public dataSet,public observer:{get?:Function,add?:Function,delete?:Function,update?:Function,addUpdate?:Function}){
       
     }
     get(...expressions:Array<any>){
         if(this.observer.get == null) return this.dataSet.get.apply(this.dataSet,arguments);
-        return this.observer.get.apply(this.dataSet,arguments);
+        let self = this;
+        let arg = arguments;
+        return this.observer.get.apply({
+            dataset:this.dataSet,
+            next:function (){
+                return self.dataSet.get.apply(self.dataSet,arg);
+            }
+        },arguments);
     }
     add(element:T):Promise<any>{
         if(this.observer.add == null && this.observer.addUpdate == null) return this.dataSet.add.apply(this.dataSet,arguments);
@@ -36,7 +43,14 @@ export class DecorateSet<T>{
     }
     delete(element:T){
         if(this.observer.delete == null) return this.dataSet.delete.apply(this.dataSet,arguments);
-        return this.observer.delete.apply(this.dataSet,arguments);
+        let self = this;
+        let arg = arguments;
+        return this.observer.delete.apply({
+            dataset:this.dataSet,
+            next:function (){
+                return self.dataSet.delete.apply(self.dataSet,arg);
+            }
+        },arguments);
     }
     update(element:T){
         if(this.observer.update == null && this.observer.addUpdate == null) return this.dataSet.update.apply(this.dataSet,arguments);
@@ -51,4 +65,16 @@ export class DecorateSet<T>{
     query(...expressions:Array<any>){
         return new DecorateSet(this.dataSet.query.apply(this.dataSet,arguments),this.observer);
     }
+}
+
+
+export class CacheSet<T> extends DecorateSet<T>{
+   constructor(dataset:DataSet<T>){
+       super(dataset,{
+           get:function (){
+               
+               return this
+           }
+       })
+   }
 }

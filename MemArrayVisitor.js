@@ -487,7 +487,7 @@ class MemSet extends Context_1.DataSet {
     }
     get(...expressions) {
         let expression = this.expressions.map(x => x).concat(expressions);
-        return Promise.resolve(MemSet.get.apply(null, [this.source, expression]));
+        return Promise.resolve(MemSet.get(this.source, expression));
     }
     add(element) {
         this.source.push(element);
@@ -507,13 +507,38 @@ class MemSet extends Context_1.DataSet {
         return Promise.resolve();
     }
     static get(source, ...expressions) {
+        if (Array.isArray(expressions) && expressions.length === 1 && expressions[0] && Array.isArray(expressions[0]))
+            expressions = expressions[0];
         let expr = expressions.map(x => x);
+        let removeOdataSet = function (o) {
+            if (o == null)
+                return null;
+            if (o instanceof Context_1.DataSet)
+                return null;
+            if (Array.isArray(o))
+                return o;
+            if (typeof o === "object") {
+                for (let i in o) {
+                    o[i] = removeOdataSet(o[i]);
+                    if (o[i] == null) {
+                        delete o[i];
+                    }
+                }
+            }
+            return o;
+        };
         /*
         if(!expr.some(x=>x instanceof Select)){
             expr.push(new Select());
         }
         */
-        return this._get.apply(null, [source, expr]);
+        return this._get(source, expr).then((result) => {
+            if (result == null)
+                return null;
+            if (Array.isArray(result))
+                return result.map(x => removeOdataSet(x));
+            return removeOdataSet(result);
+        });
     }
     static _get(source, expressions) {
         /*

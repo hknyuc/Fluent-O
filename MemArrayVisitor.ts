@@ -508,7 +508,7 @@ export class MemSet extends DataSet<any>{
     }
     get(...expressions: any[]): Promise<any> {
         let expression = this.expressions.map(x => x).concat(expressions);
-        return Promise.resolve(MemSet.get.apply(null,[this.source,expression]));
+        return Promise.resolve(MemSet.get(this.source,expression));
     }
     add(element: any): Promise<any> {
         this.source.push(element);
@@ -527,13 +527,35 @@ export class MemSet extends DataSet<any>{
     }
 
     static get(source, ...expressions: any[]) {
+        if(Array.isArray(expressions) && expressions.length === 1 && expressions[0] && Array.isArray(expressions[0]))
+            expressions = expressions[0];
         let expr = expressions.map(x=>x);
+         let removeOdataSet = function (o){
+             if(o == null) return null;
+             if(o instanceof DataSet) return null;
+             if(Array.isArray(o)) return o;
+             if(typeof o === "object") {
+                 for(let i in o){
+                     o[i] = removeOdataSet(o[i]);
+                     if(o[i] == null) {
+                        delete o[i];
+                    }
+                 }
+             }
+             return o;
+         }
+        
         /*
         if(!expr.some(x=>x instanceof Select)){
             expr.push(new Select());
         }
         */
-        return this._get.apply(null,[source,expr]);
+        
+        return this._get(source,expr).then((result)=>{
+            if(result == null) return null;
+            if(Array.isArray(result)) return result.map(x=>removeOdataSet(x));
+            return removeOdataSet(result);
+        })
     }
 
     private static _get(source, expressions: any[]) {

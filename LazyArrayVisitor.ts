@@ -18,15 +18,14 @@ export class LazyArrayVisitor extends ExpressionVisitor {
 
     select(select: Select) {
         return this.getSource().then((source) => {
-            console.log("source");
             let fn = (source,result,property)=>{
                 let baseValue = this.__getNestedProperty(source,property);
+                /*
                 if(baseValue instanceof DataSet){
-                  return  baseValue.get().then((response)=>{
                     this.__createNestedProperty(result, property)
-                    .set(response);
-                   });
+                    .set({});
                 }
+                */
         
                 if(baseValue instanceof Promise){
                     return baseValue.then((response)=>{
@@ -37,7 +36,6 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                 .set(this.__getNestedProperty(source, property)));
             };
             let allPromise = [];
-            console.log(Array.isArray(source));
             if (Array.isArray(source)) {
                 let newResult = [];
                 source.forEach(element => {
@@ -55,7 +53,6 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                 });
                 return Promise.all(allPromise).then(()=>newResult);
             } 
-            console.log("ye");
             //object
             let result = {};
             let args = select.args.length == 0?Object.keys(result).map(x=> {
@@ -455,7 +452,9 @@ export class LazyArrayVisitor extends ExpressionVisitor {
     expand(expand: Expand) {
         return this.getSource().then((source) => {
             let all =[];
-            let newSource = source.map(x=>Object.assign({},x));
+            let sourceIsArray = Array.isArray(source);
+            source = sourceIsArray?source:[source];
+            let newSource =  source.map(x=>Object.assign({},x));
             source.forEach((element,index) => {
                 let allExpands = [];
                 let applierElement = newSource[index];
@@ -491,7 +490,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                 });
                 all.push(Promise.all(allExpands));
             });
-            return Promise.all(all).then(()=>newSource);
+            return Promise.all(all).then(()=>sourceIsArray?newSource:newSource[0]);
         });
     }
 
