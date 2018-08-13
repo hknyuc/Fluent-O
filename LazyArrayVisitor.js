@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Expressions_1 = require("./Expressions");
-const Context_1 = require("./Context");
+const Dataset_1 = require("./Dataset");
+const Schema_1 = require("./Schema");
 class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
     constructor(array, root) {
         super();
@@ -76,8 +77,7 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                 }));
             });
             return Promise.all(allPromise).then(() => {
-                this.result = result;
-                return this.result;
+                return result;
             });
         });
     }
@@ -153,11 +153,18 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
         });
     }
     find(find) {
+        let getValueOf = function (value) {
+            return value != null && value.valueOf instanceof Function ? value.valueOf() : value;
+            ;
+        };
         return this.getSource().then((source) => {
             let value = find.value;
             let result;
-            if (typeof value !== "object") {
-                result = source.find((x => x.id === find.value || x.ID === find.value || x.Id === find.value));
+            if (typeof value !== "object" || (value instanceof Schema_1.Guid)) {
+                let v = getValueOf(value);
+                let findedResult = source.find(x => getValueOf(x.id) === v || getValueOf(x.ID) === v || getValueOf(x.Id) === v);
+                if (findedResult != null)
+                    result = Object.assign({}, findedResult);
             }
             else {
                 let firstValueofObject = null;
@@ -165,11 +172,14 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                     firstValueofObject = { name: i, value: find.value[i] };
                     break;
                 }
-                result = source.find((x => x[firstValueofObject.name] == firstValueofObject.value));
+                if (firstValueofObject == null)
+                    throw new Error('empty find selector');
+                let findedResult = source.find(x => getValueOf(x[firstValueofObject.name]) === getValueOf(firstValueofObject.value));
+                if (findedResult != null)
+                    result = Object.assign({}, findedResult);
             }
-            let visitor = this.createMemVisitor(result);
             if (find.expression != null) {
-                return visitor.visit(find.expression);
+                return this.createMemVisitor(result).visit(find.expression);
             }
             return result;
         });
@@ -378,14 +388,14 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
         });
     }
     modelMethod(modelMethod) {
-        this.getSource().then((source) => {
-            let visitor = this.createMemVisitor(source);
-            return visitor.visit(modelMethod.property).then((value) => {
+        return this.getSource().then((source) => {
+            return this.createMemVisitor(source).visit(modelMethod.property).then((value) => {
+                if (value == null)
+                    return Promise.resolve(null);
                 let allProps = [];
                 let self = this;
                 modelMethod.args.forEach(function (arg) {
-                    let v = self.createMemVisitor(self.source);
-                    allProps.push(v.visit(arg));
+                    allProps.push(self.createMemVisitor(self.source).visit(arg));
                 });
                 return Promise.all(allProps).then((props) => {
                     if (typeof value === "string") {
@@ -402,10 +412,8 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                         if (methods[modelMethod.name] != null) {
                             return methods[modelMethod.name].apply(methods, props);
                         }
-                        value[modelMethod.name].apply(value, props);
+                        return value[modelMethod.name].apply(value, props);
                     }
-                    if (value == null)
-                        return null;
                     if (value[modelMethod.name] == null) {
                         return null;
                         throw new Error(modelMethod.name + " method not found in context");
@@ -416,9 +424,16 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
         });
     }
     value(value) {
+        let fn = (v) => {
+            return v;
+            /*
+            if(typeof v === "function") return fn(v());
+            return v;
+            */
+        };
         if (value.value instanceof Promise)
-            return value.value;
-        return Promise.resolve(value.value);
+            return fn(value.value);
+        return Promise.resolve(fn(value.value));
     }
     applyExpressions(expressions, value) {
         if (expressions.length === 0)
@@ -427,8 +442,36 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
         let expesssion = cloneExpression.pop();
         return this.createMemVisitor(value).visit(expesssion).then((response) => this.applyExpressions(cloneExpression, response));
     }
+    isDataSet(dataSetable) {
+        return Dataset_1.DataSet.is(dataSetable);
+    }
     expand(expand) {
         return this.getSource().then((source) => {
+            let addValue = (baseValue, arg, oldValue, allExpands, applier) => {
+                if (this.isDataSet(baseValue)) {
+                    allExpands.push(baseValue.get.apply(baseValue, arg.expressions).then((response) => {
+                        applier.set(response);
+                        return response;
+                    }));
+                    return true;
+                }
+                if (baseValue instanceof Promise) {
+                    allExpands.push(baseValue.then((response) => {
+                        return this.applyExpressions(arg.expressions, response).then((response) => {
+                            applier.set(response);
+                        });
+                    }));
+                    return true;
+                }
+                if (arg.expressions != null && arg.expressions.length != 0) {
+                    allExpands.push(this.applyExpressions(arg.expressions, oldValue).then((response) => {
+                        applier.set(response);
+                        return response;
+                    }));
+                    return true;
+                }
+                allExpands.push(Promise.resolve(applier.set(oldValue)));
+            };
             let all = [];
             let sourceIsArray = Array.isArray(source);
             source = sourceIsArray ? source : [source];
@@ -440,29 +483,8 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                     let oldValue = this.__getNestedProperty(applierElement, arg.property);
                     let baseValue = this.__getNestedProperty(element, arg.property);
                     let applier = this.__createNestedProperty(applierElement, arg.property);
-                    if (baseValue instanceof Context_1.DataSet) {
-                        allExpands.push(baseValue.get.apply(baseValue, arg.expressions).then((response) => {
-                            applier.set(response);
-                            return response;
-                        }));
-                        return true;
-                    }
-                    if (baseValue instanceof Promise) {
-                        allExpands.push(baseValue.then((response) => {
-                            return this.applyExpressions(arg.expressions, response).then((response) => {
-                                applier.set(response);
-                            });
-                        }));
-                        return true;
-                    }
-                    if (arg.expressions != null && arg.expressions.length != 0) {
-                        allExpands.push(this.applyExpressions(arg.expressions, oldValue).then((response) => {
-                            applier.set(response);
-                            return response;
-                        }));
-                        return true;
-                    }
-                    allExpands.push(Promise.resolve(applier.set(oldValue)));
+                    // console.log({arg: arg.property.name,baseValue,oldValue,applier});
+                    addValue(baseValue, arg, oldValue, allExpands, applier);
                     return true;
                 });
                 all.push(Promise.all(allExpands));

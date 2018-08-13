@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Context_1 = require("./Context");
+const DataSet_1 = require("./DataSet");
 const Schema_1 = require("./Schema");
 const Expressions_1 = require("./Expressions");
 const Http_1 = require("./Http");
@@ -375,7 +375,7 @@ function idselector(ids) {
     };
 }
 exports.idselector = idselector;
-class ODataSet extends Context_1.DataSet {
+class ODataSet extends DataSet_1.DataSet {
     constructor(options) {
         super();
         this.options = options;
@@ -444,6 +444,8 @@ class ODataSet extends Context_1.DataSet {
         let result = {};
         for (let i in value) {
             if (value[i] == null)
+                continue;
+            if (DataSet_1.DataSet.is(value[i]))
                 continue;
             if (this.__isEmptyObject(value[i]))
                 continue;

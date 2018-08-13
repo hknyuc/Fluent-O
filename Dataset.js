@@ -16,12 +16,27 @@ class DataSet {
     query(...expressions) {
         return this;
     }
+    then() {
+        return this.get();
+    }
+    static is(dataSetable) {
+        if (dataSetable == null)
+            return false;
+        let name = "DataSet";
+        if (dataSetable.constructor == null)
+            return false;
+        if (dataSetable.constructor.name === name)
+            return true;
+        return this.is(dataSetable.__proto__);
+    }
 }
 exports.DataSet = DataSet;
-class DecorateSet {
+class DecorateSet extends DataSet {
     constructor(dataSet, observer) {
+        super();
         this.dataSet = dataSet;
         this.observer = observer;
+        this.dataSet = dataSet;
     }
     get(...expressions) {
         if (this.observer.get == null)
@@ -30,8 +45,9 @@ class DecorateSet {
         let arg = arguments;
         return this.observer.get.apply({
             dataset: this.dataSet,
-            next: function () {
-                return self.dataSet.get.apply(self.dataSet, arg);
+            next: function (value) {
+                value = value || arg;
+                return self.dataSet.get.apply(self.dataSet, value);
             }
         }, arguments);
     }
@@ -42,8 +58,9 @@ class DecorateSet {
             return this.observer.add.apply(this.dataSet, arguments);
         let arg = arguments;
         let self = this;
-        return this.observer.addUpdate.apply({ dataset: this.dataSet, next: function () {
-                return self.dataSet.add.apply(self.dataSet, arg);
+        return this.observer.addUpdate.apply({ dataset: this.dataSet, next: function (value) {
+                value = value || arg;
+                return self.dataSet.add.apply(self.dataSet, value);
             } }, arguments);
     }
     delete(element) {
@@ -65,8 +82,9 @@ class DecorateSet {
             return this.observer.update.apply(this.dataSet, arguments);
         let arg = arguments;
         let self = this;
-        return this.observer.addUpdate.apply({ dataset: this.dataSet, next: function () {
-                return self.dataSet.update.apply(self.dataSet, arg);
+        return this.observer.addUpdate.apply({ dataset: this.dataSet, next: function (value) {
+                value = value || arg;
+                return self.dataSet.update.apply(self.dataSet, value);
             } }, arguments);
     }
     query(...expressions) {
@@ -74,14 +92,4 @@ class DecorateSet {
     }
 }
 exports.DecorateSet = DecorateSet;
-class CacheSet extends DecorateSet {
-    constructor(dataset) {
-        super(dataset, {
-            get: function () {
-                return this;
-            }
-        });
-    }
-}
-exports.CacheSet = CacheSet;
-//# sourceMappingURL=Context.js.map
+//# sourceMappingURL=Dataset.js.map

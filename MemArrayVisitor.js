@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const LazyArrayVisitor_1 = require("./LazyArrayVisitor");
 const Expressions_1 = require("./Expressions");
-const Context_1 = require("./Context");
+const Dataset_1 = require("./Dataset");
 class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
     constructor(array, root) {
         super();
@@ -193,8 +193,8 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
     }
     property(property) {
         return this.getSource().then((source) => {
-            this.result = this.__getNestedProperty(source, property);
-            return this.result;
+            let result = this.__getNestedProperty(source, property);
+            return result;
         });
     }
     __createNestedProperty(source, property) {
@@ -475,7 +475,7 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
     }
 }
 exports.MemArrayVisitor = MemArrayVisitor;
-class MemSet extends Context_1.DataSet {
+class MemSet extends Dataset_1.DataSet {
     constructor(source, expressions) {
         super();
         this.source = source;
@@ -491,16 +491,25 @@ class MemSet extends Context_1.DataSet {
     }
     add(element) {
         this.source.push(element);
+        console.log({ source: this.source });
         return Promise.resolve(element);
     }
+    __getValueOf(value) {
+        return value != null && typeof value.valueOf === "function" ? value.valueOf() : value;
+    }
+    __is(base, element) {
+        let ids = ["ID", "id", "Id", "iD"];
+        return base === element || ids.some(x => element[x] != null && this.__getValueOf(element[x]) === this.__getValueOf(base[x]));
+    }
     delete(element) {
-        let indexOfItem = this.source.find((elem) => elem === element);
+        let indexOfItem = this.source.find((elem) => this.__is(elem, element));
         if (indexOfItem === -1)
             return Promise.reject('element not found');
+        this.source.splice(indexOfItem, 1);
         return Promise.resolve();
     }
     update(element) {
-        let indexOfItem = this.source.findIndex((elem) => elem === element);
+        let indexOfItem = this.source.findIndex((elem) => this.__is(elem, element));
         if (indexOfItem === -1)
             return Promise.reject('element not found');
         this.source[indexOfItem] = element;
@@ -509,11 +518,11 @@ class MemSet extends Context_1.DataSet {
     static get(source, ...expressions) {
         if (Array.isArray(expressions) && expressions.length === 1 && expressions[0] && Array.isArray(expressions[0]))
             expressions = expressions[0];
-        let expr = expressions.map(x => x);
+        let expr = expressions.map(x => x).reverse();
         let removeOdataSet = function (o) {
             if (o == null)
                 return null;
-            if (o instanceof Context_1.DataSet)
+            if (o instanceof Dataset_1.DataSet)
                 return null;
             if (Array.isArray(o))
                 return o;
@@ -527,17 +536,19 @@ class MemSet extends Context_1.DataSet {
             }
             return o;
         };
-        /*
-        if(!expr.some(x=>x instanceof Select)){
-            expr.push(new Select());
-        }
-        */
+        // console.log({source});
         return this._get(source, expr).then((result) => {
             if (result == null)
                 return null;
             if (Array.isArray(result))
                 return result.map(x => removeOdataSet(x));
-            return removeOdataSet(result);
+            if (typeof result === "object") {
+                return removeOdataSet(result);
+            }
+            return result;
+        }).then((result) => {
+            if (result != null)
+                return result;
         });
     }
     static _get(source, expressions) {
@@ -553,10 +564,11 @@ class MemSet extends Context_1.DataSet {
         if (expressions.length == 0)
             return Promise.resolve(source);
         let result = source;
-        let cloneExpressions = expressions.map(x => x).reverse();
+        let cloneExpressions = expressions.map(x => x);
         let item = cloneExpressions.pop();
-        let visitor = new LazyArrayVisitor_1.LazyArrayVisitor(result, source);
-        return visitor.visit(item).then((response) => this._get(response, cloneExpressions));
+        return new LazyArrayVisitor_1.LazyArrayVisitor(result, source).visit(item).then((response) => {
+            return this._get(response, cloneExpressions);
+        });
     }
 }
 exports.MemSet = MemSet;

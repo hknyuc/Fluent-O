@@ -4,7 +4,8 @@ const Schema_1 = require("./Schema");
 const MemArrayVisitor_1 = require("./MemArrayVisitor");
 const OData_1 = require("./OData");
 const Expressions_1 = require("./Expressions");
-const Context_1 = require("./Context");
+const DataSet_1 = require("./DataSet");
+const Cacheset_1 = require("./Cacheset");
 class EqBinaryExtend extends Expressions_1.EqBinary {
     constructor(eqBinary) {
         super(eqBinary.left, eqBinary.op, eqBinary.right);
@@ -967,7 +968,11 @@ function func(name, ...params) {
 }
 exports.func = func;
 function dataset(source, observer) {
-    return new Context_1.DecorateSet(source, observer);
+    return new DataSet_1.DecorateSet(source, observer);
 }
 exports.dataset = dataset;
+function cacheset(dataset) {
+    return new Cacheset_1.CacheSet(dataset);
+}
+exports.cacheset = cacheset;
 //# sourceMappingURL=Operations.js.map

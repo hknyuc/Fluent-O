@@ -2,7 +2,8 @@ import { Guid } from './Schema';
 import { MemSet } from './MemArrayVisitor';
 import {ODataSet} from './OData';
 import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method, Action, Func } from './Expressions';
-import { DecorateSet } from './Context';
+import { DecorateSet, } from './DataSet';
+import {CacheSet} from './Cacheset';
 
 export class EqBinaryExtend extends EqBinary {
     constructor(eqBinary: EqBinary) {
@@ -1154,4 +1155,8 @@ export function func(name:string,...params){
 
 export function dataset(source,observer:{get:Function,add:Function,delete:Function,query:Function,update:Function,addUpdate:Function}){
    return new DecorateSet(source,observer);
+}
+
+export function cacheset(dataset){
+    return new CacheSet(dataset);
 }

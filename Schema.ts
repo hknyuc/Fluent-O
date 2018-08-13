@@ -27,6 +27,10 @@ export class Guid{
         return this.value;
     }
 
+    valueOf(){
+       return this.value;
+    }
+
     static new():Guid{
         function s4() {
             return Math.floor((1 + Math.random()) * 0x10000)
@@ -34,6 +38,10 @@ export class Guid{
               .substring(1);
           }
           return new Guid(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
+    }
+
+    static newString():string{
+        return this.new().toString();
     }
 
     static parse(value:any){

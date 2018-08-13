@@ -1,9 +1,9 @@
 import { RestClient } from './RestClient';
-import { DataSet } from './Context';
+import { DataSet } from './DataSet';
 import { Guid } from './Schema';
 
 import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It, Action, Func } from './Expressions';
-import { Http } from './Http';
+import {Http} from './Http';
 export class ODataVisitor extends ExpressionVisitor {
     private _result: string = null;
 
@@ -419,8 +419,6 @@ export class ODataSet<T> extends DataSet<T> {
     }
 
     query(...expressions: any[]): DataSet<T> {
-      
-        
         let newOptions = {
             url: this.options.url,
             http: this.options.http,
@@ -483,11 +481,13 @@ export class ODataSet<T> extends DataSet<T> {
        let result = {} as any;
           for(let i in value){
             if(value[i] == null) continue;
+            if(DataSet.is(value[i])) continue;
             if(this.__isEmptyObject(value[i])) continue;
              result[i] = this.__convert(value[i]);
          }
        return result;
     }
+    
 
     __isEmptyObject(obj){
         if(obj == null) return true;

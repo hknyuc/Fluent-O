@@ -1,6 +1,6 @@
 import { LazyArrayVisitor } from './LazyArrayVisitor';
 import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod } from "./Expressions";
-import { DataSet } from "./Context";
+import { DataSet } from "./Dataset";
 
 export class MemArrayVisitor extends ExpressionVisitor {
     private source: any;
@@ -44,15 +44,15 @@ export class MemArrayVisitor extends ExpressionVisitor {
             let allPromise = [];
             source.forEach(element => {
                 let visitor = this.createMemVisitor(element);
-                allPromise.push(visitor.visit(filter.expression).then(x=>{
-                    if(x === true)
-                     result.push(element);
+                allPromise.push(visitor.visit(filter.expression).then(x => {
+                    if (x === true)
+                        result.push(element);
                 }))
             });
-             return Promise.all(allPromise).then(()=> {
-                 this.result = result;
-                 return this.result;
-             });
+            return Promise.all(allPromise).then(() => {
+                this.result = result;
+                return this.result;
+            });
         });
     }
 
@@ -122,89 +122,89 @@ export class MemArrayVisitor extends ExpressionVisitor {
     }
 
     top(top: Value) {
-     return this.getSource().then((source)=>{
-        this.result = source.slice(0, top.value);
-        return this.result;
-     });
+        return this.getSource().then((source) => {
+            this.result = source.slice(0, top.value);
+            return this.result;
+        });
     }
 
     find(find: Find) {
-      return this.getSource().then((source)=>{
-        let value = find.value;
-        if (typeof value !== "object") {
-            this.result = source.find((x => x.id === find.value || x.ID === find.value || x.Id === find.value));
-        }
-        else {
-            let firstValueofObject = null;
-            for (let i in find.value) {
-                firstValueofObject = { name: i, value: find.value[i] }
-                break;
+        return this.getSource().then((source) => {
+            let value = find.value;
+            if (typeof value !== "object") {
+                this.result = source.find((x => x.id === find.value || x.ID === find.value || x.Id === find.value));
             }
-            this.result = source.find((x => x[firstValueofObject.name] == firstValueofObject.value));
-        }
-        let visitor = new MemArrayVisitor(this.result, source);
-        if (find.expression != null) {
-            visitor.visit(find.expression);
-            this.result = visitor.result;
-        }
-        return this.result;
-     });
+            else {
+                let firstValueofObject = null;
+                for (let i in find.value) {
+                    firstValueofObject = { name: i, value: find.value[i] }
+                    break;
+                }
+                this.result = source.find((x => x[firstValueofObject.name] == firstValueofObject.value));
+            }
+            let visitor = new MemArrayVisitor(this.result, source);
+            if (find.expression != null) {
+                visitor.visit(find.expression);
+                this.result = visitor.result;
+            }
+            return this.result;
+        });
     }
     createMemVisitor(source: any): MemArrayVisitor {
         return new MemArrayVisitor(source, this.rootValue);
     }
 
     count(count: Count) {
-      return this.getSource().then((source)=>{
-        this.result = source.length;
-        if (count.expression != null) {
-            let memVisitor = this.createMemVisitor(source);
-           return memVisitor.visit(count.expression).then((respone)=>{
-                 this.result = respone.length;
-                 return this.result;
-            });
-        }
-        return this.result;
-     });
-    }
-
-    expendProperties(source,properties:Array<Property>){
-        let all =[];
-        source.forEach((item)=>{
-            properties.forEach((prop)=>{
-            all.push(this.createMemVisitor(item)
-              .visit(prop)
-              .then((value)=>{
-                  let applier = this.__createNestedProperty(item,prop);
-                   applier.set(value);
-                   return value;
-               }));
-        });
-      });
-      return Promise.all(all).then(()=>source);
-   }   
-
-    order(order: Order) {
-      return this.getSource().then((source)=>{
-        if (!Array.isArray(source)) throw new Error("order: order support only array");
-        return this.expendProperties(source,[order.property]).then((source)=>{
-            this.result = source.map(x => x).sort((left, right) => {
-                let l = this.__getNestedProperty(left,order.property);
-                let r = this.__getNestedProperty(right,order.property)
-                if (order.type === null || order.type === "asc")
-                    return l - r;
-                return r - l 
-            });
+        return this.getSource().then((source) => {
+            this.result = source.length;
+            if (count.expression != null) {
+                let memVisitor = this.createMemVisitor(source);
+                return memVisitor.visit(count.expression).then((respone) => {
+                    this.result = respone.length;
+                    return this.result;
+                });
+            }
             return this.result;
         });
-    });
+    }
+
+    expendProperties(source, properties: Array<Property>) {
+        let all = [];
+        source.forEach((item) => {
+            properties.forEach((prop) => {
+                all.push(this.createMemVisitor(item)
+                    .visit(prop)
+                    .then((value) => {
+                        let applier = this.__createNestedProperty(item, prop);
+                        applier.set(value);
+                        return value;
+                    }));
+            });
+        });
+        return Promise.all(all).then(() => source);
+    }
+
+    order(order: Order) {
+        return this.getSource().then((source) => {
+            if (!Array.isArray(source)) throw new Error("order: order support only array");
+            return this.expendProperties(source, [order.property]).then((source) => {
+                this.result = source.map(x => x).sort((left, right) => {
+                    let l = this.__getNestedProperty(left, order.property);
+                    let r = this.__getNestedProperty(right, order.property)
+                    if (order.type === null || order.type === "asc")
+                        return l - r;
+                    return r - l
+                });
+                return this.result;
+            });
+        });
     }
 
     property(property: Property) {
-     return this.getSource().then((source)=>{
-        this.result = this.__getNestedProperty(source, property);
-        return this.result;
-     });
+        return this.getSource().then((source) => {
+            let result = this.__getNestedProperty(source, property);
+            return result;
+        });
     }
 
     __createNestedProperty(source, property: Property) {
@@ -333,77 +333,77 @@ export class MemArrayVisitor extends ExpressionVisitor {
     }
 
     globalMethod(globalMethod: GlobalMethod) {
-      return  this.getSource().then((source)=>{
-        let methods = {
-            maxdatetime: function () {
-                return new Date(8640000000000000);
-            },
-            mindatetime: function () {
-                return new Date(-8640000000000000)
-            },
-            now: function () {
-                return new Date(Date.now());
-            },
-            ceiling: function (value) {
-                return Math.ceil(value);
-            },
-            floor: function (x: number) {
-                return Math.floor(x);
-            },
-            round: function (x: number) {
-                return Math.round(x);
+        return this.getSource().then((source) => {
+            let methods = {
+                maxdatetime: function () {
+                    return new Date(8640000000000000);
+                },
+                mindatetime: function () {
+                    return new Date(-8640000000000000)
+                },
+                now: function () {
+                    return new Date(Date.now());
+                },
+                ceiling: function (value) {
+                    return Math.ceil(value);
+                },
+                floor: function (x: number) {
+                    return Math.floor(x);
+                },
+                round: function (x: number) {
+                    return Math.round(x);
+                }
             }
-        }
-        if (methods[globalMethod.name] == null) throw new Error(globalMethod.name + " is not exists in global method");
-        let props = [];
-        globalMethod.args.forEach((elem) => {
-            let visitor = this.createMemVisitor(source);
-            props.push(visitor.visit(elem))
-        })
-        return Promise.all(props).then(()=>{
-            return  methods[globalMethod.name].apply(null, props)
+            if (methods[globalMethod.name] == null) throw new Error(globalMethod.name + " is not exists in global method");
+            let props = [];
+            globalMethod.args.forEach((elem) => {
+                let visitor = this.createMemVisitor(source);
+                props.push(visitor.visit(elem))
+            })
+            return Promise.all(props).then(() => {
+                return methods[globalMethod.name].apply(null, props)
+            });
         });
-      });
     }
 
     modelMethod(modelMethod: ModelMethod) {
-        this.getSource().then((source)=>{
-        let all = [];
-        let visitor = this.createMemVisitor(source);
-     return  visitor.visit(modelMethod.property).then((value)=>{
-            let allProps = [];
-            let self = this;
-            modelMethod.args.forEach(function (arg) {
-                let v = self.createMemVisitor(self.source);
-                allProps.push(v.visit(arg));
-            });
+        this.getSource().then((source) => {
+            let all = [];
+            let visitor = this.createMemVisitor(source);
+            return visitor.visit(modelMethod.property).then((value) => {
+                let allProps = [];
+                let self = this;
+                modelMethod.args.forEach(function (arg) {
+                    let v = self.createMemVisitor(self.source);
+                    allProps.push(v.visit(arg));
+                });
 
-           return Promise.all(allProps).then((props)=>{
-            if (typeof value === "string") {
-                let methods = this.getModelMethod().string;
-                methods["context"] = value;
-                if (methods[modelMethod.name] != null) {
-                    this.result = Promise.resolve(methods[modelMethod.name].apply(methods, props));
+                return Promise.all(allProps).then((props) => {
+                    if (typeof value === "string") {
+                        let methods = this.getModelMethod().string;
+                        methods["context"] = value;
+                        if (methods[modelMethod.name] != null) {
+                            this.result = Promise.resolve(methods[modelMethod.name].apply(methods, props));
+                            return this.result;
+                        }
+                    } else if (value instanceof Date) {
+                        let methods = this.getModelMethod().date;
+                        methods["context"] = value;
+                        if (methods[modelMethod.name] != null) {
+                            this.result = Promise.resolve(methods[modelMethod.name].apply(methods, props));
+                            return this.result;
+                        }
+                    }
+                    if (value == null) return this.result;
+                    if (value[modelMethod.name] == null) {
+                        return this.result;
+                        throw new Error(modelMethod.name + " method not found in context");
+                    }
+                    this.result = Promise.resolve(value[modelMethod.name].apply(value, props));
                     return this.result;
-                }
-            } else if (value instanceof Date) {
-                let methods = this.getModelMethod().date;
-                methods["context"] = value;
-                if (methods[modelMethod.name] != null) {
-                    this.result = Promise.resolve(methods[modelMethod.name].apply(methods, props));
-                    return this.result;
-                }
-            }
-            if (value == null) return this.result;
-            if (value[modelMethod.name] == null) {
-                return this.result;
-                throw new Error(modelMethod.name + " method not found in context");
-            }
-            this.result = Promise.resolve(value[modelMethod.name].apply(value, props));
-            return this.result;
+                });
+            });
         });
-      });
-    });
     }
 
     value(value: Value) {
@@ -412,26 +412,26 @@ export class MemArrayVisitor extends ExpressionVisitor {
     }
 
     expand(expand: Expand) {
-      return this.getSource().then((source)=>{
-        source.forEach(element => {
-            expand.args.forEach((arg) => {
-                let oldValue = this.__getNestedProperty(element, arg.property);
-                let applier = this.__createNestedProperty(element, arg.property);
-                if (arg.expressions != null && arg.expressions.length != 0) {
-                    let resultValue = oldValue;
-                    arg.expressions.forEach((expression) => {
-                        let memVisitor = this.createMemVisitor(resultValue);
-                        memVisitor.visit(expression);
-                        resultValue = memVisitor.result;
-                        return true;
-                    });
-                    applier.set(resultValue);
-                } else applier.set(oldValue);
+        return this.getSource().then((source) => {
+            source.forEach(element => {
+                expand.args.forEach((arg) => {
+                    let oldValue = this.__getNestedProperty(element, arg.property);
+                    let applier = this.__createNestedProperty(element, arg.property);
+                    if (arg.expressions != null && arg.expressions.length != 0) {
+                        let resultValue = oldValue;
+                        arg.expressions.forEach((expression) => {
+                            let memVisitor = this.createMemVisitor(resultValue);
+                            memVisitor.visit(expression);
+                            resultValue = memVisitor.result;
+                            return true;
+                        });
+                        applier.set(resultValue);
+                    } else applier.set(oldValue);
+                });
             });
+            this.result = this.source.map(x => x);
+            return this.result;
         });
-        this.result = this.source.map(x => x);
-        return this.result;
-      });
     }
 
     operation(operation: Operation) {
@@ -508,54 +508,68 @@ export class MemSet extends DataSet<any>{
     }
     get(...expressions: any[]): Promise<any> {
         let expression = this.expressions.map(x => x).concat(expressions);
-        return Promise.resolve(MemSet.get(this.source,expression));
+        return Promise.resolve(MemSet.get(this.source, expression));
     }
     add(element: any): Promise<any> {
         this.source.push(element);
         return Promise.resolve(element);
     }
+
+
+    private __getValueOf(value){
+         return value != null && typeof value.valueOf ==="function"? value.valueOf():value;
+    }
+
+    __is(base, element: any) {
+        let ids = ["ID", "id", "Id", "iD"];
+        return base === element || ids.some(x => element[x] != null && this.__getValueOf(element[x]) === this.__getValueOf(base[x]));
+    }
+
+
     delete(element: any): Promise<any> {
-        let indexOfItem = this.source.find((elem) => elem === element);
+        let indexOfItem = this.source.find((elem) => this.__is(elem, element));
         if (indexOfItem === -1) return Promise.reject('element not found');
+        this.source.splice(indexOfItem, 1);
         return Promise.resolve();
     }
     update(element: any): Promise<any> {
-        let indexOfItem = this.source.findIndex((elem) => elem === element);
+        let indexOfItem = this.source.findIndex((elem) => this.__is(elem,element));
         if (indexOfItem === -1) return Promise.reject('element not found');
         this.source[indexOfItem] = element;
         return Promise.resolve();
     }
 
+
     static get(source, ...expressions: any[]) {
-        if(Array.isArray(expressions) && expressions.length === 1 && expressions[0] && Array.isArray(expressions[0]))
+        if (Array.isArray(expressions) && expressions.length === 1 && expressions[0] && Array.isArray(expressions[0]))
             expressions = expressions[0];
-        let expr = expressions.map(x=>x);
-         let removeOdataSet = function (o){
-             if(o == null) return null;
-             if(o instanceof DataSet) return null;
-             if(Array.isArray(o)) return o;
-             if(typeof o === "object") {
-                 for(let i in o){
-                     o[i] = removeOdataSet(o[i]);
-                     if(o[i] == null) {
+        let expr = expressions.map(x => x).reverse();
+        let removeOdataSet = function (o) {
+            if (o == null) return null;
+            if (o instanceof DataSet) return null;
+            if (Array.isArray(o)) return o;
+            if (typeof o === "object") {
+                for (let i in o) {
+                    o[i] = removeOdataSet(o[i]);
+                    if (o[i] == null) {
                         delete o[i];
                     }
-                 }
-             }
-             return o;
-         }
-        
-        /*
-        if(!expr.some(x=>x instanceof Select)){
-            expr.push(new Select());
+                }
+            }
+            return o;
         }
-        */
-        
-        return this._get(source,expr).then((result)=>{
-            if(result == null) return null;
-            if(Array.isArray(result)) return result.map(x=>removeOdataSet(x));
-            return removeOdataSet(result);
-        })
+      // console.log({source});
+        return this._get(source, expr).then((result) => {
+            if (result == null) return null;
+            if (Array.isArray(result)) return result.map(x => removeOdataSet(x));
+            if (typeof result === "object") {
+                return removeOdataSet(result);
+            }
+            return result;
+        }).then((result) => {
+            if(result != null)
+            return result;
+        });
     }
 
     private static _get(source, expressions: any[]) {
@@ -568,12 +582,12 @@ export class MemSet extends DataSet<any>{
         });
         return result;
         */
-       if(expressions.length == 0) return Promise.resolve(source);
-    
+        if (expressions.length == 0) return Promise.resolve(source);
         let result = source;
-        let cloneExpressions= expressions.map(x=>x).reverse();
+        let cloneExpressions = expressions.map(x => x);
         let item = cloneExpressions.pop();
-        let visitor = new LazyArrayVisitor(result,source);
-        return visitor.visit(item).then((response)=>this._get(response,cloneExpressions));
+        return new LazyArrayVisitor(result, source).visit(item).then((response) => {
+            return this._get(response, cloneExpressions);
+        });
     }
 }

@@ -28,6 +28,9 @@ class Guid {
     toString() {
         return this.value;
     }
+    valueOf() {
+        return this.value;
+    }
     static new() {
         function s4() {
             return Math.floor((1 + Math.random()) * 0x10000)
@@ -35,6 +38,9 @@ class Guid {
                 .substring(1);
         }
         return new Guid(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
+    }
+    static newString() {
+        return this.new().toString();
     }
     static parse(value) {
         if (value instanceof Guid)

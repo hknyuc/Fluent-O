@@ -1,6 +1,6 @@
-import { ODataDataSet, ODataConfig } from "./OData";
-import { select, filter, prop, order, expand } from "./Operations";
+//import { select, filter, prop, order, expand } from "./Operations";
 
+/*
 class Context {
     customers = new ODataDataSet<any>('url');
     test(): void {
@@ -17,3 +17,4 @@ class Context {
         });
     }
 }
+*/
