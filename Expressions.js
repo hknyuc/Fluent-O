@@ -282,4 +282,7 @@ class ExpressionVisitor {
     }
 }
 exports.ExpressionVisitor = ExpressionVisitor;
+class Memorize {
+}
+exports.Memorize = Memorize;
 //# sourceMappingURL=Expressions.js.map

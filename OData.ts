@@ -123,11 +123,14 @@ export class ODataVisitor extends ExpressionVisitor {
             results.push(propertyVisitor.result + "(" + expressionVisitor.result + ")");
             return true;
         });
-        this.set("$select=" + results.join(','));
+        let distinct = (value, index, self)=>self.indexOf(value) === index;
+        this.set("$select=" + results.filter(distinct).join(','));
     }
 
     order(order: Order): void {
-        this.set('$orderby=' + order.property.name + (order.type != null ? " " + order.type : ''));
+        let odataVisitor = new ODataVisitor();
+        odataVisitor.visit(order.property);
+        this.set('$orderby=' +odataVisitor.result + (order.type != null ? " " + order.type : ''));
     }
 
     top(top: Top): void {
@@ -436,7 +439,7 @@ export class ODataSet<T> extends DataSet<T> {
     private appylExpression(expressions:Array<any>){
         let optExpressions = this.options.expressions || [];
         if(expressions[0] instanceof Find){ // filter after find. filter is not necassary
-           optExpressions = optExpressions.filter(x=>!(x instanceof Filter));
+           optExpressions = optExpressions.filter(x=>!(x instanceof Filter) && !(x instanceof Order));
         };
        return Array.isArray(optExpressions) ? optExpressions.map(x=>x).concat(expressions) : expressions.map(x=>x);
     }

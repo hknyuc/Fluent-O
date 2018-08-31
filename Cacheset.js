@@ -12,7 +12,6 @@ class CacheSet extends Dataset_1.DecorateSet {
                 self.caches = self.caches || {};
                 let query = OData_1.QuerySet.get(expressions);
                 if (self.caches[query] != null) {
-                    console.log({ caching: true, expressions, response: self.caches[query] });
                     return Promise.resolve(self.caches[query]);
                 }
                 return this.next().then((response) => {

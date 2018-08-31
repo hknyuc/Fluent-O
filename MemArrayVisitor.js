@@ -491,7 +491,6 @@ class MemSet extends Dataset_1.DataSet {
     }
     add(element) {
         this.source.push(element);
-        console.log({ source: this.source });
         return Promise.resolve(element);
     }
     __getValueOf(value) {

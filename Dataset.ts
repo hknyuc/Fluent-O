@@ -1,22 +1,50 @@
+
+/**
+ * Base data source for applying operations
+ */
 export class DataSet<T>{
+    /**
+     * fetches data as array from source.
+     * @param expressions specifies events that will operate on the resource.
+     */
     get(...expressions:Array<any>):Promise<any>{
         return Promise.reject('not implement');
     }
+    /**
+     * adds element to source 
+     * @param element 
+     */
     add(element:T):Promise<any>{
         return Promise.reject('not implement');
     }
+    /**
+     * deletes element from source
+     * @param element 
+     */
     delete(element:T):Promise<any>{
         return Promise.reject('not implement');
     }
+
+    /**
+     * updates element
+     * @param element 
+     */
     update(element:T):Promise<any>{
         return Promise.reject('not implement');
     }
+    /**
+     * creates a new dataset after it applied expression on it
+     * @param expressions specifies events that will operate on the resource.
+     */
     query(...expressions:Array<any>):DataSet<T>{
         return this;
     }
-
-    then():Promise<any>{
-       return this.get();
+    /**
+     * fetches data as array from source.
+     * @returns Promise
+     */
+    then(callback,error):Promise<any>{
+       return this.get().then(callback,error);
     }
 
     public static is(dataSetable){
@@ -82,6 +110,4 @@ export class DecorateSet<T> extends DataSet<T>{
         return new DecorateSet(this.dataSet.query.apply(this.dataSet,arguments),this.observer);
     }
 }
-
-
 

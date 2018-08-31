@@ -1,23 +1,50 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Base data source for applying operations
+ */
 class DataSet {
+    /**
+     * fetches data as array from source.
+     * @param expressions specifies events that will operate on the resource.
+     */
     get(...expressions) {
         return Promise.reject('not implement');
     }
+    /**
+     * adds element to source
+     * @param element
+     */
     add(element) {
         return Promise.reject('not implement');
     }
+    /**
+     * deletes element from source
+     * @param element
+     */
     delete(element) {
         return Promise.reject('not implement');
     }
+    /**
+     * updates element
+     * @param element
+     */
     update(element) {
         return Promise.reject('not implement');
     }
+    /**
+     * creates a new dataset after it applied expression on it
+     * @param expressions specifies events that will operate on the resource.
+     */
     query(...expressions) {
         return this;
     }
-    then() {
-        return this.get();
+    /**
+     * fetches data as array from source.
+     * @returns Promise
+     */
+    then(callback, error) {
+        return this.get().then(callback, error);
     }
     static is(dataSetable) {
         if (dataSetable == null)

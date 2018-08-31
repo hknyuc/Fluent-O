@@ -1,3 +1,5 @@
+import { DataSet } from './Dataset';
+import { ODataSet } from './OData';
 import { Guid } from "./Schema";
 
 export class Operation {
@@ -317,4 +319,8 @@ export class ExpressionVisitor {
     globalMethod(globalMethod:GlobalMethod):void{
         
     }
+}
+
+export abstract class Memorize {
+  abstract apply(odataset:DataSet<any>);
 }

@@ -11,7 +11,6 @@ export class CacheSet<T> extends DecorateSet<T>{
                 self.caches = self.caches || {};
                 let query = QuerySet.get(expressions);
                 if(self.caches[query] != null){ 
-                    console.log({caching:true,expressions,response:self.caches[query]});
                     return Promise.resolve(self.caches[query]);
                 }
                 return this.next().then((response)=>{
