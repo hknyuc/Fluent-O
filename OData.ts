@@ -460,6 +460,8 @@ export class ODataSet<T> extends DataSet<T> {
                     for (let i in r) {
                         if (!(i.startsWith("@odata") || i === "value")) return false;
                     }
+                    if(r==null) return false;
+                    if(r === "") return false;
                     return r["value"] != null && Array.isArray(r["value"]);
                 }
                 if (isArray()) {

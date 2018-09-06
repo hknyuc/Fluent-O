@@ -7,7 +7,9 @@ export class HttpResponse {
     }
 
     json(): any {
+        if(this.responseText === null || this.responseText === "") return this.responseText;
         return JSON.parse(this.responseText);
+        
     }
 }
 

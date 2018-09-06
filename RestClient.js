@@ -10,6 +10,8 @@ class HttpResponse {
         return this.status >= 200 && this.status < 300;
     }
     json() {
+        if (this.responseText === null || this.responseText === "")
+            return this.responseText;
         return JSON.parse(this.responseText);
     }
 }

@@ -423,6 +423,10 @@ class ODataSet extends DataSet_1.DataSet {
                         if (!(i.startsWith("@odata") || i === "value"))
                             return false;
                     }
+                    if (r == null)
+                        return false;
+                    if (r === "")
+                        return false;
                     return r["value"] != null && Array.isArray(r["value"]);
                 };
                 if (isArray()) {
