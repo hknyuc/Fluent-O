@@ -254,7 +254,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
         props.forEach((name) => {
             if (current == null) {
                 return null;
-                throw new Error("source is null for getting " + name + " property");
+               // throw new Error("source is null for getting " + name + " property");
             }
             current = current[name];
         });
@@ -397,7 +397,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
                     if (value == null) return this.result;
                     if (value[modelMethod.name] == null) {
                         return this.result;
-                        throw new Error(modelMethod.name + " method not found in context");
+                       // throw new Error(modelMethod.name + " method not found in context");
                     }
                     this.result = Promise.resolve(value[modelMethod.name].apply(value, props));
                     return this.result;
@@ -498,7 +498,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
 
 export class MemSet extends DataSet<any>{
 
-    constructor(private source, private expressions: Array<any>) {
+    constructor(private source, private expressions: Array<any> = []) {
         super();
         this.expressions = expressions || [];
     }

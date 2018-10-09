@@ -10,6 +10,7 @@ class CacheSet extends Dataset_1.DataSet {
         this.dataset = dataset;
     }
     get(expressions) {
+        let self = this;
         this.caches = self.caches || {};
         let query = OData_1.QuerySet.get(expressions);
         if (self.caches[query] != null) {

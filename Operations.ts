@@ -1,8 +1,9 @@
+import { MapSet } from './Mapset';
 import { Guid } from './Schema';
 import { MemSet } from './MemArrayVisitor';
 import {ODataSet} from './OData';
-import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, This, SelectMany, It, Find, GlobalMethod, Method, Action, Func } from './Expressions';
-import { DecorateSet, } from './DataSet';
+import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, SelectMany, It, Find, GlobalMethod, Action, Func } from './Expressions';
+import { DecorateSet} from './DataSet';
 import {CacheSet} from './Cacheset';
 
 export class EqBinaryExtend extends EqBinary {
@@ -249,6 +250,14 @@ export class PropertyExtend extends Property {
         return this.create('and', value);
     }
 
+    all(expression):ModelMethodExtend{
+        return this.createMethod('all',expression);
+    }
+
+    any(expression):ModelMethodExtend{
+        return this.createMethod('any',expression);
+    }
+
     or(value: any): EqBinaryExtend {
         return this.create('or', value);
     }
@@ -405,6 +414,15 @@ export class SelectManyExtend extends SelectMany{
     private createMethod(name:string,...properties:Array<any>):ModelMethodExtend{
         return method.apply(this,arguments);
     }
+
+    any(expression){
+        return this.createMethod('any',expression);
+    }
+
+    all(expression){
+        return this.createMethod('all',expression);
+    }
+
     and(value: any): EqBinaryExtend {
         return this.create('and', value);
     }
@@ -779,6 +797,10 @@ export class ItExtend extends It{
         return this.create('and', value);
     }
 
+    prop(name):PropertyExtend{
+        return prop(name,this);
+    }
+
     or(value: any): EqBinaryExtend {
         return this.create('or', value);
     }
@@ -941,16 +963,16 @@ export function o(left: any, op: Operation | string, right: any): EqBinaryExtend
     return new EqBinaryExtend(new EqBinary(leftValue, opValue as any, r));
 }
 
-export function p(name: string): PropertyExtend {
-    return prop(name);
+export function p(name: string,parent?): PropertyExtend {
+    return prop(name,parent);
 }
 
 
-export function prop(name): PropertyExtend {
+export function prop(name,parent?): PropertyExtend {
     if(name == null) throw new Error('property name could not null');
     if(typeof name != "string") throw new Error('property name must string');
     if(name.indexOf('.')>=0){
-        let current = null;
+        let current = parent;
         name.split('.').forEach(function (item){
            if(current == null)
               current = new PropertyExtend(item);
@@ -959,7 +981,7 @@ export function prop(name): PropertyExtend {
 
         return current;
     }
-    return new PropertyExtend(name);
+    return new PropertyExtend(name,parent);
 }
 
 export function filter(expression: any): Filter {
@@ -1031,7 +1053,7 @@ export class FindExtend extends Find{
 
 export var $it = it();
 
-export function selectMany(name:string,parent:any){
+export function selectMany(name:string,parent?:any):SelectManyExtend{
     /*
     if(name == null) throw new Error('selectMany:name is invalid');
     if(prop == null) throw new Error('selectMany:property is invalid');
@@ -1112,7 +1134,7 @@ export class GlobalExtend {
  * @param {Array} source source is array
  * @param baseFilter is start filter
  */
-export function memset(source,baseFilter){
+export function memset(source,baseFilter?){
     let r = source == null?[]:source;
     return new MemSet(r,baseFilter);
 }
@@ -1123,7 +1145,8 @@ export function memset(source,baseFilter){
  * @param {String} raw 
  * @returns {Guid}
  */
-export function guid(raw){
+export function guid(raw: string | Guid): Guid{
+    if(raw instanceof Guid) return raw;
    return new Guid(raw);
 }
 
@@ -1153,10 +1176,31 @@ export function func(name:string,...params){
     return new Func(name,args);
 }   
 
-export function dataset(source,observer:{get:Function,add:Function,delete:Function,query:Function,update:Function,addUpdate:Function}){
+/**
+ * 
+ * DecorateSet
+ * @param source source dataset for processing
+ * @param observer operations on source
+ * @returns {DecorateSet}
+ */
+export function dataset(source,observer:{get?:Function,add?:Function,delete?:Function,update?:Function,addUpdate?:Function}){
    return new DecorateSet(source,observer);
 }
 
+/**
+ * 
+ * caches data. After fetching it is working in local.
+ * @param dataset source dataset for processing
+ */
 export function cacheset(dataset){
     return new CacheSet(dataset);
+}
+
+/**
+ * maps data after data fetched.
+ * @param source source dataset for processing
+ * @param mapFn invokes map function after data fetched
+ */
+export function mapset(source,mapFn:(item:any)=>any){
+    return new MapSet(source,mapFn);
 }

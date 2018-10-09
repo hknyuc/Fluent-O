@@ -1,5 +1,4 @@
 import { DataSet } from './Dataset';
-import { ODataSet } from './OData';
 import { Guid } from "./Schema";
 
 export class Operation {
@@ -32,6 +31,10 @@ export class InlineCount extends Method {
         super();
     }
 }
+
+
+
+
 
 export class Order extends Method {
     constructor(public property: Property, public type?: 'desc' | 'asc') {
@@ -161,7 +164,7 @@ export class Property {
 }
 
 export class It{
-
+   name:'it';
 }
 
 export class EqBinary {
@@ -319,6 +322,7 @@ export class ExpressionVisitor {
     globalMethod(globalMethod:GlobalMethod):void{
         
     }
+
 }
 
 export abstract class Memorize {

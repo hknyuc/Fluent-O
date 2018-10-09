@@ -33,23 +33,24 @@ describe('odata', function () {
 
         it('nested', function () {
             let result = QuerySet.get(select('COMPANY.NAME', 'NAME'));
-            assert.equal(result,'?$select=COMPANY.NAME,NAME');
+           // console.log(result);
+            assert.equal(result,'?$select=COMPANY/NAME,NAME');
         });
 
 
         it('select with expression',function (){
            let result = QuerySet.get(select('Customers',filter($root.eq(5))));
-           assert.equal(result,'?$select=Customers($filter=$root eq 5)');
+           assert.equal(result,'?$select=Customers($filter=($root eq 5))');
         });
 
         it('select with with expression 2',function (){
             let result = QuerySet.get(select('Customers',filter($root.selectMany('People').eq(5))));
-            assert.equal(result,'?$select=Customers($filter=$root/People eq 5)');
+            assert.equal(result,'?$select=Customers($filter=($root/People eq 5))');
         });
 
         it('select with with expression 3',function (){
             let result = QuerySet.get(select('Customers',filter($root.selectMany('People/Names').eq(5))));
-            assert.equal(result,'?$select=Customers($filter=$root/People/Names eq 5)');
+            assert.equal(result,'?$select=Customers($filter=($root/People/Names eq 5))');
         });
 
         it('more than one select are converted one',function (){
@@ -59,7 +60,7 @@ describe('odata', function () {
 
         it('more than one select are converted one2',function (){
             let result = QuerySet.get(select('Customers',filter($root.selectMany('People').eq(5))),select('VALUE'));
-            assert.equal(result,'?$select=Customers($filter=$root/People eq 5),VALUE');
+            assert.equal(result,'?$select=Customers($filter=($root/People eq 5)),VALUE');
         })
     });
 
@@ -68,29 +69,29 @@ describe('odata', function () {
             describe('types', function () {
                 it('eq int', function () {
                     let result = QuerySet.get(filter(prop('ID').eq(5)));
-                    assert.equal(result,'?$filter=ID eq 5');
+                    assert.equal(result,'?$filter=(ID eq 5)');
                 });
 
                 it('ne int', function () {
                     let result = QuerySet.get(filter(prop('ID').ne(5)));
-                    assert.equal(result,'?$filter=ID ne 5');
+                    assert.equal(result,'?$filter=(ID ne 5)');
                 });
 
                 it('eq string', function () {
                     let result = QuerySet.get(filter(prop('ID').eq('hakan')));
-                    assert.equal(result,"?$filter=ID eq 'hakan'");
+                    assert.equal(result,"?$filter=(ID eq 'hakan')");
                 });
 
                 it('eq date', function () {
                     let date = new Date();
                     let result = QuerySet.get(filter(prop('ID').eq(date)));
-                    assert.equal(result,"?$filter=ID eq d'" + date + "'");
+                    assert.equal(result,"?$filter=(ID eq " + date.toISOString()+")");
                 });
 
                 it('eq guid', function () {
                     let guid = Guid.new();
                     let result = QuerySet.get(filter(prop('ID').eq(guid)));
-                    assert.equal(result,"?$filter=ID eq g'" + guid + "'");
+                    assert.equal(result,"?$filter=(ID eq " + guid + ")");
                 });
 
                 it('prop must string', function () {
@@ -115,17 +116,17 @@ describe('odata', function () {
             describe('multi', function () {
                 it('eq-or-eq', function () {
                     let result = QuerySet.get(filter(prop('ID').eq(5).or(prop('ID').eq(7))));
-                    assert.equal(result,"?$filter=ID eq 5 or ID eq 7");
+                    assert.equal(result,"?$filter=((ID eq 5) or (ID eq 7))");
                 });
 
                 it('eq-or-ne', function () {
                     let result = QuerySet.get(filter(prop('ID').eq(5).or(prop('ID').ne(4))));
-                    assert.equal(result,"?$filter=ID eq 5 or ID ne 4");
+                    assert.equal(result,"?$filter=((ID eq 5) or (ID ne 4))");
                 });
 
                 it('eq-or-ne-and-eq', function () {
                     let result = QuerySet.get(filter(prop('ID').eq(5).or(prop('ID').ne(4)).and(o('ID', 'eq', 4))));
-                    assert.equal(result,"?$filter=ID eq 5 or ID ne 4 and ID eq 4");
+                    assert.equal(result,"?$filter=(((ID eq 5) or (ID ne 4)) and (ID eq 4))");
                 });
             });
         });
@@ -133,7 +134,7 @@ describe('odata', function () {
         describe('properties',function (){
             it('more than one filter are converted one',function (){
                let result = QuerySet.get(filter(prop('ID').eq(5)),filter(prop('NAME').eq('Hakan')));
-               assert.equal(result,"?$filter=ID eq 5 or NAME eq 'Hakan'");
+               assert.equal(result,"?$filter=((ID eq 5) and (NAME eq 'Hakan'))");
             });
         });
     });
@@ -235,15 +236,17 @@ describe('odata', function () {
     });
 
     describe('expand', function () {
+    
         it('single', function () {
             let result = QuerySet.get(expand('Customers'));
             assert.equal(result,'?$expand=Customers');
         });
 
         it('supports two entities',function (){
-          let result = QuerySet.get(expand('Customers,Personnels'));
+          let result = QuerySet.get(expand('Customers'),expand('Personnels'));
           assert.equal(result,'?$expand=Customers,Personnels');
         });
+     
 
         it('supports nested query : select',function (){
            let result = QuerySet.get(expand('Customers',select('ID')));
@@ -252,14 +255,14 @@ describe('odata', function () {
 
         it('supports nested query: filter',function (){
            let result = QuerySet.get(expand('Customers',filter(prop('ID').eq(5))));
-           assert.equal(result,'?$expand=Customers($filter=ID eq 5)');
+           assert.equal(result,'?$expand=Customers($filter=(ID eq 5))');
         });
 
         it('supports nested multi query: filter,select',function (){
            let result = QuerySet.get(expand('Customers',
                filter(prop('ID').eq(5)),
                select('ID','NAME')));
-            assert.equal(result,'?$expand=Customers($filter=ID eq 5;$select=ID,NAME)');
+            assert.equal(result,'?$expand=Customers($filter=(ID eq 5);$select=ID,NAME)');
         });
 
         it('supports nested multi query: filter,select,top',function (){
@@ -267,7 +270,7 @@ describe('odata', function () {
             filter(prop('ID').eq(5)),
             select('ID','NAME'),
             top(5)));
-         assert.equal(result,'?$expand=Customers($filter=ID eq 5;$select=ID,NAME;$top=5)');
+         assert.equal(result,'?$expand=Customers($filter=(ID eq 5);$select=ID,NAME;$top=5)');
         });
 
         it('more than one expand are converted one',function (){
@@ -290,7 +293,7 @@ describe('odata', function () {
     describe('it',function (){
        it('single',function (){
             let result = QuerySet.get($it.selectMany('Orders/Addres').count().eq(5));
-            assert.equal(result,'$it/Orders/Addres/$count eq 5');
+            assert.equal(result,'($it/Orders/Addres/$count eq 5)');
        });
     });
 
@@ -323,7 +326,7 @@ describe('odata', function () {
         it('more than selectMany support',function (){
             let result0 = $root.selectMany('Orders/Address').eq($it.selectMany('Personnel/Address'));
             let result = QuerySet.get(result0);
-            assert.equal(result,'$root/Orders/Address eq $it/Personnel/Address');
+            assert.equal(result,'($root/Orders/Address eq $it/Personnel/Address)');
         });
     });
 
@@ -365,7 +368,7 @@ describe('odata', function () {
 
         it('filter entity count',function (){
             let result = entity('Categories').get(filter(selectMany('Products').count().eq(5))).asQuery();
-            assert.equal(result,'Categories?$filter=Products/$count eq 5');
+            assert.equal(result,'Categories?$filter=(/Products/$count eq 5)');
         });
     });
 });

@@ -23,7 +23,7 @@ class Guid {
         if (value == null)
             return;
         if (typeof value != "string")
-            throw new Error('value is not guid');
+            throw new Error('value is not guid. Please check');
     }
     toString() {
         return this.value;

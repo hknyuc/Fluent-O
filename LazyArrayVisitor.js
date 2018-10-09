@@ -280,7 +280,7 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
         props.forEach((name) => {
             if (current == null) {
                 return null;
-                throw new Error("source is null for getting " + name + " property");
+                // throw new Error("source is null for getting " + name + " property");
             }
             current = current[name];
         });
@@ -348,9 +348,18 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                 return this.context.getFullYear();
             }
         };
+        let arrayFuncs = {
+            all: function (value) {
+                return this.context.every(value);
+            },
+            any: function (value) {
+                return this.context.some(value);
+            }
+        };
         return {
             string: stringFuncs,
-            date: dateFuncs
+            date: dateFuncs,
+            array: arrayFuncs
         };
     }
     globalMethod(globalMethod) {
@@ -387,11 +396,25 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
             });
         });
     }
+    /**
+     * todo : bu metotun refactoring'e ihtiyaçı var
+     * @param modelMethod
+     */
     modelMethod(modelMethod) {
         return this.getSource().then((source) => {
             return this.createMemVisitor(source).visit(modelMethod.property).then((value) => {
                 if (value == null)
                     return Promise.resolve(null);
+                if (value instanceof Array) {
+                    let methods = this.getModelMethod().array;
+                    methods["context"] = value;
+                    //parameterlerin hep expression olduğunu varsaydık.
+                    return methods[modelMethod.name].apply(value, modelMethod.args.map(prop => {
+                        return (x) => {
+                            this.createMemVisitor(x).visit(prop);
+                        };
+                    }));
+                }
                 let allProps = [];
                 let self = this;
                 modelMethod.args.forEach(function (arg) {
@@ -401,22 +424,26 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                     if (typeof value === "string") {
                         let methods = this.getModelMethod().string;
                         methods["context"] = value;
+                        /*
                         if (methods[modelMethod.name] != null) {
                             return methods[modelMethod.name].apply(methods, props);
                         }
+                        */
                         return value[modelMethod.name].apply(value, props);
                     }
                     if (value instanceof Date) {
                         let methods = this.getModelMethod().date;
                         methods["context"] = value;
+                        /*
                         if (methods[modelMethod.name] != null) {
                             return methods[modelMethod.name].apply(methods, props);
                         }
+                        */
                         return value[modelMethod.name].apply(value, props);
                     }
                     if (value[modelMethod.name] == null) {
                         return null;
-                        throw new Error(modelMethod.name + " method not found in context");
+                        // throw new Error(modelMethod.name + " method not found in context");
                     }
                     return value[modelMethod.name].apply(value, props);
                 });

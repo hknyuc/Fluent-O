@@ -43,8 +43,12 @@ export class DataSet<T>{
      * fetches data as array from source.
      * @returns Promise
      */
-    then(callback,error):Promise<any>{
-       return this.get().then(callback,error);
+    then(callback,errorCallback?):Promise<any>{
+       return this.get().then(callback,errorCallback);
+    }
+
+    map(mapFn:(element:any)=>any):Promise<any>{
+        return this.then((response)=>(response || []).map(mapFn));
     }
 
     public static is(dataSetable){
@@ -107,7 +111,7 @@ export class DecorateSet<T> extends DataSet<T>{
         }},arguments);
     }
     query(...expressions:Array<any>){
-        return new DecorateSet(this.dataSet.query.apply(this.dataSet,arguments),this.observer);
+        return new DecorateSet(this.dataSet.query.apply(this.dataSet,arguments),this.observer) as any;
     }
 }
 

@@ -161,7 +161,11 @@ export class ODataVisitor extends ExpressionVisitor {
             propertyVisitor.visit(arg.property);
             if (!propertyVisitor.visited) throw new Error("expand: invalid property :" + JSON.stringify(arg.property));
             let expressionArray = [];
+            let combineVisitor = new ODataCombineVisitor();
             arg.expressions.forEach(function (expression) {
+                combineVisitor.visit(expression);
+            });
+            combineVisitor.result.forEach(function (expression) {
                 let expVisitor = new ODataVisitor();
                 expVisitor.visit(expression);
                 if (expVisitor.visited)
@@ -217,7 +221,7 @@ export class ODataVisitor extends ExpressionVisitor {
         value.args.forEach(function (arg, index) {
             let argsVisitor = new ODataVisitor();
             argsVisitor.visit(arg);
-            if (!argsVisitor.visited) throw new Error('modelMethod: argument index of ' + index + ' could not be resolved');
+            if (!argsVisitor.visited) throw new Error('modelMethod: argument index of ' + index + ' could not be resolved :'+JSON.stringify(arg));
             argsArray.push(argsVisitor.result);
 
         });
@@ -354,8 +358,9 @@ export class ODataCombineVisitor extends ExpressionVisitor {
 
     expand(expand: Expand): void {
         this.set('expand', () => expand, (elem: Expand) => {
-            let args = elem.args.concat(expand.args);
-            return new Expand(args)
+            let args = elem.args.map(x=>x).concat(expand.args);
+            let result = new Expand(args);
+            return result;
         });
     }
 

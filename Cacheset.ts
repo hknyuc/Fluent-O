@@ -11,6 +11,7 @@ export class CacheSet<T> extends DataSet<T>{
     }
 
     get(expressions){
+        let self = this;
         this.caches = self.caches || {};
         let query = QuerySet.get(expressions);
         if(self.caches[query] != null){ 

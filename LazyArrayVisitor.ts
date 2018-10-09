@@ -294,7 +294,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
         props.forEach((name) => {
             if (current == null) {
                 return null;
-                throw new Error("source is null for getting " + name + " property");
+               // throw new Error("source is null for getting " + name + " property");
             }
             current = current[name];
         });
@@ -366,9 +366,19 @@ export class LazyArrayVisitor extends ExpressionVisitor {
             }
         }
 
+        let arrayFuncs = {
+            all: function (value){
+                return this.context.every(value);
+            },
+            any:function (value){
+                return this.context.some(value);
+            }
+        }
+
         return {
             string: stringFuncs,
-            date: dateFuncs
+            date: dateFuncs,
+            array:arrayFuncs
         }
     }
 
@@ -405,12 +415,29 @@ export class LazyArrayVisitor extends ExpressionVisitor {
             });
         });
     }
-
+/**
+ * todo : bu metotun refactoring'e ihtiyaçı var
+ * @param modelMethod 
+ */
     modelMethod(modelMethod: ModelMethod) {
        return this.getSource().then((source) => {
             return  this.createMemVisitor(source).visit(modelMethod.property).then((value) => {
                 if(value == null) return Promise.resolve(null);
+                if(value instanceof Array){
+                    let methods = this.getModelMethod().array;
+                    methods["context"] = value;
+
+                    //parameterlerin hep expression olduğunu varsaydık.
+                    return methods[modelMethod.name].apply(value,modelMethod.args.map(prop=>{
+                        return (x)=>{
+                            this.createMemVisitor(x).visit(prop);
+                        }
+                    }))
+                    
+                }
+             
                 let allProps = [];
+
                 let self = this;
                 modelMethod.args.forEach(function (arg) {
                     allProps.push(self.createMemVisitor(self.source).visit(arg));
@@ -419,23 +446,27 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                     if (typeof value === "string") {
                         let methods = this.getModelMethod().string;
                         methods["context"] = value;
+                        /*
                         if (methods[modelMethod.name] != null) {
                             return methods[modelMethod.name].apply(methods, props);
                         }
+                        */
                         return value[modelMethod.name].apply(value, props);
                     } 
                      if (value instanceof Date) {
                         let methods = this.getModelMethod().date;
                         methods["context"] = value;
+                        /*
                         if (methods[modelMethod.name] != null) {
                             return methods[modelMethod.name].apply(methods, props);
                         }
+                        */
                         return value[modelMethod.name].apply(value, props);
                     }
-                 
+
                     if (value[modelMethod.name] == null) {
                         return null;
-                        throw new Error(modelMethod.name + " method not found in context");
+                       // throw new Error(modelMethod.name + " method not found in context");
                     }
                     return value[modelMethod.name].apply(value, props);
                 });

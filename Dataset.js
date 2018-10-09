@@ -43,8 +43,11 @@ class DataSet {
      * fetches data as array from source.
      * @returns Promise
      */
-    then(callback, error) {
-        return this.get().then(callback, error);
+    then(callback, errorCallback) {
+        return this.get().then(callback, errorCallback);
+    }
+    map(mapFn) {
+        return this.then((response) => (response || []).map(mapFn));
     }
     static is(dataSetable) {
         if (dataSetable == null)

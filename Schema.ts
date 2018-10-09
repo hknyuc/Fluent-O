@@ -16,51 +16,51 @@
 }
 */
 
-export class Guid{
-    constructor(public value:string){
-        if(value == null) return;
-        if(typeof value != "string") throw new Error('value is not guid');
-        
+export class Guid {
+    constructor(public value: string) {
+        if (value == null) return;
+        if (typeof value != "string")
+            throw new Error('value is not guid. Please check');
     }
 
-    toString(){
+    toString() {
         return this.value;
     }
 
-    valueOf(){
-       return this.value;
+    valueOf() {
+        return this.value;
     }
 
-    static new():Guid{
+    static new(): Guid {
         function s4() {
             return Math.floor((1 + Math.random()) * 0x10000)
-              .toString(16)
-              .substring(1);
-          }
-          return new Guid(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
+                .toString(16)
+                .substring(1);
+        }
+        return new Guid(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
     }
 
-    static newString():string{
+    static newString(): string {
         return this.new().toString();
     }
 
-    static parse(value:any){
-        if(value instanceof Guid) return value;
+    static parse(value: any) {
+        if (value instanceof Guid) return value;
         let any = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
-        if(any)
-           return new Guid(value);
-        throw new Error(value +" is could not parse for guid");
+        if (any)
+            return new Guid(value);
+        throw new Error(value + " is could not parse for guid");
     }
 
-    static tryParse(value){
-        if(value instanceof Guid) return value;
+    static tryParse(value) {
+        if (value instanceof Guid) return value;
         let any = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
-        if(any) return new Guid(value);
+        if (any) return new Guid(value);
         return null;
     }
 }
 
 
-export class Float{
-    
+export class Float {
+
 }

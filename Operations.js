@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const Mapset_1 = require("./Mapset");
 const Schema_1 = require("./Schema");
 const MemArrayVisitor_1 = require("./MemArrayVisitor");
 const OData_1 = require("./OData");
@@ -203,6 +204,12 @@ class PropertyExtend extends Expressions_1.Property {
     and(value) {
         return this.create('and', value);
     }
+    all(expression) {
+        return this.createMethod('all', expression);
+    }
+    any(expression) {
+        return this.createMethod('any', expression);
+    }
     or(value) {
         return this.create('or', value);
     }
@@ -327,6 +334,12 @@ class SelectManyExtend extends Expressions_1.SelectMany {
     }
     createMethod(name, ...properties) {
         return method.apply(this, arguments);
+    }
+    any(expression) {
+        return this.createMethod('any', expression);
+    }
+    all(expression) {
+        return this.createMethod('all', expression);
     }
     and(value) {
         return this.create('and', value);
@@ -628,6 +641,9 @@ class ItExtend extends Expressions_1.It {
     and(value) {
         return this.create('and', value);
     }
+    prop(name) {
+        return prop(name, this);
+    }
     or(value) {
         return this.create('or', value);
     }
@@ -759,17 +775,17 @@ function o(left, op, right) {
     return new EqBinaryExtend(new Expressions_1.EqBinary(leftValue, opValue, r));
 }
 exports.o = o;
-function p(name) {
-    return prop(name);
+function p(name, parent) {
+    return prop(name, parent);
 }
 exports.p = p;
-function prop(name) {
+function prop(name, parent) {
     if (name == null)
         throw new Error('property name could not null');
     if (typeof name != "string")
         throw new Error('property name must string');
     if (name.indexOf('.') >= 0) {
-        let current = null;
+        let current = parent;
         name.split('.').forEach(function (item) {
             if (current == null)
                 current = new PropertyExtend(item);
@@ -778,7 +794,7 @@ function prop(name) {
         });
         return current;
     }
-    return new PropertyExtend(name);
+    return new PropertyExtend(name, parent);
 }
 exports.prop = prop;
 function filter(expression) {
@@ -938,6 +954,8 @@ exports.memset = memset;
  * @returns {Guid}
  */
 function guid(raw) {
+    if (raw instanceof Schema_1.Guid)
+        return raw;
     return new Schema_1.Guid(raw);
 }
 exports.guid = guid;
@@ -967,12 +985,33 @@ function func(name, ...params) {
     return new Expressions_1.Func(name, args);
 }
 exports.func = func;
+/**
+ *
+ * DecorateSet
+ * @param source source dataset for processing
+ * @param observer operations on source
+ * @returns {DecorateSet}
+ */
 function dataset(source, observer) {
     return new DataSet_1.DecorateSet(source, observer);
 }
 exports.dataset = dataset;
+/**
+ *
+ * caches data. After fetching it is working in local.
+ * @param dataset source dataset for processing
+ */
 function cacheset(dataset) {
     return new Cacheset_1.CacheSet(dataset);
 }
 exports.cacheset = cacheset;
+/**
+ * maps data after data fetched.
+ * @param source source dataset for processing
+ * @param mapFn invokes map function after data fetched
+ */
+function mapset(source, mapFn) {
+    return new Mapset_1.MapSet(source, mapFn);
+}
+exports.mapset = mapset;
 //# sourceMappingURL=Operations.js.map
