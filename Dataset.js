@@ -49,6 +49,27 @@ class DataSet {
     map(mapFn) {
         return this.then((response) => (response || []).map(mapFn));
     }
+    insertTo(params) {
+        return this.then((response) => {
+            if (Array.isArray(params) && Array.isArray(response)) {
+                response.forEach((item) => {
+                    params.push(item);
+                });
+                return params;
+            }
+            if (Array.isArray(params) && !Array.isArray(response)) {
+                params.push(response);
+                return params;
+            }
+            if (!Array.isArray(params) && !Array.isArray(response)) {
+                for (let i in response) {
+                    params[i] = response[i];
+                }
+                return params;
+            }
+            throw new Error('not support');
+        });
+    }
     static is(dataSetable) {
         if (dataSetable == null)
             return false;
@@ -80,6 +101,12 @@ class DecorateSet extends DataSet {
                 return self.dataSet.get.apply(self.dataSet, value);
             }
         }, arguments);
+    }
+    map(mapFn) {
+        return this.dataSet.map(mapFn);
+    }
+    insertTo(params) {
+        return this.dataSet.insertTo(params);
     }
     add(element) {
         if (this.observer.add == null && this.observer.addUpdate == null)

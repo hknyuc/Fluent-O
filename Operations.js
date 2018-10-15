@@ -7,6 +7,7 @@ const OData_1 = require("./OData");
 const Expressions_1 = require("./Expressions");
 const DataSet_1 = require("./DataSet");
 const Cacheset_1 = require("./Cacheset");
+const Branchset_1 = require("./Branchset");
 class EqBinaryExtend extends Expressions_1.EqBinary {
     constructor(eqBinary) {
         super(eqBinary.left, eqBinary.op, eqBinary.right);
@@ -990,7 +991,6 @@ exports.func = func;
  * DecorateSet
  * @param source source dataset for processing
  * @param observer operations on source
- * @returns {DecorateSet}
  */
 function dataset(source, observer) {
     return new DataSet_1.DecorateSet(source, observer);
@@ -1014,4 +1014,11 @@ function mapset(source, mapFn) {
     return new Mapset_1.MapSet(source, mapFn);
 }
 exports.mapset = mapset;
+/**
+ *
+ */
+function branchset(source, branchName) {
+    return new Branchset_1.Branchset(source, branchName);
+}
+exports.branchset = branchset;
 //# sourceMappingURL=Operations.js.map

@@ -1,3 +1,5 @@
+
+import { IDataSet } from './Dataset';
 import { MapSet } from './Mapset';
 import { Guid } from './Schema';
 import { MemSet } from './MemArrayVisitor';
@@ -5,6 +7,7 @@ import {ODataSet} from './OData';
 import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, SelectMany, It, Find, GlobalMethod, Action, Func } from './Expressions';
 import { DecorateSet} from './DataSet';
 import {CacheSet} from './Cacheset';
+import { Branchset } from './Branchset';
 
 export class EqBinaryExtend extends EqBinary {
     constructor(eqBinary: EqBinary) {
@@ -1181,9 +1184,8 @@ export function func(name:string,...params){
  * DecorateSet
  * @param source source dataset for processing
  * @param observer operations on source
- * @returns {DecorateSet}
  */
-export function dataset(source,observer:{get?:Function,add?:Function,delete?:Function,update?:Function,addUpdate?:Function}){
+export function dataset(source,observer:{get?:Function,add?:Function,delete?:Function,update?:Function,addUpdate?:Function}):DecorateSet<any>{
    return new DecorateSet(source,observer);
 }
 
@@ -1192,7 +1194,7 @@ export function dataset(source,observer:{get?:Function,add?:Function,delete?:Fun
  * caches data. After fetching it is working in local.
  * @param dataset source dataset for processing
  */
-export function cacheset(dataset){
+export function cacheset(dataset):CacheSet<any>{
     return new CacheSet(dataset);
 }
 
@@ -1201,6 +1203,16 @@ export function cacheset(dataset){
  * @param source source dataset for processing
  * @param mapFn invokes map function after data fetched
  */
-export function mapset(source,mapFn:(item:any)=>any){
+export function mapset(source,mapFn:(item:any)=>any):MapSet<any>{
     return new MapSet(source,mapFn);
 }
+
+
+
+/**
+ * 
+ */
+
+ export function branchset(source:IDataSet<any>,branchName:string):IDataSet<any>{
+      return new Branchset(source,branchName);
+ }

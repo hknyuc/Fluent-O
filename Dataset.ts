@@ -1,8 +1,48 @@
 
+
+export interface IDataSet<T>{
+     /**
+     * fetches data as array from source.
+     * @param expressions specifies events that will operate on the resource.
+     */
+    get(...expressions:Array<any>):Promise<any>;
+    /**
+     * adds element to source 
+     * @param element 
+     */
+    add(element:T):Promise<any>;
+    /**
+     * deletes element from source
+     * @param element 
+     */
+    delete(element:T):Promise<any>;
+
+    /**
+     * updates element
+     * @param element 
+     */
+    update(element:T):Promise<any>;
+    /**
+     * creates a new dataset after it applied expression on it
+     * @param expressions specifies events that will operate on the resource.
+     */
+    query(...expressions:Array<any>):IDataSet<T>;
+    /**
+     * fetches data as array from source.
+     * @returns Promise
+     */
+    then(callback,errorCallback?):Promise<any>;
+
+    map(mapFn:(element:any)=>any):Promise<any>;
+
+    insertTo(params:Array<any>|object):Promise<any>;
+}
+
+
 /**
  * Base data source for applying operations
  */
-export class DataSet<T>{
+export class DataSet<T> implements IDataSet<T>{
     /**
      * fetches data as array from source.
      * @param expressions specifies events that will operate on the resource.
@@ -51,6 +91,32 @@ export class DataSet<T>{
         return this.then((response)=>(response || []).map(mapFn));
     }
 
+    insertTo(params:Array<any>|object):Promise<any>{
+        return this.then((response)=>{
+             if(Array.isArray(params) && Array.isArray(response)){
+                 response.forEach((item)=>{
+                    params.push(item);
+                 });
+                 return params;
+             }
+ 
+             if(Array.isArray(params) && !Array.isArray(response)){
+                 params.push(response);
+                 return params;
+             }
+ 
+             if(!Array.isArray(params) && !Array.isArray(response)){
+                 for(let i in response){
+                     params[i] = response[i];
+                 }
+ 
+                 return params;
+             }
+             throw new Error('not support');
+        });
+     }
+ 
+
     public static is(dataSetable){
         if(dataSetable == null) return false;
         let name = "DataSet";
@@ -61,7 +127,7 @@ export class DataSet<T>{
 }
 
 export class DecorateSet<T> extends DataSet<T>{
-    constructor(public dataSet,public observer:{get?:Function,add?:Function,delete?:Function,update?:Function,addUpdate?:Function}){
+    constructor(public dataSet:DataSet<T>,public observer:{get?:Function,add?:Function,delete?:Function,update?:Function,addUpdate?:Function}){
         super();
        this.dataSet = dataSet;
     }
@@ -76,6 +142,14 @@ export class DecorateSet<T> extends DataSet<T>{
                 return self.dataSet.get.apply(self.dataSet,value);
             }
         },arguments);
+    }
+
+    map(mapFn){
+        return this.dataSet.map(mapFn);
+    }
+
+    insertTo(params){
+        return this.dataSet.insertTo(params);
     }
     add(element:T):Promise<any>{
         if(this.observer.add == null && this.observer.addUpdate == null) return this.dataSet.add.apply(this.dataSet,arguments);
