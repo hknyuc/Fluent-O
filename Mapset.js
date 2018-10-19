@@ -9,36 +9,51 @@ class MapSet extends Dataset_1.DataSet {
         this.source = source;
         this.mapFn = mapFn;
         this.expressions = expressions;
-        this.memset = null;
-    }
-    get isMemorized() {
-        return this.memset != null;
-    }
-    debug(x) {
-        return x;
     }
     createMemset(expressions) {
-        return this.source.query.apply(this.source, expressions.filter(this.noneSelect)).then((response) => {
-            let set = new MemArrayVisitor_1.MemSet(this.mapFn(response) || []);
-            set = set.query.apply(set, expressions.filter(this.onlySelect));
-            this.memset = set;
-            return {
-                set: set
-            };
-        });
+        if (typeof this.mapFn === "function") {
+            let filters = expressions.filter(this.onlySortandElimination);
+            return this.source.query.apply(this.source, expressions.filter(this.onlyRange))
+                .then((response) => {
+                let result = Array.isArray(response) ? response.map(this.mapFn) : this.mapFn(response, -1, null);
+                let set = new MemArrayVisitor_1.MemSet(result);
+                set = set.query.apply(set, expressions.filter(this.onlySelect));
+                let memset = filters.length != 0 ? set.query.apply(set, filters) : set;
+                return {
+                    set: memset
+                };
+            });
+        }
+        if (typeof this.mapFn === "string") {
+            let filters = expressions.filter(this.onlySortandElimination);
+            let exps = expressions.filter(this.onlyRange).concat(new Expressions_1.Expand([{
+                    property: new Expressions_1.Property(this.mapFn),
+                    expressions: expressions.filter(this.onlySelect)
+                }]));
+            return this.source.query.apply(this.source, exps).then((response) => {
+                let result = Array.isArray(response) ? response.map(x => x[this.mapFn]) : response[this.mapFn];
+                let set = new MemArrayVisitor_1.MemSet(result);
+                return {
+                    set: (filters.length != 0 ? set.query.apply(set, filters) : set)
+                };
+            });
+        }
+        throw new Error('Not support');
     }
     query(...expression) {
-        let exp = expression || [];
-        let expressions = [].concat(this.expressions).concat(exp);
-        return new MapSet(this.source, this.mapFn, expressions);
+        return new MapSet(this.source, this.mapFn, [].concat(this.expressions).concat(expression || []));
     }
     onlySelect(x) {
         let types = [Expressions_1.Select, Expressions_1.Expand];
         return types.some(t => x instanceof t);
     }
-    noneSelect(x) {
-        let types = [Expressions_1.Select, Expressions_1.Expand];
-        return !types.some(t => x instanceof t);
+    onlyRange(x) {
+        let types = [Expressions_1.Skip, Expressions_1.Top];
+        return types.some(t => x instanceof t);
+    }
+    onlySortandElimination(x) {
+        let types = [Expressions_1.Filter, Expressions_1.Order];
+        return types.some(t => x instanceof t);
     }
     add(item) {
         return Promise.reject('Mapset: not support add');

@@ -8,6 +8,7 @@ import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand
 import { DecorateSet} from './DataSet';
 import {CacheSet} from './Cacheset';
 import { Branchset } from './Branchset';
+import { Pipeset } from './Pipeset';
 
 export class EqBinaryExtend extends EqBinary {
     constructor(eqBinary: EqBinary) {
@@ -1137,7 +1138,7 @@ export class GlobalExtend {
  * @param {Array} source source is array
  * @param baseFilter is start filter
  */
-export function memset(source,baseFilter?){
+export function memset(source:Array<any>,baseFilter?){
     let r = source == null?[]:source;
     return new MemSet(r,baseFilter);
 }
@@ -1203,8 +1204,10 @@ export function cacheset(dataset):CacheSet<any>{
  * @param source source dataset for processing
  * @param mapFn invokes map function after data fetched
  */
-export function mapset(source,mapFn:(item:any)=>any):MapSet<any>{
-    return new MapSet(source,mapFn);
+export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any)|string,mapExFn?:(item:any,index:number,arr:Array<any>)=>any):MapSet<any>{
+    if(mapExFn == null)
+       return new MapSet(source,mapFn);
+     return new MapSet(new MapSet(source,mapFn),mapExFn);
 }
 
 
@@ -1215,4 +1218,9 @@ export function mapset(source,mapFn:(item:any)=>any):MapSet<any>{
 
  export function branchset(source:IDataSet<any>,branchName:string):IDataSet<any>{
       return new Branchset(source,branchName);
+ }
+
+
+ export function pipeset(source:IDataSet<any>,pipes:Array<(response:any)=>void>){
+     return new Pipeset(source,pipes);
  }

@@ -8,6 +8,7 @@ const Expressions_1 = require("./Expressions");
 const DataSet_1 = require("./DataSet");
 const Cacheset_1 = require("./Cacheset");
 const Branchset_1 = require("./Branchset");
+const Pipeset_1 = require("./Pipeset");
 class EqBinaryExtend extends Expressions_1.EqBinary {
     constructor(eqBinary) {
         super(eqBinary.left, eqBinary.op, eqBinary.right);
@@ -1010,8 +1011,10 @@ exports.cacheset = cacheset;
  * @param source source dataset for processing
  * @param mapFn invokes map function after data fetched
  */
-function mapset(source, mapFn) {
-    return new Mapset_1.MapSet(source, mapFn);
+function mapset(source, mapFn, mapExFn) {
+    if (mapExFn == null)
+        return new Mapset_1.MapSet(source, mapFn);
+    return new Mapset_1.MapSet(new Mapset_1.MapSet(source, mapFn), mapExFn);
 }
 exports.mapset = mapset;
 /**
@@ -1021,4 +1024,8 @@ function branchset(source, branchName) {
     return new Branchset_1.Branchset(source, branchName);
 }
 exports.branchset = branchset;
+function pipeset(source, pipes) {
+    return new Pipeset_1.Pipeset(source, pipes);
+}
+exports.pipeset = pipeset;
 //# sourceMappingURL=Operations.js.map

@@ -503,7 +503,7 @@ export class MemSet extends DataSet<any>{
         this.expressions = expressions || [];
     }
 
-    query(...expressions: any[]): DataSet<any> {
+    query(...expressions: any[]): MemSet {
         return new MemSet(this.source, this.expressions.map(x => x).concat(expressions));
     }
     get(...expressions: any[]): Promise<any> {
