@@ -1012,9 +1012,7 @@ exports.cacheset = cacheset;
  * @param mapFn invokes map function after data fetched
  */
 function mapset(source, mapFn, mapExFn) {
-    if (mapExFn == null)
-        return new Mapset_1.MapSet(source, mapFn);
-    return new Mapset_1.MapSet(new Mapset_1.MapSet(source, mapFn), mapExFn);
+    return new Mapset_1.MapSet(source, mapFn, [], mapExFn);
 }
 exports.mapset = mapset;
 /**

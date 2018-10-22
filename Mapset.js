@@ -4,11 +4,12 @@ const Dataset_1 = require("./Dataset");
 const MemArrayVisitor_1 = require("./MemArrayVisitor");
 const Expressions_1 = require("./Expressions");
 class MapSet extends Dataset_1.DataSet {
-    constructor(source, mapFn, expressions = []) {
+    constructor(source, mapFn, expressions = [], mapFnEx) {
         super();
         this.source = source;
         this.mapFn = mapFn;
         this.expressions = expressions;
+        this.mapFnEx = mapFnEx;
     }
     createMemset(expressions) {
         if (typeof this.mapFn === "function") {
@@ -31,7 +32,18 @@ class MapSet extends Dataset_1.DataSet {
                     expressions: expressions.filter(this.onlySelect)
                 }]));
             return this.source.query.apply(this.source, exps).then((response) => {
-                let result = Array.isArray(response) ? response.map(x => x[this.mapFn]) : response[this.mapFn];
+                let result = Array.isArray(response) ? response.map((x, i, array) => {
+                    let result = x[this.mapFn];
+                    if (this.mapFnEx == null)
+                        return result;
+                    return this.mapFnEx(result, x, i, array);
+                }) : () => {
+                    let result = response[this.mapFn];
+                    if (this.mapFnEx != null) {
+                        return this.mapFnEx(result, response, -1, null);
+                    }
+                    return result;
+                };
                 let set = new MemArrayVisitor_1.MemSet(result);
                 return {
                     set: (filters.length != 0 ? set.query.apply(set, filters) : set)

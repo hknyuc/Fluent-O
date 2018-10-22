@@ -1204,10 +1204,8 @@ export function cacheset(dataset):CacheSet<any>{
  * @param source source dataset for processing
  * @param mapFn invokes map function after data fetched
  */
-export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any)|string,mapExFn?:(item:any,index:number,arr:Array<any>)=>any):MapSet<any>{
-    if(mapExFn == null)
-       return new MapSet(source,mapFn);
-     return new MapSet(new MapSet(source,mapFn),mapExFn);
+export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any)|string,mapExFn?:(element:any,beforeElement:any,index:number,arr:Array<any>)=>any):MapSet<any>{
+     return new MapSet(source,mapFn,[],mapExFn);
 }
 
 

@@ -2,7 +2,7 @@ import { DataSet } from './Dataset';
 import { MemSet } from './MemArrayVisitor';
 import { Select, Expand, Filter, Top, Skip, Property, Order } from './Expressions';
 export class MapSet<T> extends DataSet<T>{
-    constructor(private source: DataSet<T>, private mapFn: ((element: T, index: number, items: T[]) => any) | string, private expressions: Array<any> = []) {
+    constructor(private source: DataSet<T>, private mapFn: ((element: T, index: number, items: T[]) => any) | string, private expressions: Array<any> = [],private mapFnEx?:((element: T, beforeElement:any, index: number, items: T[]) => any)) {
         super();
     }
 
@@ -27,7 +27,18 @@ export class MapSet<T> extends DataSet<T>{
                 expressions: expressions.filter(this.onlySelect)
             }]));
             return this.source.query.apply(this.source, exps).then((response) => {
-                let result = Array.isArray(response) ? response.map(x => x[this.mapFn as string]) : response[this.mapFn as string];
+                let result = Array.isArray(response) ? response.map((x,i,array) => {
+                    let result = x[this.mapFn as string];
+                    if(this.mapFnEx == null) return result;
+                    return this.mapFnEx(result,x,i,array);
+                }) : ()=>{
+                   let result = response[this.mapFn as string];
+                   if(this.mapFnEx != null) {
+                       return this.mapFnEx(result,response,-1,null);
+                   }
+                   return result;
+
+                };
                 let set = new MemSet(result);
                 return {
                     set: (filters.length != 0 ? set.query.apply(set,filters) : set)
