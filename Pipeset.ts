@@ -21,12 +21,18 @@ export class Pipeset<T> extends DataSet<T>{
     }
 
     get(...expression: Array<any>) {
-       return this.source.query.apply(this.source,[].concat(this.expressions).concat(expression)).then((response)=>{
-            let result = response;
-            this.pipes.forEach((pipe)=>{
-                result = pipe(result);
-            });
-            return result;
+        let getResultFromPipesAsPromise = function (pipes:Array<any>,value){
+          let pArray = [].concat(Array.isArray(pipes)?pipes:[pipes]).filter(fn=>typeof fn === "function");
+          let valuePromise = (value instanceof Promise)?value:Promise.resolve(value);
+          if(pArray.length === 0)return valuePromise;
+          return valuePromise.then((v)=>{
+              let pipefunc = pArray.pop();
+              let funcResult = pipefunc(v);
+              return getResultFromPipesAsPromise(pArray,funcResult);
+          });   
+        }
+       return this.source.query.apply(this.source,[].concat(this.expressions).concat(expression)).then((r)=>{
+          return getResultFromPipesAsPromise(this.pipes,r);
        });
     }
 }

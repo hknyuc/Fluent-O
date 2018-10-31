@@ -10,22 +10,20 @@ class CacheSet extends Dataset_1.DataSet {
         this.dataset = dataset;
     }
     get(expressions) {
-        let self = this;
-        this.caches = self.caches || {};
         let query = OData_1.QuerySet.get(expressions);
-        if (self.caches[query] != null) {
-            return Promise.resolve(self.caches[query]);
+        if (CacheSet.caches[query] != null) {
+            return Promise.resolve(CacheSet.caches[query]);
         }
         return this.dataset.get.apply(this.dataset, arguments).then((response) => {
-            self.caches[query] = response;
+            CacheSet.caches[query] = response;
             return response;
         });
     }
     query() {
         let result = new CacheSet(this.dataset.query.apply(this.dataset, arguments));
-        result.caches = this.caches;
         return result;
     }
 }
+CacheSet.caches = {};
 exports.CacheSet = CacheSet;
 //# sourceMappingURL=Cacheset.js.map
