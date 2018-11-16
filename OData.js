@@ -385,7 +385,7 @@ function idselector(ids) {
 exports.idselector = idselector;
 class ODataSet extends DataSet_1.DataSet {
     constructor(options) {
-        super();
+        super(options.expressions || []);
         this.options = options;
     }
     query(...expressions) {

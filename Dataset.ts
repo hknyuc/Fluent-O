@@ -1,6 +1,7 @@
 
 
 export interface IDataSet<T>{
+    getExpressions():Array<any>;
      /**
      * fetches data as array from source.
      * @param expressions specifies events that will operate on the resource.
@@ -43,6 +44,14 @@ export interface IDataSet<T>{
  * Base data source for applying operations
  */
 export class DataSet<T> implements IDataSet<T>{
+    protected expressions:Array<any>;
+    constructor(expressions:Array<any>){
+        this.expressions = expressions;
+     
+    }
+    getExpressions(){
+        return this.expressions;
+    }
     /**
      * fetches data as array from source.
      * @param expressions specifies events that will operate on the resource.
@@ -92,6 +101,7 @@ export class DataSet<T> implements IDataSet<T>{
     }
 
     insertTo(params:Array<any>|object):Promise<any>{
+        if(params == null) return Promise.resolve(null);
         return this.then((response)=>{
              if(Array.isArray(params) && Array.isArray(response)){
                  response.forEach((item)=>{
@@ -128,7 +138,7 @@ export class DataSet<T> implements IDataSet<T>{
 
 export class DecorateSet<T> extends DataSet<T>{
     constructor(public dataSet:DataSet<T>,public observer:{get?:Function,add?:Function,delete?:Function,update?:Function,addUpdate?:Function}){
-        super();
+        super(dataSet.getExpressions());
        this.dataSet = dataSet;
     }
     get(...expressions:Array<any>){

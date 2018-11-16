@@ -6,7 +6,7 @@ class CacheSet extends Dataset_1.DataSet {
     constructor(dataset) {
         if (dataset == null)
             throw new Error('dataset is null for caching');
-        super();
+        super(dataset.getExpressions());
         this.dataset = dataset;
     }
     get(expressions) {

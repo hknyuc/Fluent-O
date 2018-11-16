@@ -4,7 +4,7 @@ const Expressions_1 = require("./Expressions");
 const Dataset_1 = require("./Dataset");
 class Branchset extends Dataset_1.DataSet {
     constructor(source, branchName) {
-        super();
+        super(source.getExpressions());
         this.source = source;
         this.branchName = branchName;
     }

@@ -477,9 +477,8 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
 exports.MemArrayVisitor = MemArrayVisitor;
 class MemSet extends Dataset_1.DataSet {
     constructor(source, expressions = []) {
-        super();
+        super(expressions);
         this.source = source;
-        this.expressions = expressions;
         this.expressions = expressions || [];
     }
     query(...expressions) {

@@ -2,8 +2,8 @@ import { DataSet } from './Dataset';
 import { MemSet } from './MemArrayVisitor';
 import { Select, Expand, Filter, Top, Skip, Property, Order } from './Expressions';
 export class MapSet<T> extends DataSet<T>{
-    constructor(private source: DataSet<T>, private mapFn: ((element: T, index: number, items: T[]) => any) | string, private expressions: Array<any> = [],private mapFnEx?:((element: T, beforeElement:any, index: number, items: T[]) => any)) {
-        super();
+    constructor(private source: DataSet<T>, private mapFn: ((element: T, index: number, items: T[]) => any) | string, expressions: Array<any> = [],private mapFnEx?:((element: T, beforeElement:any, index: Number, items: T[]) => any)) {
+        super(expressions);
     }
 
     private createMemset(expressions) {
@@ -22,10 +22,10 @@ export class MapSet<T> extends DataSet<T>{
         }
         if (typeof this.mapFn === "string") {
             let filters = expressions.filter(this.onlySortandElimination);
-            let exps = expressions.filter(this.onlyRange).concat(new Expand([{
+            let exps = expressions.filter(this.onlyRange).concat([new Expand([{
                 property: new Property(this.mapFn),
                 expressions: expressions.filter(this.onlySelect)
-            }]));
+            }])]);
             return this.source.query.apply(this.source, exps).then((response) => {
                 let result = Array.isArray(response) ? response.map((x,i,array) => {
                     let result = x[this.mapFn as string];

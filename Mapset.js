@@ -5,10 +5,9 @@ const MemArrayVisitor_1 = require("./MemArrayVisitor");
 const Expressions_1 = require("./Expressions");
 class MapSet extends Dataset_1.DataSet {
     constructor(source, mapFn, expressions = [], mapFnEx) {
-        super();
+        super(expressions);
         this.source = source;
         this.mapFn = mapFn;
-        this.expressions = expressions;
         this.mapFnEx = mapFnEx;
     }
     createMemset(expressions) {
@@ -27,10 +26,10 @@ class MapSet extends Dataset_1.DataSet {
         }
         if (typeof this.mapFn === "string") {
             let filters = expressions.filter(this.onlySortandElimination);
-            let exps = expressions.filter(this.onlyRange).concat(new Expressions_1.Expand([{
-                    property: new Expressions_1.Property(this.mapFn),
-                    expressions: expressions.filter(this.onlySelect)
-                }]));
+            let exps = expressions.filter(this.onlyRange).concat([new Expressions_1.Expand([{
+                        property: new Expressions_1.Property(this.mapFn),
+                        expressions: expressions.filter(this.onlySelect)
+                    }])]);
             return this.source.query.apply(this.source, exps).then((response) => {
                 let result = Array.isArray(response) ? response.map((x, i, array) => {
                     let result = x[this.mapFn];

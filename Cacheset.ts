@@ -6,7 +6,7 @@ export class CacheSet<T> extends DataSet<T>{
     private dataset:DataSet<T>
     constructor(dataset:DataSet<T>){
         if(dataset == null) throw new Error('dataset is null for caching');
-        super();
+        super(dataset.getExpressions());
         this.dataset = dataset;
 
     }

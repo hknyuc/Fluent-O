@@ -421,9 +421,8 @@ export function idselector(ids: Array<string>) {
 }
 
 export class ODataSet<T> extends DataSet<T> {
-
     constructor(private options: { url: string, http?: RestClient, arrayable?: boolean, expressions?: Array<any>, primary: { type: Object, name: string } }) {
-        super();
+        super(options.expressions || []);
     }
 
     query(...expressions: any[]): DataSet<T> {

@@ -17,7 +17,7 @@
 */
 
 export class Guid {
-    constructor(public value: string) {
+    constructor(public value: String) {
         if (value == null) return;
         if (typeof value != "string")
             throw new Error('value is not guid. Please check');
@@ -40,7 +40,7 @@ export class Guid {
         return new Guid(s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4());
     }
 
-    static newString(): string {
+    static newString(): String {
         return this.new().toString();
     }
 

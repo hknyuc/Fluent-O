@@ -4,6 +4,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * Base data source for applying operations
  */
 class DataSet {
+    constructor(expressions) {
+        this.expressions = expressions;
+    }
+    getExpressions() {
+        return this.expressions;
+    }
     /**
      * fetches data as array from source.
      * @param expressions specifies events that will operate on the resource.
@@ -50,6 +56,8 @@ class DataSet {
         return this.then((response) => (response || []).map(mapFn));
     }
     insertTo(params) {
+        if (params == null)
+            return Promise.resolve(null);
         return this.then((response) => {
             if (Array.isArray(params) && Array.isArray(response)) {
                 response.forEach((item) => {
@@ -84,7 +92,7 @@ class DataSet {
 exports.DataSet = DataSet;
 class DecorateSet extends DataSet {
     constructor(dataSet, observer) {
-        super();
+        super(dataSet.getExpressions());
         this.dataSet = dataSet;
         this.observer = observer;
         this.dataSet = dataSet;
