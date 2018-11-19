@@ -450,6 +450,7 @@ export class ODataSet<T> extends DataSet<T> {
 
     get(...expressions: any[]): Promise<any> {
         let optExpressions = this.appylExpression(expressions);
+        let qs =  QuerySet.get.apply(QuerySet, optExpressions);
         let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, optExpressions));
         if (this.options.arrayable == null || this.options.arrayable === false) return result;
         let anyCount = optExpressions.some((exp) => exp instanceof Count);

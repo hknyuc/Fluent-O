@@ -1209,11 +1209,10 @@ export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any
 }
 
 
-
 /**
- * 
+ * Herhangi bir source üzerindeki objenin expend edilen propertsini tek bir source gibi kullanmak için kullanılır.
+ *
  */
-
  export function branchset(source:IDataSet<any>,branchName:string):IDataSet<any>{
       return new Branchset(source,branchName);
  }

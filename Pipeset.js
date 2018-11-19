@@ -3,13 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Dataset_1 = require("./Dataset");
 class Pipeset extends Dataset_1.DataSet {
     constructor(source, pipes, expressions = []) {
-        super();
+        super(expressions);
         this.source = source;
         this.pipes = pipes;
-        this.expressions = expressions;
     }
     query(...expression) {
         return new Pipeset(this.source, this.pipes, [].concat(this.expressions).concat(expression));
+    }
+    getExpressions() {
+        return this.expressions;
     }
     add(item) {
         return this.source.add(item);

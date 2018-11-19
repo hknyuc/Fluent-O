@@ -1,11 +1,15 @@
 import { DataSet, IDataSet } from './Dataset';
 export class Pipeset<T> extends DataSet<T>{
-    constructor(private source: IDataSet<T>,private pipes:Array<(response:any)=>any>,private expressions:Array<any> = []) {
-        super();
+    constructor(private source: IDataSet<T>,private pipes:Array<(response:any)=>any>, expressions:Array<any> = []) {
+        super(expressions);
     }
 
     query(...expression: Array<any>) {
       return new Pipeset(this.source,this.pipes,[].concat(this.expressions).concat(expression));
+    }
+
+    getExpressions(){
+        return this.expressions;
     }
 
     add(item) {

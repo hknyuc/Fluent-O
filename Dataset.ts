@@ -93,7 +93,7 @@ export class DataSet<T> implements IDataSet<T>{
      * @returns Promise
      */
     then(callback,errorCallback?):Promise<any>{
-       return this.get().then(callback,errorCallback);
+       return this.get.apply(this,[]).then(callback,errorCallback);
     }
 
     map(mapFn:(element:any)=>any):Promise<any>{

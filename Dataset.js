@@ -50,7 +50,7 @@ class DataSet {
      * @returns Promise
      */
     then(callback, errorCallback) {
-        return this.get().then(callback, errorCallback);
+        return this.get.apply(this, []).then(callback, errorCallback);
     }
     map(mapFn) {
         return this.then((response) => (response || []).map(mapFn));

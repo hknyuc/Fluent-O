@@ -411,6 +411,7 @@ class ODataSet extends DataSet_1.DataSet {
     }
     get(...expressions) {
         let optExpressions = this.appylExpression(expressions);
+        let qs = QuerySet.get.apply(QuerySet, optExpressions);
         let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, optExpressions));
         if (this.options.arrayable == null || this.options.arrayable === false)
             return result;

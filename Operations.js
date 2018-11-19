@@ -1016,6 +1016,7 @@ function mapset(source, mapFn, mapExFn) {
 }
 exports.mapset = mapset;
 /**
+ * Herhangi bir source üzerindeki objenin expend edilen propertsini tek bir source gibi kullanmak için kullanılır.
  *
  */
 function branchset(source, branchName) {
