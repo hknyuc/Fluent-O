@@ -1218,6 +1218,6 @@ export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any
  }
 
 
- export function pipeset(source:IDataSet<any>,pipes:Array<(response:any)=>void>){
-     return new Pipeset(source,pipes);
+ export function pipeset(source:IDataSet<any>){
+     return new Pipeset(source);
  }

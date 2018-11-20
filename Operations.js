@@ -1023,8 +1023,8 @@ function branchset(source, branchName) {
     return new Branchset_1.Branchset(source, branchName);
 }
 exports.branchset = branchset;
-function pipeset(source, pipes) {
-    return new Pipeset_1.Pipeset(source, pipes);
+function pipeset(source) {
+    return new Pipeset_1.Pipeset(source);
 }
 exports.pipeset = pipeset;
 //# sourceMappingURL=Operations.js.map

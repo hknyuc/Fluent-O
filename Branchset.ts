@@ -98,8 +98,10 @@ export class SelectManySet<T> extends DataSet<T>{
         }]))
             .then((response) => { // 
                 let items = BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response);
+                let allExpressions = context.expressions.concat(this.getDoubleSourceExpressions(context.expressions));
                 return new MemSet(items, //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
-                    context.expressions.concat(this.getDoubleSourceExpressions(context.expressions))).then((r) => {
+                    allExpressions).then((r) => {
+                        console.log({items,allExpressions,r})
                         return r;
                     });
             });
@@ -154,9 +156,9 @@ export class DirectBranchSet<T> extends DataSet<T>{
  *
  */
 export class Branchset<T> implements IDataSet<T>{
-    private bridge:IDataSet<any>;
+    private strategy:IDataSet<any>;
     constructor(private source:IDataSet<any>,private branchName:string,private expressions:Array<any> = []){
-        this.bridge = this.getDataset();
+        this.strategy = this.getDataset();
     }
 
     getDataset(){
@@ -169,27 +171,27 @@ export class Branchset<T> implements IDataSet<T>{
         return this.expressions;
     }
     get(...expressions: any[]): Promise<any> {
-        return this.bridge.get.apply(this.bridge,expressions);
+        return this.strategy.get.apply(this.strategy,expressions);
     }
     add(element: T): Promise<any> {
-        return this.bridge.add(element);
+        return this.strategy.add(element);
     }
     delete(element: T): Promise<any> {
-        return this.bridge.delete(element);
+        return this.strategy.delete(element);
     }
     update(element: T): Promise<any> {
-        return this.bridge.update(element);
+        return this.strategy.update(element);
     }
     query(...expressions: any[]): IDataSet<T> {
         return new Branchset(this.source,this.branchName,this.expressions.concat(expressions));
     }
     then(callback: any, errorCallback?: any): Promise<any> {
-        return this.bridge.then(callback,errorCallback);
+        return this.strategy.then(callback,errorCallback);
     }
     map(mapFn: (element: any) => any): Promise<any> {
-        return this.bridge.map(mapFn);
+        return this.strategy.map(mapFn);
     }
     insertTo(params: object | any[]): Promise<any> {
-        return this.bridge.insertTo(params);
+        return this.strategy.insertTo(params);
     }
 }

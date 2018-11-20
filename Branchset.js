@@ -91,8 +91,10 @@ class SelectManySet extends Dataset_1.DataSet {
             }]))
             .then((response) => {
             let items = BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response);
+            let allExpressions = context.expressions.concat(this.getDoubleSourceExpressions(context.expressions));
             return new MemArrayVisitor_1.MemSet(items, //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
-            context.expressions.concat(this.getDoubleSourceExpressions(context.expressions))).then((r) => {
+            allExpressions).then((r) => {
+                console.log({ items, allExpressions, r });
                 return r;
             });
         });
@@ -147,7 +149,7 @@ class Branchset {
         this.source = source;
         this.branchName = branchName;
         this.expressions = expressions;
-        this.bridge = this.getDataset();
+        this.strategy = this.getDataset();
     }
     getDataset() {
         let anyFind = this.source.getExpressions().some(x => x instanceof Expressions_1.Find);
@@ -159,28 +161,28 @@ class Branchset {
         return this.expressions;
     }
     get(...expressions) {
-        return this.bridge.get.apply(this.bridge, expressions);
+        return this.strategy.get.apply(this.strategy, expressions);
     }
     add(element) {
-        return this.bridge.add(element);
+        return this.strategy.add(element);
     }
     delete(element) {
-        return this.bridge.delete(element);
+        return this.strategy.delete(element);
     }
     update(element) {
-        return this.bridge.update(element);
+        return this.strategy.update(element);
     }
     query(...expressions) {
         return new Branchset(this.source, this.branchName, this.expressions.concat(expressions));
     }
     then(callback, errorCallback) {
-        return this.bridge.then(callback, errorCallback);
+        return this.strategy.then(callback, errorCallback);
     }
     map(mapFn) {
-        return this.bridge.map(mapFn);
+        return this.strategy.map(mapFn);
     }
     insertTo(params) {
-        return this.bridge.insertTo(params);
+        return this.strategy.insertTo(params);
     }
 }
 exports.Branchset = Branchset;
