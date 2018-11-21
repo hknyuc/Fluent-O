@@ -85,7 +85,7 @@ export class DataSet<T> implements IDataSet<T>{
      * creates a new dataset after it applied expression on it
      * @param expressions specifies events that will operate on the resource.
      */
-    query(...expressions:Array<any>):DataSet<T>{
+    query(...expressions:Array<any>):IDataSet<T>{
         return this;
     }
     /**

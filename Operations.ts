@@ -1,4 +1,4 @@
-
+import { Pointset } from './Pointset';
 import { IDataSet } from './Dataset';
 import { MapSet } from './Mapset';
 import { Guid } from './Schema';
@@ -1211,13 +1211,23 @@ export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any
 
 /**
  * Herhangi bir source üzerindeki objenin expend edilen propertsini tek bir source gibi kullanmak için kullanılır.
- *
  */
  export function branchset(source:IDataSet<any>,branchName:string):IDataSet<any>{
       return new Branchset(source,branchName);
  }
 
 
+/**
+ * Query kısmına extradan lokalde yapılan işlemler eklenebilir. O işlemden sonra diğer işlem memset üzeriden gider.
+ */
  export function pipeset(source:IDataSet<any>){
      return new Pipeset(source);
+ }
+
+ /**
+  * Query 
+  * @param source 
+  */
+ export function pointset(source:IDataSet<any>){
+     return new Pointset(source);
  }

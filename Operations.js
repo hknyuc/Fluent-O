@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const Pointset_1 = require("./Pointset");
 const Mapset_1 = require("./Mapset");
 const Schema_1 = require("./Schema");
 const MemArrayVisitor_1 = require("./MemArrayVisitor");
@@ -1017,14 +1018,24 @@ function mapset(source, mapFn, mapExFn) {
 exports.mapset = mapset;
 /**
  * Herhangi bir source üzerindeki objenin expend edilen propertsini tek bir source gibi kullanmak için kullanılır.
- *
  */
 function branchset(source, branchName) {
     return new Branchset_1.Branchset(source, branchName);
 }
 exports.branchset = branchset;
+/**
+ * Query kısmına extradan lokalde yapılan işlemler eklenebilir. O işlemden sonra diğer işlem memset üzeriden gider.
+ */
 function pipeset(source) {
     return new Pipeset_1.Pipeset(source);
 }
 exports.pipeset = pipeset;
+/**
+ * Query
+ * @param source
+ */
+function pointset(source) {
+    return new Pointset_1.Pointset(source);
+}
+exports.pointset = pointset;
 //# sourceMappingURL=Operations.js.map

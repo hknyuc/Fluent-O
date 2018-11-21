@@ -1,6 +1,9 @@
 import { MemSet } from './MemArrayVisitor';
 import { DataSet, IDataSet } from './Dataset';
 import { MemOperation } from './MemOperation';
+/**
+ * Query kısmına extradan lokalde yapılan işlemler eklenebilir. O işlemden sonra diğer işlem memset üzeriden gider.
+ */
 export class Pipeset<T> extends DataSet<T>{
     constructor(private source: IDataSet<T>, expressions: Array<any> = []) {
         super(expressions);
