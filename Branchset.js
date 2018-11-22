@@ -67,7 +67,7 @@ class SelectManySet extends Dataset_1.DataSet {
         this.usesDoubleSourceExpressions = [Expressions_1.Filter];
     }
     query(...expressions) {
-        return new SelectManySet(this.source, this.branchName, this.expressions.concat.apply(this.expressions, expressions));
+        return new SelectManySet(this.source, this.branchName, this.withOwnExpressions(expressions));
     }
     /**
      *
@@ -85,29 +85,32 @@ class SelectManySet extends Dataset_1.DataSet {
         return expressions.filter(x => this.usesDoubleSourceExpressions.some(a => x instanceof a));
     }
     getOn(context) {
+        let exps = this.escapeAfterExpressions(context.expressions).concat(this.getDoubleSourceExpressions(context.expressions));
         return context.source.get(new Expressions_1.Expand([{
                 property: new Expressions_1.Property(context.branchName),
-                expressions: this.escapeAfterExpressions(context.expressions).concat(this.getDoubleSourceExpressions(context.expressions))
+                expressions: exps
             }]))
             .then((response) => {
             let items = BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response);
             let allExpressions = context.expressions.concat(this.getDoubleSourceExpressions(context.expressions));
             return new MemArrayVisitor_1.MemSet(items, //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
             allExpressions).then((r) => {
-                console.log({ items, allExpressions, r });
                 return r;
             });
         });
     }
+    withOwnExpressions(expressions) {
+        return this.expressions.concat.apply(this.expressions, expressions);
+    }
     get(...expressions) {
-        return this.getOn(new BranchContext(this.source, this.branchName, [].concat(this.expressions).concat(expressions)));
+        return this.getOn(new BranchContext(this.source, this.branchName, this.withOwnExpressions(expressions)));
     }
     /**
      * Diğer expression da kullanılan propertleri de alarak onlarında yüklenmesini sağlar.
      * @param expressions
      */
     then(callback, errorCallback) {
-        return this.getOn(new BranchContext(this.source, this.branchName, this.expressions)).then((response) => {
+        return this.getOn(new BranchContext(this.source, this.branchName, [])).then((response) => {
             return callback(response);
         }, (error) => errorCallback || (function (a) { })(error));
     }
@@ -129,11 +132,13 @@ class DirectBranchSet extends Dataset_1.DataSet {
     get(...expressions) {
         let exps = this.escapeAfterExpressions(this.expressions.concat(expressions));
         let expsWithUsedExpressions = exps.concat(BrachsetUtility.getSelectOrExpandByUsedProperies(exps));
+        console.log({ exps, expsWithUsedExpressions });
         return this.source.get.apply(this.source, new Expressions_1.Expand([{
                 property: new Expressions_1.Property(this.branchName),
                 expressions: expsWithUsedExpressions
             }])).then((response) => {
             return new MemArrayVisitor_1.MemSet(BrachsetUtility.getPropertyAndGuaranteeResultIsArray(this.branchName, response), expsWithUsedExpressions).then((response) => {
+                console.log({ response });
                 return response;
             });
         });

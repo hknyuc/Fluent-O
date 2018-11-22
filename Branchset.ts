@@ -68,7 +68,7 @@ export class SelectManySet<T> extends DataSet<T>{
     }
 
     query(...expressions: Array<any>) {
-        return new SelectManySet(this.source, this.branchName, this.expressions.concat.apply(this.expressions, expressions));
+        return new SelectManySet(this.source, this.branchName, this.withOwnExpressions(expressions));
     }
 
     /**
@@ -92,23 +92,27 @@ export class SelectManySet<T> extends DataSet<T>{
 
 
     private getOn(context: BranchContext) {
+        let exps =  this.escapeAfterExpressions(context.expressions).concat(this.getDoubleSourceExpressions(context.expressions));
         return context.source.get(new Expand([{
             property: new Property(context.branchName),
-            expressions: this.escapeAfterExpressions(context.expressions).concat(this.getDoubleSourceExpressions(context.expressions))
+            expressions:exps
         }]))
             .then((response) => { // 
                 let items = BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response);
                 let allExpressions = context.expressions.concat(this.getDoubleSourceExpressions(context.expressions));
                 return new MemSet(items, //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
                     allExpressions).then((r) => {
-                        console.log({items,allExpressions,r})
                         return r;
                     });
             });
     }
 
+    private withOwnExpressions(expressions:Array<any>){
+        return this.expressions.concat.apply(this.expressions,expressions);
+    }
+
     get(...expressions: Array<any>) {
-        return this.getOn(new BranchContext(this.source, this.branchName, [].concat(this.expressions).concat(expressions)));
+        return this.getOn(new BranchContext(this.source, this.branchName, this.withOwnExpressions(expressions)));
     }
 
     /**
@@ -117,7 +121,7 @@ export class SelectManySet<T> extends DataSet<T>{
      */
 
     then(callback, errorCallback?): Promise<any> {
-        return this.getOn(new BranchContext(this.source, this.branchName, this.expressions)).then((response) => {
+        return this.getOn(new BranchContext(this.source, this.branchName,[])).then((response) => {
             return callback(response);
         }, (error) => errorCallback || (function (a) { })(error));
     }
@@ -139,11 +143,13 @@ export class DirectBranchSet<T> extends DataSet<T>{
     get(...expressions: Array<any>) {
         let exps = this.escapeAfterExpressions(this.expressions.concat(expressions));
         let expsWithUsedExpressions = exps.concat(BrachsetUtility.getSelectOrExpandByUsedProperies(exps));
+        console.log({exps,expsWithUsedExpressions});
         return this.source.get.apply(this.source, new Expand([{
             property: new Property(this.branchName),
             expressions: expsWithUsedExpressions
         }])).then((response) => {
             return new MemSet(BrachsetUtility.getPropertyAndGuaranteeResultIsArray(this.branchName, response), expsWithUsedExpressions).then((response) => {
+                console.log({response});
                 return response;
             });
         })

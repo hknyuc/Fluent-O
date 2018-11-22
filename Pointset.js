@@ -30,20 +30,35 @@ class Pointset extends Dataset_1.DataSet {
         let pipe = operations.pop();
         if (typeof pipe === "function") {
             return Pointset.insureAsPromise(pipe(response)).then((response) => {
-                return this.applyMemOps(operations, response);
+                return this.applyMemOps(operations, response).then((resp) => {
+                    return resp;
+                });
             });
         }
         if (pipe instanceof MemOperation_1.MemOperation)
             return Pointset.insureAsPromise(pipe.pipe(response)).then((response) => {
-                return this.applyMemOps(operations, response);
+                return this.applyMemOps(operations, response).then((resp) => {
+                    return resp;
+                });
             });
-        //expressionda olabilir.
+        //expression da olabilir.
         return new MemArrayVisitor_1.MemSet(response, [pipe]).then((resp) => {
             return resp;
         });
     }
+    withOwnExpressions(expressions) {
+        let exps = expressions || [];
+        if (this.expressions == null)
+            return exps.concat();
+        if (!Array.isArray(this.expressions)) {
+            throw new Error('expressions are not support');
+        }
+        return this.expressions.concat.apply(this.expressions, exps);
+    }
     get(...expressions) {
-        return this.datasource.get.apply(this.datasource, arguments).then((response) => {
+        let exps = this.withOwnExpressions(expressions);
+        return this.datasource.get.apply(this.datasource, exps)
+            .then((response) => {
             return this.applyMemOps(this.memOperations, response);
         });
     }
@@ -57,7 +72,7 @@ class Pointset extends Dataset_1.DataSet {
         return this.datasource.update(element);
     }
     query(...expressions) {
-        return new Pointset(this.datasource, this.expressions.concat(expressions), this.memOperations.map(x => x));
+        return new Pointset(this.datasource, this.withOwnExpressions(expressions), this.memOperations.map(x => x));
     }
 }
 exports.Pointset = Pointset;

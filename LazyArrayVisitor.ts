@@ -446,21 +446,21 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                     if (typeof value === "string") {
                         let methods = this.getModelMethod().string;
                         methods["context"] = value;
-                        /*
+                        
                         if (methods[modelMethod.name] != null) {
                             return methods[modelMethod.name].apply(methods, props);
                         }
-                        */
+                        
                         return value[modelMethod.name].apply(value, props);
                     } 
                      if (value instanceof Date) {
                         let methods = this.getModelMethod().date;
                         methods["context"] = value;
-                        /*
+                        
                         if (methods[modelMethod.name] != null) {
                             return methods[modelMethod.name].apply(methods, props);
                         }
-                        */
+                        
                         return value[modelMethod.name].apply(value, props);
                     }
 

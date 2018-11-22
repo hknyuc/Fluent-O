@@ -353,7 +353,6 @@ class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
     }
     modelMethod(modelMethod) {
         this.getSource().then((source) => {
-            let all = [];
             let visitor = this.createMemVisitor(source);
             return visitor.visit(modelMethod.property).then((value) => {
                 let allProps = [];
@@ -481,6 +480,29 @@ class MemSet extends Dataset_1.DataSet {
         this.source = source;
         this.expressions = expressions || [];
     }
+    /**
+     * İlk önce
+     */
+    static rangeExpressions(expressions) {
+        let filters = this.filterExpressions(expressions, Expressions_1.Filter);
+        filters = filters.length > 1 ? [new Expressions_1.Filter(filters.reduce((accumulator, current) => {
+                if (accumulator instanceof Expressions_1.Filter) {
+                    return new Expressions_1.EqBinary(accumulator.expression, new Expressions_1.Operation('and'), current.expression);
+                }
+                return new Expressions_1.EqBinary(accumulator, new Expressions_1.Operation('and'), current.expression);
+            }))] : filters; // combine as one
+        let orders = this.filterExpressions(expressions, Expressions_1.Order);
+        let skips = this.filterExpressions(expressions, Expressions_1.Skip);
+        let tops = this.filterExpressions(expressions, Expressions_1.Top);
+        let selects = this.filterExpressions(expressions, Expressions_1.Select);
+        selects = selects.length > 1 ? [selects.reverse().pop()] : selects; // get last
+        let expands = this.filterExpressions(expressions, Expressions_1.Expand);
+        let finds = this.filterExpressions(expressions, Expressions_1.Find);
+        return expands.concat(filters, finds, orders, skips, tops, selects);
+    }
+    static filterExpressions(expressions, type) {
+        return expressions.filter(a => a instanceof type);
+    }
     query(...expressions) {
         return new MemSet(this.source, this.expressions.map(x => x).concat(expressions));
     }
@@ -562,7 +584,7 @@ class MemSet extends Dataset_1.DataSet {
         if (expressions.length == 0)
             return Promise.resolve(source);
         let result = source;
-        let cloneExpressions = expressions.map(x => x);
+        let cloneExpressions = this.rangeExpressions(expressions.map(x => x));
         let item = cloneExpressions.pop();
         return new LazyArrayVisitor_1.LazyArrayVisitor(result, source).visit(item).then((response) => {
             return this._get(response, cloneExpressions);

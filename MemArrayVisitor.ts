@@ -1,6 +1,7 @@
 import { LazyArrayVisitor } from './LazyArrayVisitor';
-import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod } from "./Expressions";
+import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./Expressions";
 import { DataSet } from "./Dataset";
+import { o } from './Operations';
 
 export class MemArrayVisitor extends ExpressionVisitor {
     private source: any;
@@ -368,7 +369,6 @@ export class MemArrayVisitor extends ExpressionVisitor {
 
     modelMethod(modelMethod: ModelMethod) {
         this.getSource().then((source) => {
-            let all = [];
             let visitor = this.createMemVisitor(source);
             return visitor.visit(modelMethod.property).then((value) => {
                 let allProps = [];
@@ -503,12 +503,37 @@ export class MemSet extends DataSet<any>{
         this.expressions = expressions || [];
     }
 
+    /**
+     * İlk önce 
+     */
+    private static rangeExpressions(expressions:Array<any>){
+      let filters  = this.filterExpressions(expressions,Filter);
+      filters = filters.length > 1 ? [new Filter(filters.reduce((accumulator,current)=>{
+             if(accumulator instanceof Filter){
+                 return new EqBinary(accumulator.expression,new Operation('and'),current.expression);
+             }
+             return new EqBinary(accumulator,new Operation('and'),current.expression);
+      }))]:filters;// combine as one
+      let orders = this.filterExpressions(expressions,Order);
+      let skips = this.filterExpressions(expressions,Skip);
+      let tops = this.filterExpressions(expressions,Top);
+      let selects = this.filterExpressions(expressions,Select);
+      selects = selects.length > 1?[selects.reverse().pop()]:selects; // get last
+      let expands = this.filterExpressions(expressions,Expand);
+      let finds = this.filterExpressions(expressions,Find);
+      return expands.concat(filters,finds,orders,skips,tops,selects);
+    }
+
+    private static filterExpressions(expressions:Array<any>,type:any){
+        return expressions.filter(a=> a instanceof type);
+    }
+
     query(...expressions: any[]): MemSet {
         return new MemSet(this.source, this.expressions.map(x => x).concat(expressions));
     }
     get(...expressions: any[]): Promise<any> {
         let expression = this.expressions.map(x => x).concat(expressions);
-        return Promise.resolve(MemSet.get(this.source, expression));
+        return Promise.resolve(MemSet.get(this.source,expression));
     }
     add(element: any): Promise<any> {
         this.source.push(element);
@@ -584,7 +609,7 @@ export class MemSet extends DataSet<any>{
         */
         if (expressions.length == 0) return Promise.resolve(source);
         let result = source;
-        let cloneExpressions = expressions.map(x => x);
+        let cloneExpressions = this.rangeExpressions(expressions.map(x => x));
         let item = cloneExpressions.pop();
         return new LazyArrayVisitor(result, source).visit(item).then((response) => {
             return this._get(response, cloneExpressions);
