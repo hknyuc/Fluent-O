@@ -143,15 +143,11 @@ export class DirectBranchSet<T> extends DataSet<T>{
     get(...expressions: Array<any>) {
         let exps = this.escapeAfterExpressions(this.expressions.concat(expressions));
         let expsWithUsedExpressions = exps.concat(BrachsetUtility.getSelectOrExpandByUsedProperies(exps));
-        console.log({exps,expsWithUsedExpressions});
-        return this.source.get.apply(this.source, new Expand([{
+        return this.source.get.apply(this.source, [new Expand([{
             property: new Property(this.branchName),
             expressions: expsWithUsedExpressions
-        }])).then((response) => {
-            return new MemSet(BrachsetUtility.getPropertyAndGuaranteeResultIsArray(this.branchName, response), expsWithUsedExpressions).then((response) => {
-                console.log({response});
-                return response;
-            });
+        }])]).then((response) => {
+            return new MemSet(BrachsetUtility.getPropertyAndGuaranteeResultIsArray(this.branchName, response), expsWithUsedExpressions).get();
         })
     }
 }

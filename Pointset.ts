@@ -72,7 +72,7 @@ export class Pointset<T> extends DataSet<T>{
         return this.datasource.update(element);
     }
 
-    query(...expressions: any[]): IDataSet<T> {
+    query(...expressions: any[]): Pointset<T> {
         return new Pointset(this.datasource, this.withOwnExpressions(expressions), this.memOperations.map(x => x));
     }
 
