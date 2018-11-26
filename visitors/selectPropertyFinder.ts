@@ -6,6 +6,7 @@ export class SelectPropertyFinder extends ExpressionVisitor {
     }
 
     private addProperty(property: Property) {
+        if([null,''].some((a)=>property.name == a)) return;
         this.properties.push(property);
     }
 

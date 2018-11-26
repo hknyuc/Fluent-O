@@ -19,7 +19,7 @@ class BrachsetUtility {
      */
     static getPropertyAndGuaranteeResultIsArray(propName, response) {
         if (response == null)
-            return null;
+            return [];
         let results = [];
         if (Array.isArray(response)) {
             response.forEach((item) => {
@@ -56,18 +56,60 @@ class BrachsetUtility {
     }
 }
 /**
- *  Herhangi bir source üzerindeki objenin expend edilen propertsini tek bir source gibi kullanmak için kullanılır.
+ * Bütün işlemleri expand üzerinde yapar.
  */
-class SelectManySet extends Dataset_1.DataSet {
-    constructor(source, branchName, expressions = []) {
-        super(expressions);
-        this.source = source;
-        this.branchName = branchName;
+class DirectStrategy {
+    constructor() {
+        this.afterExpressions = [Expressions_1.Find];
+    }
+    escapeAfterExpressions(expressions) {
+        return expressions.filter(x => !this.afterExpressions.some(e => x instanceof e));
+    }
+    get(context) {
+        let exps = this.escapeAfterExpressions(context.expressions);
+        let expsWithUsedExpressions = exps.concat(BrachsetUtility.getSelectOrExpandByUsedProperies(exps));
+        return context.source.get.apply(context.source, [new Expressions_1.Expand([{
+                    property: new Expressions_1.Property(context.branchName),
+                    expressions: expsWithUsedExpressions
+                }])]).then((response) => {
+            return new MemArrayVisitor_1.MemSet(BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response), expsWithUsedExpressions).get();
+        });
+    }
+}
+exports.DirectStrategy = DirectStrategy;
+/**
+ * Single Side Collector
+ * Toplama işleminden sonra order,top,skip,filter işlemlerini yapar.
+ */
+class SSCollectorStrategy {
+    getExpandAndSelect(expressions) {
+        let items = [Expressions_1.Select, Expressions_1.Expand];
+        return expressions.filter(a => items.some(i => a instanceof i));
+    }
+    get(context) {
+        // let exps =  this.escapeAfterExpressions(context.expressions).concat(this.getDoubleSourceExpressions(context.expressions));
+        return context.source.get(new Expressions_1.Expand([{
+                property: new Expressions_1.Property(context.branchName),
+                expressions: this.getExpandAndSelect(context.expressions)
+            }]))
+            .then((response) => {
+            let items = BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response);
+            // let allExpressions = context.expressions.concat(this.getDoubleSourceExpressions(context.expressions));
+            return new MemArrayVisitor_1.MemSet(items || [], //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
+            context.expressions).then((r) => {
+                return r;
+            });
+        });
+    }
+}
+/**
+ * Double side filter collector.
+ * Toplama işleminden sonra ve source üzerinde order,top,skip,filter işlemlerini yapar.
+ */
+class DSFCollectorStrategy {
+    constructor() {
         this.afterExpressions = [Expressions_1.Order, Expressions_1.Top, Expressions_1.Skip, Expressions_1.Filter, Expressions_1.Find];
         this.usesDoubleSourceExpressions = [Expressions_1.Filter];
-    }
-    query(...expressions) {
-        return new SelectManySet(this.source, this.branchName, this.withOwnExpressions(expressions));
     }
     /**
      *
@@ -76,15 +118,10 @@ class SelectManySet extends Dataset_1.DataSet {
     escapeAfterExpressions(expressions) {
         return expressions.filter(x => !this.afterExpressions.some(e => x instanceof e));
     }
-    /*
-    private getAfterExpressions(expressions: Array<any>) {
-        return expressions.filter(x => this.afterExpressions.some(e => x instanceof e));
-    }
-    */
     getDoubleSourceExpressions(expressions) {
         return expressions.filter(x => this.usesDoubleSourceExpressions.some(a => x instanceof a));
     }
-    getOn(context) {
+    get(context) {
         let exps = this.escapeAfterExpressions(context.expressions).concat(this.getDoubleSourceExpressions(context.expressions));
         return context.source.get(new Expressions_1.Expand([{
                 property: new Expressions_1.Property(context.branchName),
@@ -92,99 +129,69 @@ class SelectManySet extends Dataset_1.DataSet {
             }]))
             .then((response) => {
             let items = BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response);
-            let allExpressions = context.expressions.concat(this.getDoubleSourceExpressions(context.expressions));
+            // let allExpressions = context.expressions.concat(this.getDoubleSourceExpressions(context.expressions));
             return new MemArrayVisitor_1.MemSet(items, //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
-            allExpressions).then((r) => {
+            context.expressions).then((r) => {
                 return r;
             });
         });
     }
-    withOwnExpressions(expressions) {
-        return this.expressions.concat.apply(this.expressions, expressions);
+}
+class SmartStrategy {
+    getStrategy(context) {
+        if (context.source.getExpressions().some(x => x instanceof Expressions_1.Find))
+            return new DirectStrategy();
+        return new SSCollectorStrategy();
     }
-    get(...expressions) {
-        return this.getOn(new BranchContext(this.source, this.branchName, this.withOwnExpressions(expressions)));
-    }
-    /**
-     * Diğer expression da kullanılan propertleri de alarak onlarında yüklenmesini sağlar.
-     * @param expressions
-     */
-    then(callback, errorCallback) {
-        return this.getOn(new BranchContext(this.source, this.branchName, [])).then((response) => {
-            return callback(response);
-        }, (error) => errorCallback || (function (a) { })(error));
+    get(context) {
+        return this.getStrategy(context).get(context);
     }
 }
-exports.SelectManySet = SelectManySet;
-/**
- * İki kere expression işlemi implement ediliyor. Biri sourceda biri memory de.
- */
-class DirectBranchSet extends Dataset_1.DataSet {
-    constructor(source, branchName, expressions = []) {
-        super(expressions);
-        this.source = source;
-        this.branchName = branchName;
-        this.afterExpressions = [Expressions_1.Find];
-    }
-    escapeAfterExpressions(expressions) {
-        return expressions.filter(x => !this.afterExpressions.some(e => x instanceof e));
-    }
-    get(...expressions) {
-        let exps = this.escapeAfterExpressions(this.expressions.concat(expressions));
-        let expsWithUsedExpressions = exps.concat(BrachsetUtility.getSelectOrExpandByUsedProperies(exps));
-        return this.source.get.apply(this.source, [new Expressions_1.Expand([{
-                    property: new Expressions_1.Property(this.branchName),
-                    expressions: expsWithUsedExpressions
-                }])]).then((response) => {
-            return new MemArrayVisitor_1.MemSet(BrachsetUtility.getPropertyAndGuaranteeResultIsArray(this.branchName, response), expsWithUsedExpressions).get();
-        });
-    }
-}
-exports.DirectBranchSet = DirectBranchSet;
 /**
  * Herhangi bir source üzerindeki objenin expend edilen propertsini tek bir source gibi kullanmak için kullanılır.
  *
  */
-class Branchset {
-    constructor(source, branchName, expressions = []) {
+class Branchset extends Dataset_1.DataSet {
+    constructor(source, branchName, expressions = [], strategy = new SmartStrategy()) {
+        super(expressions);
         this.source = source;
         this.branchName = branchName;
-        this.expressions = expressions;
-        this.strategy = this.getDataset();
-    }
-    getDataset() {
-        let anyFind = this.source.getExpressions().some(x => x instanceof Expressions_1.Find);
-        if (anyFind)
-            return new DirectBranchSet(this.source, this.branchName, this.expressions);
-        return new SelectManySet(this.source, this.branchName, this.expressions);
-    }
-    getExpressions() {
-        return this.expressions;
+        this.strategy = strategy;
     }
     get(...expressions) {
-        return this.strategy.get.apply(this.strategy, expressions);
+        return this.getOn(expressions);
+    }
+    getOn(expressions) {
+        let items = this.expressions.concat.apply(this.expressions, expressions);
+        return this.strategy.get(new BranchContext(this.source, this.branchName, items));
     }
     add(element) {
-        return this.strategy.add(element);
+        return this.source.add(element);
     }
     delete(element) {
-        return this.strategy.delete(element);
+        return this.source.delete(element);
     }
     update(element) {
-        return this.strategy.update(element);
+        return this.source.update(element);
     }
     query(...expressions) {
-        return new Branchset(this.source, this.branchName, this.expressions.concat(expressions));
-    }
-    then(callback, errorCallback) {
-        return this.strategy.then(callback, errorCallback);
-    }
-    map(mapFn) {
-        return this.strategy.map(mapFn);
-    }
-    insertTo(params) {
-        return this.strategy.insertTo(params);
+        return new Branchset(this.source, this.branchName, this.expressions.concat.apply(this.expressions, expressions), this.strategy);
     }
 }
+/**
+ * Double side filter collector.
+ * Toplama işleminden sonra ve source üzerinde order,top,skip,filter işlemlerini yapar.
+ */
+Branchset.DoubleSideCollector = new DSFCollectorStrategy();
+/**
+ * Single Side Collector
+ * Toplama işleminden sonra order,top,skip,filter işlemlerini yapar.
+*/
+Branchset.SingleSideCollector = new SSCollectorStrategy();
+/**
+ * Bütün işlemleri expand üzerinde yapar.
+ */
+Branchset.Direct = new DirectStrategy();
+Branchset.SmartStrategy = new SmartStrategy();
 exports.Branchset = Branchset;
 //# sourceMappingURL=Branchset.js.map

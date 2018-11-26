@@ -10,6 +10,8 @@ class SelectPropertyFinder extends Expressions_1.ExpressionVisitor {
         this.visit(filter.expression);
     }
     addProperty(property) {
+        if ([null, ''].some((a) => property.name == a))
+            return;
         this.properties.push(property);
     }
     getAsExpressions() {

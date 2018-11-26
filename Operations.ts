@@ -7,7 +7,7 @@ import {ODataSet} from './OData';
 import { Select, Filter, Count, EqBinary, Operation, Property, Top, Skip, Expand, Order, InlineCount, Value, ModelMethod, Root, SelectMany, It, Find, GlobalMethod, Action, Func } from './Expressions';
 import { DecorateSet} from './DataSet';
 import {CacheSet} from './Cacheset';
-import { Branchset } from './Branchset';
+import { Branchset, IBranchStrategy } from './Branchset';
 import { Pipeset } from './Pipeset';
 
 export class EqBinaryExtend extends EqBinary {
@@ -1211,9 +1211,10 @@ export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any
 
 /**
  * Herhangi bir source üzerindeki objenin expend edilen propertsini tek bir source gibi kullanmak için kullanılır.
+ * @param force provides order,skip,top,filter expression after data fetching
  */
- export function branchset(source:IDataSet<any>,branchName:string):IDataSet<any>{
-      return new Branchset(source,branchName);
+ export function branchset(source:IDataSet<any>,branchName:string,strategy?:IBranchStrategy):IDataSet<any>{
+      return new Branchset(source,branchName,[],strategy || Branchset.SmartStrategy);
  }
 
 

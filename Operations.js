@@ -1018,9 +1018,10 @@ function mapset(source, mapFn, mapExFn) {
 exports.mapset = mapset;
 /**
  * Herhangi bir source üzerindeki objenin expend edilen propertsini tek bir source gibi kullanmak için kullanılır.
+ * @param force provides order,skip,top,filter expression after data fetching
  */
-function branchset(source, branchName) {
-    return new Branchset_1.Branchset(source, branchName);
+function branchset(source, branchName, strategy) {
+    return new Branchset_1.Branchset(source, branchName, [], strategy || Branchset_1.Branchset.SmartStrategy);
 }
 exports.branchset = branchset;
 /**
