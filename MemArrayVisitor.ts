@@ -1,3 +1,4 @@
+import { Guid } from './Schema';
 import { LazyArrayVisitor } from './LazyArrayVisitor';
 import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./Expressions";
 import { DataSet } from "./Dataset";
@@ -255,7 +256,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
         props.forEach((name) => {
             if (current == null) {
                 return null;
-               // throw new Error("source is null for getting " + name + " property");
+                // throw new Error("source is null for getting " + name + " property");
             }
             current = current[name];
         });
@@ -397,7 +398,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
                     if (value == null) return this.result;
                     if (value[modelMethod.name] == null) {
                         return this.result;
-                       // throw new Error(modelMethod.name + " method not found in context");
+                        // throw new Error(modelMethod.name + " method not found in context");
                     }
                     this.result = Promise.resolve(value[modelMethod.name].apply(value, props));
                     return this.result;
@@ -506,26 +507,35 @@ export class MemSet extends DataSet<any>{
     /**
      * İlk önce 
      */
-    private static rangeExpressions(expressions:Array<any>){
-      let filters  = this.filterExpressions(expressions,Filter);
-      filters = filters.length > 1 ? [new Filter(filters.reduce((accumulator,current)=>{
-             if(accumulator instanceof Filter){
-                 return new EqBinary(accumulator.expression,new Operation('and'),current.expression);
-             }
-             return new EqBinary(accumulator,new Operation('and'),current.expression);
-      }))]:filters;// combine as one
-      let orders = this.filterExpressions(expressions,Order);
-      let skips = this.filterExpressions(expressions,Skip);
-      let tops = this.filterExpressions(expressions,Top);
-      let selects = this.filterExpressions(expressions,Select);
-      selects = selects.length > 1?[selects.reverse().pop()]:selects; // get last
-      let expands = this.filterExpressions(expressions,Expand);
-      let finds = this.filterExpressions(expressions,Find);
-      return expands.concat(filters,finds,orders,skips,tops,selects);
+    private static rangeExpressions(expressions: Array<any>): { expandAndSelects: Array<any>, others: Array<any> } {
+        let filters = this.filterExpressions(expressions, Filter);
+        filters = filters.length > 1 ? [new Filter(filters.reduce((accumulator, current) => {
+            if (accumulator instanceof Filter) {
+                return new EqBinary(accumulator.expression, new Operation('and'), current.expression);
+            }
+            return new EqBinary(accumulator, new Operation('and'), current.expression);
+        }))] : filters;// combine as one
+        let orders = this.filterExpressions(expressions, Order);
+        let skips = this.filterExpressions(expressions, Skip);
+        let tops = this.filterExpressions(expressions, Top);
+        let selects = this.filterExpressions(expressions, Select).reduce((accumlator: Select, c: Select) => {
+            if(accumlator == null) return null;
+            return new Select(accumlator.args.concat(c.args))
+        },null);
+        let expands = this.filterExpressions(expressions, Expand).reduce((accumulator: Expand, c: Expand) => {
+            if(accumulator == null) return null;
+            return new Expand(accumulator.args.concat(c.args))
+        },null);
+
+        let finds = this.filterExpressions(expressions, Find);
+        return {
+            expandAndSelects: [].concat(expands,selects).filter(x=> x != null),
+            others: filters.concat(orders, skips, tops, finds)
+        }
     }
 
-    private static filterExpressions(expressions:Array<any>,type:any){
-        return expressions.filter(a=> a instanceof type);
+    private static filterExpressions(expressions: Array<any>, type: any) {
+        return expressions.filter(a => a instanceof type);
     }
 
     query(...expressions: any[]): MemSet {
@@ -533,7 +543,7 @@ export class MemSet extends DataSet<any>{
     }
     get(...expressions: any[]): Promise<any> {
         let expression = this.expressions.map(x => x).concat(expressions);
-        return Promise.resolve(MemSet.get(this.source,expression));
+        return Promise.resolve(MemSet.get(this.source, expression));
     }
     add(element: any): Promise<any> {
         this.source.push(element);
@@ -541,8 +551,8 @@ export class MemSet extends DataSet<any>{
     }
 
 
-    private __getValueOf(value){
-         return value != null && typeof value.valueOf ==="function"? value.valueOf():value;
+    private __getValueOf(value) {
+        return value != null && typeof value.valueOf === "function" ? value.valueOf() : value;
     }
 
     __is(base, element: any) {
@@ -558,60 +568,100 @@ export class MemSet extends DataSet<any>{
         return Promise.resolve();
     }
     update(element: any): Promise<any> {
-        let indexOfItem = this.source.findIndex((elem) => this.__is(elem,element));
+        let indexOfItem = this.source.findIndex((elem) => this.__is(elem, element));
         if (indexOfItem === -1) return Promise.reject('element not found');
         this.source[indexOfItem] = element;
         return Promise.resolve();
+    }
+
+    static _prune(o) {
+        if (o == null) return null;
+        if (o instanceof DataSet) return null;
+        if (Array.isArray(o)) return o;
+        if (typeof o === "object") {
+            for (let i in o) {
+                o[i] = this._prune(o[i]);
+                if (o[i] == null) {
+                    delete o[i];
+                }
+            }
+        }
+        return o;
+    }
+
+    static _pruneAndGet(source, expr): Promise<any> {
+        return this._get(source, expr).then((result) => {
+            if (result == null) return null;
+            if (Array.isArray(result)) return result.map(x => this._prune(x));
+            if (typeof result === "object") {
+                return this._prune(result);
+            }
+            return result;
+        }).then((result) => {
+            if (result != null)
+                return result;
+        });
+    }
+
+    static getOnlyStucts(element) {
+        if (element == null) return;
+        let validsStructs = ["string", "boolean", "number"];
+        let validsObject = [Date, Guid];
+        let newResult = {};
+        for (let i in element) {
+            let isStruct = validsStructs.some(v => typeof element[i] === v);
+            let isObject = validsObject.some(v => element[i] instanceof v);
+            if (!isStruct && !isObject) continue;
+            newResult[i] = element[i];
+        }
+    }
+
+    private static __invokeExpandAndSelects(expand, select, index, element): Promise<{model:any,index:number}> {
+        let allp = [];
+        if (expand != null)
+            allp.push(this._get([element], [expand]));
+        if (expand == null)
+            allp.push(Promise.resolve({}));
+        if (select != null)
+            allp.push(this._get([this.getOnlyStucts(element)], [select]));
+        if (select == null)
+            allp.push(Promise.resolve(this.getOnlyStucts(element)));
+        return Promise.all(allp).then((respones) => {
+            console.log({respones});
+            return { model: Object.assign({},respones[0][0], respones[1][0]),index};
+        });
     }
 
 
     static get(source, ...expressions: any[]) {
         if (Array.isArray(expressions) && expressions.length === 1 && expressions[0] && Array.isArray(expressions[0]))
             expressions = expressions[0];
-        let expr = expressions.map(x => x).reverse();
-        let removeOdataSet = function (o) {
-            if (o == null) return null;
-            if (o instanceof DataSet) return null;
-            if (Array.isArray(o)) return o;
-            if (typeof o === "object") {
-                for (let i in o) {
-                    o[i] = removeOdataSet(o[i]);
-                    if (o[i] == null) {
-                        delete o[i];
-                    }
-                }
+        let expr = this.rangeExpressions(expressions);
+
+        return this._pruneAndGet(source, expr.others.reverse()).then((response) => {
+            let expand = this.filterExpressions(expr.expandAndSelects, Expand)[0];
+            let select = this.filterExpressions(expr.expandAndSelects, Select)[0];
+            if (Array.isArray(response)) {
+                console.log({p:response});
+               return Promise.all(response.map((element,index)=>this.__invokeExpandAndSelects(expand,select,index,element))).then((resp)=>{ 
+                   console.log({resp});
+                return resp.sort((b,n)=>b.index - n.index).map(x=>x.model);
+               });
             }
-            return o;
-        }
-      // console.log({source});
-        return this._get(source, expr).then((result) => {
-            if (result == null) return null;
-            if (Array.isArray(result)) return result.map(x => removeOdataSet(x));
-            if (typeof result === "object") {
-                return removeOdataSet(result);
-            }
-            return result;
-        }).then((result) => {
-            if(result != null)
-            return result;
+            return this.__invokeExpandAndSelects(expand,select,0,response).then((resp)=>{
+                return resp.model;
+            })
         });
+        // console.log({source});
+
     }
 
     private static _get(source, expressions: any[]) {
-        /*
-        let result = source;
-        expressions.forEach((expression) => {
-            let visitor = new MemArrayVisitor(result, source);
-            visitor.visit(expression);
-            result = visitor.result;
-        });
-        return result;
-        */
         if (expressions.length == 0) return Promise.resolve(source);
         let result = source;
-        let cloneExpressions = this.rangeExpressions(expressions.map(x => x));
-        let item = cloneExpressions.pop();
-        return new LazyArrayVisitor(result, source).visit(item).then((response) => {
+        let cloneExpressions = expressions.map(x => x);
+        let expression = cloneExpressions.pop();
+        return new LazyArrayVisitor(result, source).visit(expression).then((response) => {
             return this._get(response, cloneExpressions);
         });
     }

@@ -12,60 +12,67 @@ export class LazyArrayVisitor extends ExpressionVisitor {
         this.result = [];
         this.rootValue = root;
     }
-    private getSource() {
+    private _getSource() {
         if (this.source instanceof Promise) return this.source;
         return Promise.resolve(this.source);
     }
 
+    private getSource() {
+        return this._getSource().then((source) => {
+            return source;
+        });
+    }
+
+    /*
+    private getWithExpands(element){
+        if(element == null) return element;
+        let newResult = {};
+        for(let i in element){
+            let value = element[i];
+            if(value == null) continue;
+            if(Array.isArray(value) || typeof value === "object")
+                newResult[i] = value;
+        }
+        return newResult
+    }
+    */
+
+
     select(select: Select) {
         return this.getSource().then((source) => {
-            let fn = (source,result,property)=>{
-                let baseValue = this.__getNestedProperty(source,property);
+            let fn = (source, result, property) => {
+                let baseValue = this.__getNestedProperty(source, property);
                 /*
                 if(baseValue instanceof DataSet){
                     this.__createNestedProperty(result, property)
                     .set({});
                 }
                 */
-        
-                if(baseValue instanceof Promise){
-                    return baseValue.then((response)=>{
+
+                if (baseValue instanceof Promise) {
+                    return baseValue.then((response) => {
                         this.__createNestedProperty(result, property).set(response);
                     })
                 }
-               return Promise.resolve(this.__createNestedProperty(result,property)
-                .set(this.__getNestedProperty(source, property)));
+                return Promise.resolve(this.__createNestedProperty(result, property)
+                    .set(this.__getNestedProperty(source, property)));
             };
             let allPromise = [];
-            if (Array.isArray(source)) {
-                let newResult = [];
-                source.forEach(element => {
-                    let result = {} as any;
-                    newResult.push(result);
-                    let args = select.args.length == 0?Object.keys(element).map(x=> {
-                        return {
-                            property:new Property(x),
-                            expression:null
-                        }
-                    }):select.args;
-                    args.forEach(arg => {
-                        allPromise.push(fn(element,result,arg.property));
-                    });
+            let newResult = [];
+            source.forEach(element => {
+                let result = {} as any;
+                newResult.push(result);
+                let args = select.args.length == 0 ? Object.keys(element).map(x => {
+                    return {
+                        property: new Property(x),
+                        expression: null
+                    }
+                }) : select.args;
+                args.forEach(arg => {
+                    allPromise.push(fn(element, result, arg.property));
                 });
-                return Promise.all(allPromise).then(()=>newResult);
-            } 
-            //object
-            let result = {};
-            let args = select.args.length == 0?Object.keys(result).map(x=> {
-                return {
-                    property:new Property(x),
-                    expression:null
-                }
-            }):select.args;
-            args.forEach((arg) => {
-                allPromise.push(fn(source,result,arg.property))
             });
-            return Promise.all(allPromise).then(()=>result);
+            return Promise.all(allPromise).then(() => newResult);
         });
     }
 
@@ -87,7 +94,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
     }
 
     _selectManyArray(selectMany: SelectMany, source: Array<any>) {
-        let fn = (s)=>{
+        let fn = (s) => {
             let rs = [];
             s.forEach(element => {
                 let arr = element[selectMany.name];
@@ -103,7 +110,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
         }
         if (selectMany.parent != null) {
             let visitor = this.createMemVisitor(source);
-           return  visitor.visit(selectMany.parent).then((result)=>{
+            return visitor.visit(selectMany.parent).then((result) => {
                 if (!Array.isArray(result)) return result;
                 return fn(result);
             });
@@ -111,10 +118,10 @@ export class LazyArrayVisitor extends ExpressionVisitor {
 
         return Promise.resolve(fn(source));
 
-      
+
     }
     _selectManyObject(selectMany: SelectMany, source: Object) {
-        let fn = (s)=>{
+        let fn = (s) => {
             if (Array.isArray(s)) // array i nested
             {
                 let rs = [];
@@ -136,46 +143,46 @@ export class LazyArrayVisitor extends ExpressionVisitor {
         }
         if (selectMany.parent != null) {
             let visitor = this.createMemVisitor(source);
-           return visitor.visit(selectMany.parent).then((result)=>fn(result))
+            return visitor.visit(selectMany.parent).then((result) => fn(result))
         }
 
         return Promise.resolve(fn(source));
-      
-       // throw new Error(selectMany.name + " is not found in object");
+
+        // throw new Error(selectMany.name + " is not found in object");
     }
 
     selectMany(selectMany: SelectMany) {
         return this.getSource().then((source) => {
             if (Array.isArray(source))
                 return this._selectManyArray(selectMany, source);
-            return  this._selectManyObject(selectMany, source);
+            return this._selectManyObject(selectMany, source);
         });
     }
 
     skip(skip: Skip) {
         return this.getSource().then((source) => {
-           return source.slice(skip.value, source.length);
+            return source.slice(skip.value, source.length);
         });
     }
 
     top(top: Value) {
         return this.getSource().then((source) => {
-           return source.slice(0, top.value);
+            return source.slice(0, top.value);
         });
     }
 
     find(find: Find) {
-        let getValueOf = function (value){
-            return value != null && value.valueOf instanceof Function?value.valueOf():value;;
+        let getValueOf = function (value) {
+            return value != null && value.valueOf instanceof Function ? value.valueOf() : value;;
         }
         return this.getSource().then((source) => {
             let value = find.value;
             let result;
             if (typeof value !== "object" || (value instanceof Guid)) {
                 let v = getValueOf(value);
-                let findedResult = source.find(x => getValueOf(x.id) === v|| getValueOf(x.ID) === v || getValueOf(x.Id) === v);
-                if(findedResult != null)
-                  result = Object.assign({},findedResult);
+                let findedResult = source.find(x => getValueOf(x.id) === v || getValueOf(x.ID) === v || getValueOf(x.Id) === v);
+                if (findedResult != null)
+                    result = Object.assign({}, findedResult);
             }
             else {
                 let firstValueofObject = null;
@@ -183,10 +190,10 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                     firstValueofObject = { name: i, value: find.value[i] }
                     break;
                 }
-                if(firstValueofObject == null) throw new Error('empty find selector');
+                if (firstValueofObject == null) throw new Error('empty find selector');
                 let findedResult = source.find(x => getValueOf(x[firstValueofObject.name]) === getValueOf(firstValueofObject.value));
-                if(findedResult != null)
-                   result = Object.assign({}, findedResult);
+                if (findedResult != null)
+                    result = Object.assign({}, findedResult);
             }
             if (find.expression != null) {
                 return this.createMemVisitor(result).visit(find.expression);
@@ -294,7 +301,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
         props.forEach((name) => {
             if (current == null) {
                 return null;
-               // throw new Error("source is null for getting " + name + " property");
+                // throw new Error("source is null for getting " + name + " property");
             }
             current = current[name];
         });
@@ -367,10 +374,10 @@ export class LazyArrayVisitor extends ExpressionVisitor {
         }
 
         let arrayFuncs = {
-            all: function (value){
+            all: function (value) {
                 return this.context.every(value);
             },
-            any:function (value){
+            any: function (value) {
                 return this.context.some(value);
             }
         }
@@ -378,7 +385,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
         return {
             string: stringFuncs,
             date: dateFuncs,
-            array:arrayFuncs
+            array: arrayFuncs
         }
     }
 
@@ -415,27 +422,27 @@ export class LazyArrayVisitor extends ExpressionVisitor {
             });
         });
     }
-/**
- * todo : bu metotun refactoring'e ihtiyaçı var
- * @param modelMethod 
- */
+    /**
+     * todo : bu metotun refactoring'e ihtiyaçı var
+     * @param modelMethod 
+     */
     modelMethod(modelMethod: ModelMethod) {
-       return this.getSource().then((source) => {
-            return  this.createMemVisitor(source).visit(modelMethod.property).then((value) => {
-                if(value == null) return Promise.resolve(null);
-                if(value instanceof Array){
+        return this.getSource().then((source) => {
+            return this.createMemVisitor(source).visit(modelMethod.property).then((value) => {
+                if (value == null) return Promise.resolve(null);
+                if (value instanceof Array) {
                     let methods = this.getModelMethod().array;
                     methods["context"] = value;
 
                     //parameterlerin hep expression olduğunu varsaydık.
-                    return methods[modelMethod.name].apply(value,modelMethod.args.map(prop=>{
-                        return (x)=>{
+                    return methods[modelMethod.name].apply(value, modelMethod.args.map(prop => {
+                        return (x) => {
                             this.createMemVisitor(x).visit(prop);
                         }
                     }))
-                    
+
                 }
-             
+
                 let allProps = [];
 
                 let self = this;
@@ -446,27 +453,27 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                     if (typeof value === "string") {
                         let methods = this.getModelMethod().string;
                         methods["context"] = value;
-                        
+
                         if (methods[modelMethod.name] != null) {
                             return methods[modelMethod.name].apply(methods, props);
                         }
-                        
+
                         return value[modelMethod.name].apply(value, props);
-                    } 
-                     if (value instanceof Date) {
+                    }
+                    if (value instanceof Date) {
                         let methods = this.getModelMethod().date;
                         methods["context"] = value;
-                        
+
                         if (methods[modelMethod.name] != null) {
                             return methods[modelMethod.name].apply(methods, props);
                         }
-                        
+
                         return value[modelMethod.name].apply(value, props);
                     }
 
                     if (value[modelMethod.name] == null) {
                         return null;
-                       // throw new Error(modelMethod.name + " method not found in context");
+                        // throw new Error(modelMethod.name + " method not found in context");
                     }
                     return value[modelMethod.name].apply(value, props);
                 });
@@ -475,77 +482,76 @@ export class LazyArrayVisitor extends ExpressionVisitor {
     }
 
     value(value: Value) {
-        let fn = (v)=>{
+        let fn = (v) => {
             return v;
             /*
             if(typeof v === "function") return fn(v());
             return v;
             */
         }
-        if(value.value instanceof Promise) return fn(value.value);
+        if (value.value instanceof Promise) return fn(value.value);
         return Promise.resolve(fn(value.value));
     }
 
-    private applyExpressions(expressions,value):Promise<any>{
-        if(expressions.length === 0) return Promise.resolve(value);
-        let cloneExpression = expressions.map(x=>x).reverse();
+    private applyExpressions(expressions, value): Promise<any> {
+        if (expressions.length === 0) return Promise.resolve(value);
+        let cloneExpression = expressions.map(x => x).reverse();
         let expesssion = cloneExpression.pop();
-        return this.createMemVisitor(value).visit(expesssion).then((response)=>this.applyExpressions(cloneExpression,response));
+        return this.createMemVisitor(value).visit(expesssion).then((response) => this.applyExpressions(cloneExpression, response));
     }
 
-    isDataSet(dataSetable){
+    isDataSet(dataSetable) {
         return DataSet.is(dataSetable);
     }
 
     expand(expand: Expand) {
         return this.getSource().then((source) => {
-
-            let addValue = (baseValue,arg,oldValue,allExpands,applier)=>{
+            let addValue = (baseValue, arg, oldValue, allExpands, applier) => {
                 if (this.isDataSet(baseValue)) {
                     allExpands.push(baseValue.get.apply(baseValue, arg.expressions).then((response) => {
                         applier.set(response);
                         return response;
                     }));
                     return true;
-                }  
+                }
                 if (baseValue instanceof Promise) {
                     allExpands.push(baseValue.then((response) => {
-                        return this.applyExpressions(arg.expressions,response).then((response)=>{
+                        return this.applyExpressions(arg.expressions, response).then((response) => {
                             applier.set(response);
                         });
                     }));
                     return true;
                 }
-  
+
 
                 if (arg.expressions != null && arg.expressions.length != 0) {
-                    allExpands.push(this.applyExpressions(arg.expressions,oldValue).then((response)=>{
+                    allExpands.push(this.applyExpressions(arg.expressions, oldValue).then((response) => {
                         applier.set(response);
                         return response;
                     }))
-                  return true;
-                } 
+                    return true;
+                }
 
                 allExpands.push(Promise.resolve(applier.set(oldValue)));
             }
-            let all =[];
+            let all = [];
             let sourceIsArray = Array.isArray(source);
-            source = sourceIsArray?source:[source];
-            let newSource =  source.map(x=>Object.assign({},x));
-            source.forEach((element,index) => {
+            source = sourceIsArray ? source : [source];
+            let newSource = source.map(x => Object.assign({}, x));
+            source.forEach((element, index) => {
                 let allExpands = [];
                 let applierElement = newSource[index];
                 expand.args.forEach((arg) => {
                     let oldValue = this.__getNestedProperty(applierElement, arg.property);
-                    let baseValue = this.__getNestedProperty(element,arg.property);
+                    let baseValue = this.__getNestedProperty(element, arg.property);
                     let applier = this.__createNestedProperty(applierElement, arg.property);
-                   // console.log({arg: arg.property.name,baseValue,oldValue,applier});
-                    addValue(baseValue,arg,oldValue,allExpands,applier);
+                    // console.log({arg: arg.property.name,baseValue,oldValue,applier});
+                    addValue(baseValue, arg, oldValue, allExpands, applier);
                     return true;
                 });
                 all.push(Promise.all(allExpands));
             });
-            return Promise.all(all).then(()=>sourceIsArray?newSource:newSource[0]);
+            return Promise.all(all).then(() => sourceIsArray ? newSource : newSource[0]);
         });
     }
 
@@ -554,13 +560,13 @@ export class LazyArrayVisitor extends ExpressionVisitor {
     }
 
     eqBinary(eqBinary: EqBinary) {
-        return this.getSource().then((source)=>{
-        let leftVisitor = this.createMemVisitor(source);
-        let rightVisitor = this.createMemVisitor(source);
-        let all = [];
-        all.push(leftVisitor.visit(eqBinary.left));
-        all.push(rightVisitor.visit(eqBinary.right));
-        return  Promise.all(all).then((items)=>{
+        return this.getSource().then((source) => {
+            let leftVisitor = this.createMemVisitor(source);
+            let rightVisitor = this.createMemVisitor(source);
+            let all = [];
+            all.push(leftVisitor.visit(eqBinary.left));
+            all.push(rightVisitor.visit(eqBinary.right));
+            return Promise.all(all).then((items) => {
                 let left = items[0];
                 let right = items[1];
                 let result = null;
@@ -593,8 +599,8 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                         throw new Error(eqBinary.op.type + " is not support yet");
                 }
                 return result;
-       });
-      });
+            });
+        });
     }
 
     root(root: Root) {
@@ -602,7 +608,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
     }
 
     refExpression(refExpression: RefExpression) {
-       return this.getSource().then((source)=>this.createMemVisitor(source).visit(refExpression.expression).then((result)=>{
+        return this.getSource().then((source) => this.createMemVisitor(source).visit(refExpression.expression).then((result) => {
             if (refExpression.next != null) {
                 let visitorNext = this.createMemVisitor(result);
                 return visitorNext.visit(refExpression.next);

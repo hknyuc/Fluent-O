@@ -10,11 +10,29 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
         this.result = [];
         this.rootValue = root;
     }
-    getSource() {
+    _getSource() {
         if (this.source instanceof Promise)
             return this.source;
         return Promise.resolve(this.source);
     }
+    getSource() {
+        return this._getSource().then((source) => {
+            return source;
+        });
+    }
+    /*
+    private getWithExpands(element){
+        if(element == null) return element;
+        let newResult = {};
+        for(let i in element){
+            let value = element[i];
+            if(value == null) continue;
+            if(Array.isArray(value) || typeof value === "object")
+                newResult[i] = value;
+        }
+        return newResult
+    }
+    */
     select(select) {
         return this.getSource().then((source) => {
             let fn = (source, result, property) => {
@@ -34,35 +52,21 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                     .set(this.__getNestedProperty(source, property)));
             };
             let allPromise = [];
-            if (Array.isArray(source)) {
-                let newResult = [];
-                source.forEach(element => {
-                    let result = {};
-                    newResult.push(result);
-                    let args = select.args.length == 0 ? Object.keys(element).map(x => {
-                        return {
-                            property: new Expressions_1.Property(x),
-                            expression: null
-                        };
-                    }) : select.args;
-                    args.forEach(arg => {
-                        allPromise.push(fn(element, result, arg.property));
-                    });
+            let newResult = [];
+            source.forEach(element => {
+                let result = {};
+                newResult.push(result);
+                let args = select.args.length == 0 ? Object.keys(element).map(x => {
+                    return {
+                        property: new Expressions_1.Property(x),
+                        expression: null
+                    };
+                }) : select.args;
+                args.forEach(arg => {
+                    allPromise.push(fn(element, result, arg.property));
                 });
-                return Promise.all(allPromise).then(() => newResult);
-            }
-            //object
-            let result = {};
-            let args = select.args.length == 0 ? Object.keys(result).map(x => {
-                return {
-                    property: new Expressions_1.Property(x),
-                    expression: null
-                };
-            }) : select.args;
-            args.forEach((arg) => {
-                allPromise.push(fn(source, result, arg.property));
             });
-            return Promise.all(allPromise).then(() => result);
+            return Promise.all(allPromise).then(() => newResult);
         });
     }
     filter(filter) {
