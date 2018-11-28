@@ -1,4 +1,4 @@
-import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod } from "./Expressions";
+import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./Expressions";
 import { DataSet } from "./Dataset";
 import { Guid } from "./Schema";
 
@@ -59,7 +59,8 @@ export class LazyArrayVisitor extends ExpressionVisitor {
             };
             let allPromise = [];
             let newResult = [];
-            source.forEach(element => {
+            let aSource = new Arrayable(source);
+            aSource.forEach(element => {
                 let result = {} as any;
                 newResult.push(result);
                 let args = select.args.length == 0 ? Object.keys(element).map(x => {
@@ -72,7 +73,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                     allPromise.push(fn(element, result, arg.property));
                 });
             });
-            return Promise.all(allPromise).then(() => newResult);
+            return Promise.all(allPromise).then(() => aSource.ifArrayReturn(newResult));
         });
     }
 
@@ -493,16 +494,136 @@ export class LazyArrayVisitor extends ExpressionVisitor {
         return Promise.resolve(fn(value.value));
     }
 
-    private applyExpressions(expressions, value): Promise<any> {
-        if (expressions.length === 0) return Promise.resolve(value);
-        let cloneExpression = expressions.map(x => x).reverse();
-        let expesssion = cloneExpression.pop();
-        return this.createMemVisitor(value).visit(expesssion).then((response) => this.applyExpressions(cloneExpression, response));
+      /**
+     * İlk önce 
+     */
+    private static rangeExpressions(expressions: Array<any>): { expandAndSelects: Array<any>, others: Array<any> } {
+        let filters = this.filterExpressions(expressions, Filter);
+        filters = filters.length > 1 ? [new Filter(filters.reduce((accumulator, current) => {
+            if (accumulator instanceof Filter) {
+                return new EqBinary(accumulator.expression, new Operation('and'), current.expression);
+            }
+            return new EqBinary(accumulator, new Operation('and'), current.expression);
+        }))] : filters;// combine as one
+        let orders = this.filterExpressions(expressions, Order);
+        let skips = this.filterExpressions(expressions, Skip);
+        let tops = this.filterExpressions(expressions, Top);
+        let selects = this.filterExpressions(expressions, Select);
+        let select = selects.length == 0? null: selects.reduce((accumlator: Select, c: Select) => {
+            return new Select(accumlator.args.concat(c.args))
+        });
+        let expands = this.filterExpressions(expressions, Expand);
+        let expand = expands.length == 0?null:expands.reduce((accumulator: Expand, c: Expand) => {
+            return new Expand(accumulator.args.concat(c.args))
+        });
+
+        let finds = this.filterExpressions(expressions, Find);
+        let result = {
+            expandAndSelects: [].concat(expand,select).filter(x=> x != null),
+            others: filters.concat(orders, skips, tops, finds)
+        };
+        return result;
     }
+
+    static getOnlyStucts(element) {
+        if (element == null) return;
+        let validsStructs = ["string", "boolean", "number"];
+        let validsObject = [Date, Guid];
+        let newResult = {};
+        for (let i in element) {
+            let isStruct = validsStructs.some(v => typeof element[i] === v);
+            let isObject = validsObject.some(v => element[i] instanceof v);
+            if (!isStruct && !isObject) continue;
+            newResult[i] = element[i];
+        }
+        return newResult;
+    }
+
+
+    
+    private static __invokeExpandAndSelects(expand, select, index, element): Promise<{model:any,index:number}> {
+        let allp = [];
+        if (expand != null)
+            allp.push(this._get(element, [expand]));
+        if (expand == null)
+            allp.push(Promise.resolve({}));
+        if (select != null)
+            allp.push(this._get(this.getOnlyStucts(element), [select]));
+        if (select == null)
+            allp.push(Promise.resolve(this.getOnlyStucts(element)));
+        return Promise.all(allp).then((respones) => {
+            return { model: Object.assign({},respones[0], respones[1]),index};
+        });
+    }
+
+
+    private static filterExpressions(expressions: Array<any>, type: any) {
+        return expressions.filter(a => a instanceof type);
+    }
+
 
     isDataSet(dataSetable) {
         return DataSet.is(dataSetable);
     }
+
+    static get(source, ...expressions: any[]) {
+        if (Array.isArray(expressions) && expressions.length === 1 && expressions[0] && Array.isArray(expressions[0]))
+            expressions = expressions[0];
+        let rangeExpressions = this.rangeExpressions(expressions);
+        return this._pruneAndGet(source, rangeExpressions.others.reverse()).then((response) => {
+            let expand = this.filterExpressions(rangeExpressions.expandAndSelects, Expand)[0];
+            let select = this.filterExpressions(rangeExpressions.expandAndSelects, Select)[0];
+            if (Array.isArray(response)) {
+               return Promise.all(response.map((element,index)=>this.__invokeExpandAndSelects(expand,select,index,element))).then((resp)=>{ 
+                return resp.sort((b,n)=>b.index - n.index).map(x=>x.model);
+               });
+            }
+            return this.__invokeExpandAndSelects(expand,select,0,response).then((resp)=>{
+                if(resp == null) return resp;
+                return resp.model;
+            })
+        });
+        // console.log({source});
+
+    }
+
+    private static _get(source, expressions: any[]) {
+        if (expressions.length == 0) return Promise.resolve(source);
+        let result = source;
+        let cloneExpressions = expressions.map(x => x);
+        let expression = cloneExpressions.pop();
+        return new LazyArrayVisitor(result, source).visit(expression).then((response) => {
+            return this._get(response, cloneExpressions);
+        });
+    }
+
+    static _pruneAndGet(source, expr): Promise<any> {
+        return this._get(source, expr).then((result) => {
+            if (result == null) return null;
+            if (Array.isArray(result)) return result.map(x => this._prune(x));
+            if (typeof result === "object") 
+                return this._prune(result);
+            return result;
+        });
+    }
+
+    static _prune(o) {
+        if (o == null) return null;
+        if (o instanceof DataSet) return null;
+        if (Array.isArray(o)) return o;
+        if (typeof o === "object") {
+            for (let i in o) {
+                o[i] = this._prune(o[i]);
+                if (o[i] == null) {
+                    delete o[i];
+                }
+            }
+        }
+        return o;
+    }
+
+  
+
 
     expand(expand: Expand) {
         return this.getSource().then((source) => {
@@ -516,7 +637,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                 }
                 if (baseValue instanceof Promise) {
                     allExpands.push(baseValue.then((response) => {
-                        return this.applyExpressions(arg.expressions, response).then((response) => {
+                        return LazyArrayVisitor.get(response,arg.expressions).then((response) => {
                             applier.set(response);
                         });
                     }));
@@ -525,25 +646,28 @@ export class LazyArrayVisitor extends ExpressionVisitor {
 
 
                 if (arg.expressions != null && arg.expressions.length != 0) {
-                    allExpands.push(this.applyExpressions(arg.expressions, oldValue).then((response) => {
+                    allExpands.push(LazyArrayVisitor.get(baseValue,arg.expressions).then((response) => {
                         applier.set(response);
                         return response;
                     }))
                     return true;
                 }
 
-                allExpands.push(Promise.resolve(applier.set(oldValue)));
+                allExpands.push(Promise.resolve(applier.set(baseValue)));
             }
             let all = [];
             let sourceIsArray = Array.isArray(source);
             source = sourceIsArray ? source : [source];
-            let newSource = source.map(x => Object.assign({}, x));
+            let newSource = source.map(x => {
+                return {};
+            });
             source.forEach((element, index) => {
                 let allExpands = [];
                 let applierElement = newSource[index];
                 expand.args.forEach((arg) => {
                     let oldValue = this.__getNestedProperty(applierElement, arg.property);
                     let baseValue = this.__getNestedProperty(element, arg.property);
+                    if(baseValue == null) return true;
                     let applier = this.__createNestedProperty(applierElement, arg.property);
                     // console.log({arg: arg.property.name,baseValue,oldValue,applier});
                     addValue(baseValue, arg, oldValue, allExpands, applier);
@@ -615,5 +739,38 @@ export class LazyArrayVisitor extends ExpressionVisitor {
             }
             return result;
         }));
+    }
+}
+
+class Arrayable{
+    value:any;
+    get isArray(){
+        return Array.isArray(this.value);
+    }
+    constructor(value){
+     this.value = value;
+    }
+    
+    static is(value):Arrayable{
+        return new Arrayable(value);
+    }
+
+    ifArrayReturn(value){
+        if(this.isArray) return value;
+        return value[0];
+    }
+
+
+    private toArray():Array<any>{
+        if(this.isArray) return this.value;
+        return [this.value];
+    }
+  
+    forEach(callbackfn){
+        return this.toArray().forEach(callbackfn);
+    }
+
+    map(callbackfn){
+        return this.toArray().map(callbackfn);
     }
 }

@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Schema_1 = require("./Schema");
 const LazyArrayVisitor_1 = require("./LazyArrayVisitor");
 const Expressions_1 = require("./Expressions");
 const Dataset_1 = require("./Dataset");
@@ -481,45 +480,14 @@ class MemSet extends Dataset_1.DataSet {
         this.source = source;
         this.expressions = expressions || [];
     }
-    /**
-     * İlk önce
-     */
-    static rangeExpressions(expressions) {
-        let filters = this.filterExpressions(expressions, Expressions_1.Filter);
-        filters = filters.length > 1 ? [new Expressions_1.Filter(filters.reduce((accumulator, current) => {
-                if (accumulator instanceof Expressions_1.Filter) {
-                    return new Expressions_1.EqBinary(accumulator.expression, new Expressions_1.Operation('and'), current.expression);
-                }
-                return new Expressions_1.EqBinary(accumulator, new Expressions_1.Operation('and'), current.expression);
-            }))] : filters; // combine as one
-        let orders = this.filterExpressions(expressions, Expressions_1.Order);
-        let skips = this.filterExpressions(expressions, Expressions_1.Skip);
-        let tops = this.filterExpressions(expressions, Expressions_1.Top);
-        let selects = this.filterExpressions(expressions, Expressions_1.Select).reduce((accumlator, c) => {
-            if (accumlator == null)
-                return null;
-            return new Expressions_1.Select(accumlator.args.concat(c.args));
-        }, null);
-        let expands = this.filterExpressions(expressions, Expressions_1.Expand).reduce((accumulator, c) => {
-            if (accumulator == null)
-                return null;
-            return new Expressions_1.Expand(accumulator.args.concat(c.args));
-        }, null);
-        let finds = this.filterExpressions(expressions, Expressions_1.Find);
-        return {
-            expandAndSelects: [].concat(expands, selects).filter(x => x != null),
-            others: filters.concat(orders, skips, tops, finds)
-        };
-    }
-    static filterExpressions(expressions, type) {
-        return expressions.filter(a => a instanceof type);
-    }
     query(...expressions) {
         return new MemSet(this.source, this.expressions.map(x => x).concat(expressions));
     }
     get(...expressions) {
         let expression = this.expressions.map(x => x).concat(expressions);
-        return Promise.resolve(MemSet.get(this.source, expression));
+        return LazyArrayVisitor_1.LazyArrayVisitor.get(this.source, expression).then((response) => {
+            return response;
+        });
     }
     add(element) {
         this.source.push(element);
@@ -545,97 +513,6 @@ class MemSet extends Dataset_1.DataSet {
             return Promise.reject('element not found');
         this.source[indexOfItem] = element;
         return Promise.resolve();
-    }
-    static _prune(o) {
-        if (o == null)
-            return null;
-        if (o instanceof Dataset_1.DataSet)
-            return null;
-        if (Array.isArray(o))
-            return o;
-        if (typeof o === "object") {
-            for (let i in o) {
-                o[i] = this._prune(o[i]);
-                if (o[i] == null) {
-                    delete o[i];
-                }
-            }
-        }
-        return o;
-    }
-    static _pruneAndGet(source, expr) {
-        return this._get(source, expr).then((result) => {
-            if (result == null)
-                return null;
-            if (Array.isArray(result))
-                return result.map(x => this._prune(x));
-            if (typeof result === "object") {
-                return this._prune(result);
-            }
-            return result;
-        }).then((result) => {
-            if (result != null)
-                return result;
-        });
-    }
-    static getOnlyStucts(element) {
-        if (element == null)
-            return;
-        let validsStructs = ["string", "boolean", "number"];
-        let validsObject = [Date, Schema_1.Guid];
-        let newResult = {};
-        for (let i in element) {
-            let isStruct = validsStructs.some(v => typeof element[i] === v);
-            let isObject = validsObject.some(v => element[i] instanceof v);
-            if (!isStruct && !isObject)
-                continue;
-            newResult[i] = element[i];
-        }
-    }
-    static __invokeExpandAndSelects(expand, select, index, element) {
-        let allp = [];
-        if (expand != null)
-            allp.push(this._get([element], [expand]));
-        if (expand == null)
-            allp.push(Promise.resolve({}));
-        if (select != null)
-            allp.push(this._get([this.getOnlyStucts(element)], [select]));
-        if (select == null)
-            allp.push(Promise.resolve(this.getOnlyStucts(element)));
-        return Promise.all(allp).then((respones) => {
-            console.log({ respones });
-            return { model: Object.assign({}, respones[0][0], respones[1][0]), index };
-        });
-    }
-    static get(source, ...expressions) {
-        if (Array.isArray(expressions) && expressions.length === 1 && expressions[0] && Array.isArray(expressions[0]))
-            expressions = expressions[0];
-        let expr = this.rangeExpressions(expressions);
-        return this._pruneAndGet(source, expr.others.reverse()).then((response) => {
-            let expand = this.filterExpressions(expr.expandAndSelects, Expressions_1.Expand)[0];
-            let select = this.filterExpressions(expr.expandAndSelects, Expressions_1.Select)[0];
-            if (Array.isArray(response)) {
-                console.log({ p: response });
-                return Promise.all(response.map((element, index) => this.__invokeExpandAndSelects(expand, select, index, element))).then((resp) => {
-                    console.log({ resp });
-                    return resp.sort((b, n) => b.index - n.index).map(x => x.model);
-                });
-            }
-            return this.__invokeExpandAndSelects(expand, select, 0, response).then((resp) => {
-                return resp.model;
-            });
-        });
-        // console.log({source});
-    }
-    static _get(source, expressions) {
-        if (expressions.length == 0)
-            return Promise.resolve(source);
-        let result = source;
-        let cloneExpressions = expressions.map(x => x);
-        let expression = cloneExpressions.pop();
-        return new LazyArrayVisitor_1.LazyArrayVisitor(result, source).visit(expression).then((response) => {
-            return this._get(response, cloneExpressions);
-        });
     }
 }
 exports.MemSet = MemSet;

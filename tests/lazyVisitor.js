@@ -274,7 +274,7 @@ describe("lazy", function () {
         });
     });
     
-        describe("selectMany", function () {
+    describe("selectMany", function () {
             it("single in filter", function (done) {
                 memset.get(self.createArray(), filter($it.selectMany("users").count().eq(3))).then((result) => {
                     assert.equal(Array.isArray(result), true);
@@ -385,7 +385,6 @@ describe("lazy", function () {
             }
 
             memset.get([obj],expand('name')).then((result)=>{
-                console.log({name:result.name});
                 done();
             });
         })
