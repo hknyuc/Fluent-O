@@ -1,3 +1,4 @@
+import { ChangeSet } from './ChangeSet';
 import { Pointset } from './Pointset';
 import { IDataSet } from './Dataset';
 import { MapSet } from './Mapset';
@@ -1231,4 +1232,13 @@ export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any
   */
  export function pointset(source:IDataSet<any>){
      return new Pointset(source);
+ }
+
+ /**
+   *Observes when element is adding,added,updating,updated,deleting,deleted.
+  * @param source which is will observe
+  * @returns {ChangeSet}
+  */
+ export function changeset<T>(source:IDataSet<T>):ChangeSet<T>{
+     return new ChangeSet(source);
  }

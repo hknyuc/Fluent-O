@@ -23,14 +23,16 @@ class ODataVisitor extends Expressions_1.ExpressionVisitor {
     }
     action(action) {
         let result = "/" + action.name;
+        /*
         let params = [];
-        action.parameters.forEach((param) => {
+        action.parameters.forEach((param)=>{
             let visitor = new ODataVisitor();
             visitor.visit(visitor.result);
             params.push(param);
-        });
-        if (params.length != 0)
-            result += "(" + params.join(',') + ")";
+        })
+        if(params.length != 0)
+           result += "("+ params.join(',') +")";
+           */
         this.set(result);
     }
     func(func) {
@@ -409,10 +411,31 @@ class ODataSet extends DataSet_1.DataSet {
         ;
         return Array.isArray(optExpressions) ? optExpressions.map(x => x).concat(expressions) : expressions.map(x => x);
     }
+    getBody(expressions) {
+        let body = expressions.filter(x => x instanceof Expressions_1.Action).map(x => x.parameters).reduce((c, n) => {
+            return c.concat(n);
+        }, []).reduce((c, n) => {
+            return new Expressions_1.Value(Object.assign({}, c.value, n.value));
+        }, new Expressions_1.Value({}));
+        return body.value;
+    }
+    anyBody(expressions) {
+        return expressions.some(a => a instanceof Expressions_1.Action);
+    }
+    getMethod(expressions) {
+        if (this.anyBody(expressions))
+            return this.createHttp().post;
+        return this.createHttp().get;
+    }
+    invokeHttpMethod(expressions) {
+        let http = this.createHttp();
+        let fn = this.anyBody(expressions) ? http.post : http.get;
+        let result = fn.apply(http, [this.options.url + QuerySet.get.apply(QuerySet, expressions), this.getBody(expressions)]);
+        return result;
+    }
     get(...expressions) {
         let optExpressions = this.appylExpression(expressions);
-        let qs = QuerySet.get.apply(QuerySet, optExpressions);
-        let result = this.createHttp().get(this.options.url + QuerySet.get.apply(QuerySet, optExpressions));
+        let result = this.invokeHttpMethod(optExpressions);
         if (this.options.arrayable == null || this.options.arrayable === false)
             return result;
         let anyCount = optExpressions.some((exp) => exp instanceof Expressions_1.Count);

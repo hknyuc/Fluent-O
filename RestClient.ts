@@ -1,3 +1,4 @@
+import { ILogger } from './logs/ILogger';
 export class HttpResponse {
     get isSuccess(){
         return this.status >= 200 && this.status< 300;
@@ -73,6 +74,11 @@ export class RestClient {
                 for (let i in cloneHeader) {
                     xhttp.setRequestHeader(i, cloneHeader[i]);
                 }
+                xhttp.timeout = 240000; // 4dk
+                xhttp.ontimeout = function (e) {
+                    // XMLHttpRequest timed out. Do something here.
+                    reject(self.invokePipe(new HttpResponse("Request Timeout", self.getHeaders(this.getAllResponseHeaders()), this.status)));
+                  };
                 xhttp.onreadystatechange = function () {
                     if (this.readyState != 4) return;
                     if (this.status >= 200 && this.status < 300) {
@@ -102,3 +108,61 @@ export class RestClient {
         return headerMap;
     }
 }
+
+export class TrackingClient extends RestClient {
+   constructor( private restClient:RestClient,private logger:ILogger){
+     super(restClient.creator)
+   }
+
+   private calculateTimeString(interval:number){
+    let minutes = Math.floor(interval / 60000);
+    let seconds = parseInt(((interval % 60000) / 1000).toFixed(0));
+    return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+   }
+
+   create(method:string,url:string,data:any,headers){
+       let now = Date.now()
+      return this.logger.info({
+          "id":now,
+          "type":"request",
+          [method]: {
+              url,
+              data,
+              headers
+          }
+      }).then(()=>{
+        return this.restClient.create(method,url,data,headers).then((response)=>{
+                return this.logger.info({
+                    "id":now,
+                    "type":"response",
+                    time: this.calculateTimeString(Date.now() - now),
+                    [method]: {
+                        url,
+                        data,
+                        headers,
+                        response
+                    }
+                }).then(()=>{
+                    return response;
+                });
+        },(errors)=>{
+            return this.logger.error({
+                "id":now,
+                "type":"error",
+                time: this.calculateTimeString(Date.now() - now),
+                [method]: {
+                    url,
+                    data,
+                    headers,
+                    errors
+                }
+            }).then(()=>{
+                return errors;
+            });
+        }); 
+      });
+   }
+}
+
+
+

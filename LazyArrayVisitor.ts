@@ -516,25 +516,31 @@ export class LazyArrayVisitor extends ExpressionVisitor {
         let expand = expands.length == 0?null:expands.reduce((accumulator: Expand, c: Expand) => {
             return new Expand(accumulator.args.concat(c.args))
         });
-
         let finds = this.filterExpressions(expressions, Find);
+        let counts = this.filterExpressions(expressions,Count);
         let result = {
             expandAndSelects: [].concat(expand,select).filter(x=> x != null),
-            others: filters.concat(orders, skips, tops, finds)
+            others: filters.concat(orders, skips, tops,counts, finds)
         };
         return result;
     }
 
     static getOnlyStucts(element) {
         if (element == null) return;
-        let validsStructs = ["string", "boolean", "number"];
+        let validsStructs = ["string", "boolean", "number","function"];
         let validsObject = [Date, Guid];
         let newResult = {};
         for (let i in element) {
             let isStruct = validsStructs.some(v => typeof element[i] === v);
             let isObject = validsObject.some(v => element[i] instanceof v);
             if (!isStruct && !isObject) continue;
-            newResult[i] = element[i];
+            if(typeof element[i] === "function"){ // fonksiyon varsa kopyalasın
+                newResult[i] = function (){
+                    return element[i].apply(newResult,arguments);
+                }
+            }else{
+               newResult[i] = element[i];
+            }
         }
         return newResult;
     }
@@ -578,6 +584,8 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                 return resp.sort((b,n)=>b.index - n.index).map(x=>x.model);
                });
             }
+            if(response == null) return response;
+            if(typeof response === "number") return response; // count gelirse
             return this.__invokeExpandAndSelects(expand,select,0,response).then((resp)=>{
                 if(resp == null) return resp;
                 return resp.model;

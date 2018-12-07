@@ -486,16 +486,17 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
             return new Expressions_1.Expand(accumulator.args.concat(c.args));
         });
         let finds = this.filterExpressions(expressions, Expressions_1.Find);
+        let counts = this.filterExpressions(expressions, Expressions_1.Count);
         let result = {
             expandAndSelects: [].concat(expand, select).filter(x => x != null),
-            others: filters.concat(orders, skips, tops, finds)
+            others: filters.concat(orders, skips, tops, counts, finds)
         };
         return result;
     }
     static getOnlyStucts(element) {
         if (element == null)
             return;
-        let validsStructs = ["string", "boolean", "number"];
+        let validsStructs = ["string", "boolean", "number", "function"];
         let validsObject = [Date, Schema_1.Guid];
         let newResult = {};
         for (let i in element) {
@@ -503,7 +504,14 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
             let isObject = validsObject.some(v => element[i] instanceof v);
             if (!isStruct && !isObject)
                 continue;
-            newResult[i] = element[i];
+            if (typeof element[i] === "function") { // fonksiyon varsa kopyalasın
+                newResult[i] = function () {
+                    return element[i].apply(newResult, arguments);
+                };
+            }
+            else {
+                newResult[i] = element[i];
+            }
         }
         return newResult;
     }
@@ -539,6 +547,10 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
                     return resp.sort((b, n) => b.index - n.index).map(x => x.model);
                 });
             }
+            if (response == null)
+                return response;
+            if (typeof response === "number")
+                return response; // count gelirse
             return this.__invokeExpandAndSelects(expand, select, 0, response).then((resp) => {
                 if (resp == null)
                     return resp;

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const ChangeSet_1 = require("./ChangeSet");
 const Pointset_1 = require("./Pointset");
 const Mapset_1 = require("./Mapset");
 const Schema_1 = require("./Schema");
@@ -1039,4 +1040,13 @@ function pointset(source) {
     return new Pointset_1.Pointset(source);
 }
 exports.pointset = pointset;
+/**
+  *Observes when element is adding,added,updating,updated,deleting,deleted.
+ * @param source which is will observe
+ * @returns {ChangeSet}
+ */
+function changeset(source) {
+    return new ChangeSet_1.ChangeSet(source);
+}
+exports.changeset = changeset;
 //# sourceMappingURL=Operations.js.map
