@@ -10,6 +10,21 @@ export class CacheSet<T> extends DataSet<T>{
         this.dataset = dataset;
 
     }
+
+
+    update(value):Promise<any>{
+        return this.dataset.update.apply(this.dataset,arguments);
+    }
+
+    add(value):Promise<any>{
+        return this.dataset.add.apply(this.dataset,arguments);
+    }
+
+
+    delete(value):Promise<any>{
+        return this.dataset.delete.apply(this.dataset,arguments);
+    }
+
     get(expressions){
         let query = QuerySet.get(expressions);
         if(CacheSet.caches[query] != null){ 

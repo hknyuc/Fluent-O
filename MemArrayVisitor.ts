@@ -498,8 +498,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
 
 
 export class MemSet extends DataSet<any>{
-
-    constructor(private source, expressions: Array<any> = []) {
+    constructor(protected source, expressions: Array<any> = []) {
         super(expressions);
         this.expressions = expressions || [];
     }

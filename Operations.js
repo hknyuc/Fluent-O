@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const TrackingMemset_1 = require("./TrackingMemset");
 const ChangeSet_1 = require("./ChangeSet");
 const Pointset_1 = require("./Pointset");
 const Mapset_1 = require("./Mapset");
@@ -1049,4 +1050,8 @@ function changeset(source) {
     return new ChangeSet_1.ChangeSet(source);
 }
 exports.changeset = changeset;
+function trackingMemset(source) {
+    return new TrackingMemset_1.TrackingMemset(memset(source));
+}
+exports.trackingMemset = trackingMemset;
 //# sourceMappingURL=Operations.js.map

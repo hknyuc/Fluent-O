@@ -1,3 +1,4 @@
+import { TrackingMemset } from './TrackingMemset';
 import { ChangeSet } from './ChangeSet';
 import { Pointset } from './Pointset';
 import { IDataSet } from './Dataset';
@@ -1241,4 +1242,9 @@ export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any
   */
  export function changeset<T>(source:IDataSet<T>):ChangeSet<T>{
      return new ChangeSet(source);
+ }
+
+
+ export function trackingMemset(source:Array<any>):TrackingMemset{
+    return new TrackingMemset(memset(source));
  }

@@ -9,6 +9,15 @@ class CacheSet extends Dataset_1.DataSet {
         super(dataset.getExpressions());
         this.dataset = dataset;
     }
+    update(value) {
+        return this.dataset.update.apply(this.dataset, arguments);
+    }
+    add(value) {
+        return this.dataset.add.apply(this.dataset, arguments);
+    }
+    delete(value) {
+        return this.dataset.delete.apply(this.dataset, arguments);
+    }
     get(expressions) {
         let query = OData_1.QuerySet.get(expressions);
         if (CacheSet.caches[query] != null) {
