@@ -39,7 +39,7 @@ export class MapSet<T> extends DataSet<T>{
                    return result;
 
                 };
-                let set = new MemSet(result);
+                let set = new MemSet(result as any);
                 return {
                     set: (filters.length != 0 ? set.query.apply(set,filters) : set)
                 };

@@ -1248,3 +1248,25 @@ export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any
  export function trackingMemset(source:Array<any>):TrackingMemset{
     return new TrackingMemset(memset(source));
  }
+
+ /**
+  * get first data from source
+  * @param source datasource
+  */
+ export function first(source:IDataSet<any>|Array<any>):DecorateSet<any>{
+     source =  Array.isArray(source)?memset(source):source;
+    return dataset(source,{
+        get:function (expressions){
+            expressions = expressions || [];
+            let exp = this.dataset.getExpressions().concat(expressions);
+            let anyFirst = exp.find(a=> a instanceof Find);
+            if(anyFirst) { // eğer find yazılmışşsa tek gelecek demek zaten
+                return this.next();
+            }
+            return this.next(exp.concat(top(1))).then((response)=>{
+                if(Array.isArray(response)) return response[0];
+                return response;
+            });
+        }
+    })
+ }

@@ -55,7 +55,7 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
             let newResult = [];
             let aSource = new Arrayable(source);
             aSource.forEach(element => {
-                let result = {};
+                let result = LazyArrayVisitor.createEmptyObjectFor(element);
                 newResult.push(result);
                 let args = select.args.length == 0 ? Object.keys(element).map(x => {
                     return {
@@ -69,6 +69,13 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
             });
             return Promise.all(allPromise).then(() => aSource.ifArrayReturn(newResult));
         });
+    }
+    static createEmptyObjectFor(element) {
+        let newResult = {};
+        Object.getOwnPropertySymbols(element).forEach((prop) => {
+            newResult[prop] = element[prop];
+        });
+        return newResult;
     }
     filter(filter) {
         return this.getSource().then((source) => {
@@ -496,9 +503,9 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
     static getOnlyStucts(element) {
         if (element == null)
             return;
-        let validsStructs = ["string", "boolean", "number", "function"];
+        let validsStructs = ["string", "boolean", "number", "function", "symbol"];
         let validsObject = [Date, Schema_1.Guid];
-        let newResult = {};
+        let newResult = LazyArrayVisitor.createEmptyObjectFor(element);
         for (let i in element) {
             let isStruct = validsStructs.some(v => typeof element[i] === v);
             let isObject = validsObject.some(v => element[i] instanceof v);

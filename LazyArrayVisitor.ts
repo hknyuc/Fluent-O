@@ -1,3 +1,4 @@
+
 import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./Expressions";
 import { DataSet } from "./Dataset";
 import { Guid } from "./Schema";
@@ -61,7 +62,7 @@ export class LazyArrayVisitor extends ExpressionVisitor {
             let newResult = [];
             let aSource = new Arrayable(source);
             aSource.forEach(element => {
-                let result = {} as any;
+                let result = LazyArrayVisitor.createEmptyObjectFor(element);
                 newResult.push(result);
                 let args = select.args.length == 0 ? Object.keys(element).map(x => {
                     return {
@@ -75,6 +76,16 @@ export class LazyArrayVisitor extends ExpressionVisitor {
             });
             return Promise.all(allPromise).then(() => aSource.ifArrayReturn(newResult));
         });
+    }
+
+
+    private static createEmptyObjectFor(element){
+        let newResult = {};
+        Object.getOwnPropertySymbols(element).forEach((prop)=>{
+            newResult[prop] = element[prop];
+        });
+        return newResult;
+        
     }
 
     filter(filter: Filter) {
@@ -527,9 +538,9 @@ export class LazyArrayVisitor extends ExpressionVisitor {
 
     static getOnlyStucts(element) {
         if (element == null) return;
-        let validsStructs = ["string", "boolean", "number","function"];
+        let validsStructs = ["string", "boolean", "number","function","symbol"];
         let validsObject = [Date, Guid];
-        let newResult = {};
+        let newResult =  LazyArrayVisitor.createEmptyObjectFor(element);
         for (let i in element) {
             let isStruct = validsStructs.some(v => typeof element[i] === v);
             let isObject = validsObject.some(v => element[i] instanceof v);

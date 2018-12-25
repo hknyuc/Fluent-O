@@ -1,48 +1,45 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const Core_1 = require("./Core");
 const Expressions_1 = require("./Expressions");
-const Schema_1 = require("./Schema");
 const MemArrayVisitor_1 = require("./MemArrayVisitor");
-const Operations_1 = require("./Operations");
 class TrackingMemset extends MemArrayVisitor_1.MemSet {
     constructor(memset) {
         super(memset["source"], memset.getExpressions());
         this.memset = memset;
-        this.trackingId = Symbol(Schema_1.Guid.newString().toString());
-        this.source.forEach((item) => {
-            this.addTrackingId(item);
-        });
+        this.trackingId = memset.trackingId;
     }
     trackObject(index, object) {
         let element = (Array.isArray(this.source) ? this.source : [this.source])[index];
+        let newResult = {
+            test: 'timeout'
+        };
         for (let i in object) {
-            let _value;
-            Object.defineProperty(object, i, {
+            let _value = object[i];
+            Core_1.Utility.ObjectDefineProperty(newResult, i, {
                 get: function () {
                     return _value;
                 },
                 set: function (newValue) {
                     _value = newValue;
                     element[i] = newValue;
-                }
+                },
+                configurable: true,
+                enumerable: true
             });
         }
+        Object.getOwnPropertySymbols(object).forEach((prop) => {
+            newResult[prop] = object[prop];
+        });
+        return newResult;
+    }
+    query(...expressions) {
+        return new TrackingMemset(this.memset.query.apply(this.memset, expressions));
     }
     then(callback, errorCallback) {
         return this.memset.then.apply(this.memset, arguments);
     }
-    addTrackingId(value) {
-        if (value != null) {
-            let v = Schema_1.Guid.newString();
-            Object.defineProperty(value, this.trackingId, {
-                get: function () {
-                    return v;
-                }
-            });
-        }
-    }
     add(value) {
-        this.addTrackingId(value);
         return this.memset.add.apply(this.memset, arguments);
     }
     update(value) {
@@ -51,10 +48,19 @@ class TrackingMemset extends MemArrayVisitor_1.MemSet {
     delete(value) {
         return this.memset.delete.apply(this.memset, arguments);
     }
+    selectTrackId(expressionsArr) {
+        let expressions = [].concat(expressionsArr);
+        let indexOfLast = expressions.lastIndexOf(x => x instanceof Expressions_1.Select);
+        if (indexOfLast < 0) {
+            return expressions; // gets all
+        }
+        expressions[indexOfLast] = new Expressions_1.Select([].concat(expressions[indexOfLast].args, {
+            property: new Expressions_1.Property(this.trackingId)
+        }));
+        return expressions;
+    }
     get(...expressions) {
-        let anySelect = expressions.find(x => x instanceof Expressions_1.Select);
-        let externalExpression = anySelect != null ? [Operations_1.select(this.trackingId)] : [];
-        expressions = [].concat(expressions, externalExpression);
+        expressions = this.selectTrackId(expressions);
         return this.memset.get.apply(this.memset, expressions).then((response) => {
             if (typeof response === "number")
                 return response;
@@ -62,8 +68,8 @@ class TrackingMemset extends MemArrayVisitor_1.MemSet {
                 let indexOfItem = (Array.isArray(this.source) ? this.source : [this.source]).findIndex(a => a[this.trackingId] === x[this.trackingId]);
                 if (indexOfItem < 0)
                     return x;
-                this.trackObject(indexOfItem, x);
-                return x;
+                let result = this.trackObject(indexOfItem, x);
+                return result;
             });
         });
     }

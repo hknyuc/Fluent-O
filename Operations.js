@@ -1054,4 +1054,27 @@ function trackingMemset(source) {
     return new TrackingMemset_1.TrackingMemset(memset(source));
 }
 exports.trackingMemset = trackingMemset;
+/**
+ * get first data from source
+ * @param source datasource
+ */
+function first(source) {
+    source = Array.isArray(source) ? memset(source) : source;
+    return dataset(source, {
+        get: function (expressions) {
+            expressions = expressions || [];
+            let exp = this.dataset.getExpressions().concat(expressions);
+            let anyFirst = exp.find(a => a instanceof Expressions_1.Find);
+            if (anyFirst) { // eğer find yazılmışşsa tek gelecek demek zaten
+                return this.next();
+            }
+            return this.next(exp.concat(top(1))).then((response) => {
+                if (Array.isArray(response))
+                    return response[0];
+                return response;
+            });
+        }
+    });
+}
+exports.first = first;
 //# sourceMappingURL=Operations.js.map

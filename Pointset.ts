@@ -1,6 +1,9 @@
 import { MemSet } from './MemArrayVisitor';
 import { IDataSet, DataSet } from './Dataset';
 import { MemOperation } from './MemOperation';
+/**
+ * Ne kadar Expression eklenirse eklenirsin WhenMemorized kısmı sonra çalışır.  Pipesetde ise MemOperationdan sonra işlemler memory üzerinden gerçekleşir.
+ */
 export class Pointset<T> extends DataSet<T>{
     constructor(private datasource: IDataSet<T>, expressions: Array<any> = [], private memOperations: Array<any> = []) {
         super(expressions)
@@ -77,3 +80,4 @@ export class Pointset<T> extends DataSet<T>{
     }
 
 }
+

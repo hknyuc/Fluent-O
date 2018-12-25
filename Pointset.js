@@ -3,6 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const MemArrayVisitor_1 = require("./MemArrayVisitor");
 const Dataset_1 = require("./Dataset");
 const MemOperation_1 = require("./MemOperation");
+/**
+ * Ne kadar Expression eklenirse eklenirsin WhenMemorized kısmı sonra çalışır.  Pipesetde ise MemOperationdan sonra işlemler memory üzerinden gerçekleşir.
+ */
 class Pointset extends Dataset_1.DataSet {
     constructor(datasource, expressions = [], memOperations = []) {
         super(expressions);

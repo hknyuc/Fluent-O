@@ -498,14 +498,36 @@ export class MemArrayVisitor extends ExpressionVisitor {
 
 
 export class MemSet extends DataSet<any>{
-    constructor(protected source, expressions: Array<any> = []) {
+    private _trackingId;
+    get trackingId():Symbol{
+        return this._trackingId;
+    };
+
+     set trackingId(newValue){
+        this._trackingId = newValue;
+    }
+    constructor(protected source:Array<any>, expressions: Array<any> = []) {
         super(expressions);
         this.expressions = expressions || [];
+       
+        (Array.isArray(source)?source:[]).forEach((item)=>{
+            this.addTrackingId(item);
+        })
+        this.trackingId = Symbol(Guid.newString().toString());
+    }
+
+
+    private addTrackingId(element){
+        if(element != null)
+              element[this.trackingId as any] = Guid.newString();
     }
 
   
     query(...expressions: any[]): MemSet {
-        return new MemSet(this.source, this.expressions.map(x => x).concat(expressions));
+        let result =  new MemSet([], this.expressions.map(x => x).concat(expressions));
+        result.source = this.source;
+        result.trackingId = this.trackingId;
+        return result;
     }
     get(...expressions: any[]): Promise<any> {
         let expression = this.expressions.map(x => x).concat(expressions);
@@ -514,6 +536,7 @@ export class MemSet extends DataSet<any>{
         });
     }
     add(element: any): Promise<any> {
+        this.addTrackingId(element);
         this.source.push(element);
         return Promise.resolve(element);
     }
@@ -524,7 +547,7 @@ export class MemSet extends DataSet<any>{
     }
 
     __is(base, element: any) {
-        let ids = ["ID", "id", "Id", "iD"];
+        let ids = ["ID", "id", "Id", "iD",this.trackingId as any];
         return base === element || ids.some(x => element[x] != null && this.__getValueOf(element[x]) === this.__getValueOf(base[x]));
     }
 

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const Schema_1 = require("./Schema");
 const LazyArrayVisitor_1 = require("./LazyArrayVisitor");
 const Expressions_1 = require("./Expressions");
 const Dataset_1 = require("./Dataset");
@@ -479,9 +480,27 @@ class MemSet extends Dataset_1.DataSet {
         super(expressions);
         this.source = source;
         this.expressions = expressions || [];
+        (Array.isArray(source) ? source : []).forEach((item) => {
+            this.addTrackingId(item);
+        });
+        this.trackingId = Symbol(Schema_1.Guid.newString().toString());
+    }
+    get trackingId() {
+        return this._trackingId;
+    }
+    ;
+    set trackingId(newValue) {
+        this._trackingId = newValue;
+    }
+    addTrackingId(element) {
+        if (element != null)
+            element[this.trackingId] = Schema_1.Guid.newString();
     }
     query(...expressions) {
-        return new MemSet(this.source, this.expressions.map(x => x).concat(expressions));
+        let result = new MemSet([], this.expressions.map(x => x).concat(expressions));
+        result.source = this.source;
+        result.trackingId = this.trackingId;
+        return result;
     }
     get(...expressions) {
         let expression = this.expressions.map(x => x).concat(expressions);
@@ -490,6 +509,7 @@ class MemSet extends Dataset_1.DataSet {
         });
     }
     add(element) {
+        this.addTrackingId(element);
         this.source.push(element);
         return Promise.resolve(element);
     }
@@ -497,7 +517,7 @@ class MemSet extends Dataset_1.DataSet {
         return value != null && typeof value.valueOf === "function" ? value.valueOf() : value;
     }
     __is(base, element) {
-        let ids = ["ID", "id", "Id", "iD"];
+        let ids = ["ID", "id", "Id", "iD", this.trackingId];
         return base === element || ids.some(x => element[x] != null && this.__getValueOf(element[x]) === this.__getValueOf(base[x]));
     }
     delete(element) {

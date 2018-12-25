@@ -18,6 +18,12 @@ export class Select extends Method {
         super()
         this.args = args;
     }
+
+      reduce(...params:Array<Select>):Select{
+       return params.reduce((ac,c)=>{
+         return new Select([].concat(ac.args,c.args))
+       },this);
+    }
 }
 
 export class Filter extends Method {

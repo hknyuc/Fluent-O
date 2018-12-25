@@ -15,6 +15,11 @@ class Select extends Method {
         super();
         this.args = args;
     }
+    reduce(...params) {
+        return params.reduce((ac, c) => {
+            return new Select([].concat(ac.args, c.args));
+        }, this);
+    }
 }
 exports.Select = Select;
 class Filter extends Method {

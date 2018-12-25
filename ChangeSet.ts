@@ -72,6 +72,7 @@ export class ChangeSet<T> extends DataSet<T>{
         });
     }
 
+
     delete(value):Promise<T>{
         if(this.onDeleting.emit(this.getEmitValue({value})) == false) return Promise.reject(this.getInterrupted('deleting is interrupted'));
         return this.source.delete(value).then((response)=>{
