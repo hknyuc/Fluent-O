@@ -1,8 +1,8 @@
 {
   "name": "fluento",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "Queryable data structure",
-  "main": "Operations.js",
+  "main": "index.js",
   "scripts": {
     "test": "mocha tests/temp.js"
   },
