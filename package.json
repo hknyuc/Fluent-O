@@ -1,8 +1,8 @@
 {
   "name": "fluento",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Queryable data structure",
-  "main": "index.js",
+  "main": "Operations.js",
   "scripts": {
     "test": "mocha tests/temp.js"
   },
@@ -15,5 +15,20 @@
   "dependencies": {
     "global-mocha": "^1.0.1",
     "xmlhttprequest": "^1.8.0"
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hknyuc/Fluent-O.git"
+  },
+  "keywords": [
+    "fluent",
+    "odata"
+  ],
+  "bugs": {
+    "url": "https://github.com/hknyuc/Fluent-O/issues"
+  },
+  "homepage": "https://github.com/hknyuc/Fluent-O#readme"
 }
