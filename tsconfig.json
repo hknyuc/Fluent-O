@@ -2,12 +2,14 @@
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",
-        "sourceMap": true,
+        "sourceMap": false,
         "experimentalDecorators": true,
-        "allowJs": true
+        "outDir": "dist",
+        "declaration": true
+
     },
     "exclude": [
-    "node_modules",
-    "tests",
+    "node_modules",   
+   // "tests",
   ],
 }

@@ -27,6 +27,7 @@ describe("memArray",function(){
     describe("select",function (){
         it("single",function(){
             let result =  memset.get(self.createArray(),select("id"));
+            console.log(result);
             assert.equal(Array.isArray(result),true);
             assert.notEqual(result.length,null);
             assert.notEqual(result.length,0);
