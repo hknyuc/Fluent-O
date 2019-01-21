@@ -252,9 +252,10 @@ export class LazyArrayVisitor extends ExpressionVisitor {
                 return source.map(x => x).sort((left, right) => {
                     let l = this.__getNestedProperty(left, order.property);
                     let r = this.__getNestedProperty(right, order.property);
+                    if(l === r) return 0;
                     if (order.type === null || order.type === "asc")
-                        return l - r;
-                    return r - l;
+                        return l>r?1:-1;
+                    return r>l?1:-1;
                 });
             });
         });
