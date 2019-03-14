@@ -1,4 +1,4 @@
-import { DataSet } from "./Dataset";
+import { DataSet } from "./dataset";
 export declare class CacheSet<T> extends DataSet<T> {
     private static caches;
     private dataset;

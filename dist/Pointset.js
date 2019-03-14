@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const MemArrayVisitor_1 = require("./MemArrayVisitor");
-const Dataset_1 = require("./Dataset");
-const MemOperation_1 = require("./MemOperation");
+const memarrayvisitor_1 = require("./memarrayvisitor");
+const dataset_1 = require("./dataset");
+const memoperation_1 = require("./memoperation");
 /**
  * Ne kadar Expression eklenirse eklenirsin WhenMemorized kısmı sonra çalışır.  Pipesetde ise MemOperationdan sonra işlemler memory üzerinden gerçekleşir.
  */
-class Pointset extends Dataset_1.DataSet {
+class Pointset extends dataset_1.DataSet {
     constructor(datasource, expressions = [], memOperations = []) {
         super(expressions);
         this.datasource = datasource;
@@ -38,14 +38,14 @@ class Pointset extends Dataset_1.DataSet {
                 });
             });
         }
-        if (pipe instanceof MemOperation_1.MemOperation)
+        if (pipe instanceof memoperation_1.MemOperation)
             return Pointset.insureAsPromise(pipe.pipe(response)).then((response) => {
                 return this.applyMemOps(operations, response).then((resp) => {
                     return resp;
                 });
             });
         //expression da olabilir.
-        return new MemArrayVisitor_1.MemSet(response, [pipe]).then((resp) => {
+        return new memarrayvisitor_1.MemSet(response, [pipe]).then((resp) => {
             return resp;
         });
     }

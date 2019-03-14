@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Expressions_1 = require("./Expressions");
 const Dataset_1 = require("./Dataset");
-const Schema_1 = require("./Schema");
+const schema_1 = require("./schema");
 class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
     constructor(array, root) {
         super();
@@ -172,7 +172,7 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
         return this.getSource().then((source) => {
             let value = find.value;
             let result;
-            if (typeof value !== "object" || (value instanceof Schema_1.Guid)) {
+            if (typeof value !== "object" || (value instanceof schema_1.Guid)) {
                 let v = getValueOf(value);
                 let findedResult = source.find(x => getValueOf(x.id) === v || getValueOf(x.ID) === v || getValueOf(x.Id) === v);
                 if (findedResult != null)
@@ -506,7 +506,7 @@ class LazyArrayVisitor extends Expressions_1.ExpressionVisitor {
         if (element == null)
             return;
         let validsStructs = ["string", "boolean", "number", "function", "symbol"];
-        let validsObject = [Date, Schema_1.Guid];
+        let validsObject = [Date, schema_1.Guid];
         let newResult = LazyArrayVisitor.createEmptyObjectFor(element);
         for (let i in element) {
             let isStruct = validsStructs.some(v => typeof element[i] === v);

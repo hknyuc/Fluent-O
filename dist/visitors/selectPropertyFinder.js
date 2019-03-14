@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Expressions_1 = require("./../Expressions");
-class SelectPropertyFinder extends Expressions_1.ExpressionVisitor {
+const expressions_1 = require("../expressions");
+class SelectPropertyFinder extends expressions_1.ExpressionVisitor {
     constructor() {
         super(...arguments);
         this.properties = [];
@@ -23,9 +23,9 @@ class SelectPropertyFinder extends Expressions_1.ExpressionVisitor {
                 p = p.parent;
             }
             allProps.reverse();
-            return new Expressions_1.Expand([{
-                    property: new Expressions_1.Property(allProps[0]),
-                    expressions: [new Expressions_1.Select(allProps.splice(1, allProps.length).map(a => {
+            return new expressions_1.Expand([{
+                    property: new expressions_1.Property(allProps[0]),
+                    expressions: [new expressions_1.Select(allProps.splice(1, allProps.length).map(a => {
                             return {
                                 property: a,
                             };
@@ -33,7 +33,7 @@ class SelectPropertyFinder extends Expressions_1.ExpressionVisitor {
                 }]);
         };
         let expands = this.properties.filter(x => x.parent != null);
-        return [].concat(expands.map(getExpand)).concat([new Expressions_1.Select(this.properties.filter(x => x.parent == null).map(a => {
+        return [].concat(expands.map(getExpand)).concat([new expressions_1.Select(this.properties.filter(x => x.parent == null).map(a => {
                 return {
                     property: a,
                     expressions: []
@@ -52,7 +52,7 @@ class SelectPropertyFinder extends Expressions_1.ExpressionVisitor {
         this.addProperty(propery);
     }
     selectMany(selectManay) {
-        this.addProperty(new Expressions_1.Property(selectManay.name, selectManay.parent));
+        this.addProperty(new expressions_1.Property(selectManay.name, selectManay.parent));
     }
     modelMethod(method) {
         method.args.forEach((i) => {

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Schema_1 = require("./Schema");
+const schema_1 = require("./schema");
 class Operation {
     constructor(type) {
         this.type = type;
@@ -142,7 +142,7 @@ class Value {
         }
         if (value instanceof Date)
             return true;
-        if (value instanceof Schema_1.Guid)
+        if (value instanceof schema_1.Guid)
             return true;
         return false;
     }

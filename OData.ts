@@ -1,9 +1,9 @@
-import { RestClient } from './RestClient';
+import { RestClient } from './restclient';
 import { DataSet } from './DataSet';
-import { Guid } from './Schema';
+import { Guid } from './schema';
 
 import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It, Action, Func } from './Expressions';
-import {Http} from './Http';
+import {Http} from './http';
 export class ODataVisitor extends ExpressionVisitor {
     private _result: string = null;
 

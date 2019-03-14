@@ -1,4 +1,4 @@
-import { DataSet } from './Dataset';
+import { DataSet } from './dataset';
 export declare class MapSet<T> extends DataSet<T> {
     private source;
     private mapFn;

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Schema_1 = require("./Schema");
-const LazyArrayVisitor_1 = require("./LazyArrayVisitor");
+const schema_1 = require("./schema");
+const lazyarrayvisitor_1 = require("./lazyarrayvisitor");
 const Expressions_1 = require("./Expressions");
 const Dataset_1 = require("./Dataset");
 class MemArrayVisitor extends Expressions_1.ExpressionVisitor {
@@ -480,7 +480,7 @@ class MemSet extends Dataset_1.DataSet {
         super(expressions);
         this.source = source;
         this.expressions = expressions || [];
-        this.trackingId = Symbol.for(Schema_1.Guid.newString().toString());
+        this.trackingId = Symbol.for(schema_1.Guid.newString().toString());
         (Array.isArray(source) ? source : []).forEach((item) => {
             this.addTrackingId(item);
         });
@@ -494,7 +494,7 @@ class MemSet extends Dataset_1.DataSet {
     }
     addTrackingId(element) {
         if (element != null)
-            element[this.trackingId] = Schema_1.Guid.newString();
+            element[this.trackingId] = schema_1.Guid.newString();
     }
     query(...expressions) {
         let result = new MemSet([], this.expressions.map(x => x).concat(expressions));
@@ -504,7 +504,7 @@ class MemSet extends Dataset_1.DataSet {
     }
     get(...expressions) {
         let expression = this.expressions.map(x => x).concat(expressions);
-        return LazyArrayVisitor_1.LazyArrayVisitor.get(this.source, expression).then((response) => {
+        return lazyarrayvisitor_1.LazyArrayVisitor.get(this.source, expression).then((response) => {
             return response;
         });
     }

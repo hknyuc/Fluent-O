@@ -1,5 +1,5 @@
-import { IDataSet, DataSet } from './Dataset';
-import { MemOperation } from './MemOperation';
+import { IDataSet, DataSet } from './dataset';
+import { MemOperation } from './memoperation';
 /**
  * Ne kadar Expression eklenirse eklenirsin WhenMemorized kısmı sonra çalışır.  Pipesetde ise MemOperationdan sonra işlemler memory üzerinden gerçekleşir.
  */

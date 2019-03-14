@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Core_1 = require("./Core");
-const Expressions_1 = require("./Expressions");
-const MemArrayVisitor_1 = require("./MemArrayVisitor");
-class TrackingMemset extends MemArrayVisitor_1.MemSet {
+const core_1 = require("./core");
+const expressions_1 = require("./expressions");
+const memarrayvisitor_1 = require("./memarrayvisitor");
+class TrackingMemset extends memarrayvisitor_1.MemSet {
     constructor(memset) {
         super(memset["source"], memset.getExpressions());
         this.memset = memset;
@@ -16,7 +16,7 @@ class TrackingMemset extends MemArrayVisitor_1.MemSet {
         };
         for (let i in object) {
             let _value = object[i];
-            Core_1.Utility.ObjectDefineProperty(newResult, i, {
+            core_1.Utility.ObjectDefineProperty(newResult, i, {
                 get: function () {
                     return _value;
                 },
@@ -50,12 +50,12 @@ class TrackingMemset extends MemArrayVisitor_1.MemSet {
     }
     selectTrackId(expressionsArr) {
         let expressions = [].concat(expressionsArr);
-        let indexOfLast = expressions.lastIndexOf(x => x instanceof Expressions_1.Select);
+        let indexOfLast = expressions.lastIndexOf(x => x instanceof expressions_1.Select);
         if (indexOfLast < 0) {
             return expressions; // gets all
         }
-        expressions[indexOfLast] = new Expressions_1.Select([].concat(expressions[indexOfLast].args, {
-            property: new Expressions_1.Property(this.trackingId)
+        expressions[indexOfLast] = new expressions_1.Select([].concat(expressions[indexOfLast].args, {
+            property: new expressions_1.Property(this.trackingId)
         }));
         return expressions;
     }

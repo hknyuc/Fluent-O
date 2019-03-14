@@ -1,4 +1,4 @@
-import { MemSet } from './MemArrayVisitor';
+import { MemSet } from './memarrayvisitor';
 export declare class TrackingMemset extends MemSet {
     private memset;
     constructor(memset: MemSet);

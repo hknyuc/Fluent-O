@@ -1,4 +1,4 @@
-import { DataSet, IDataSet } from './Dataset';
+import { DataSet, IDataSet } from './dataset';
 declare class BranchContext {
     source: IDataSet<any>;
     branchName: string;

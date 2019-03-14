@@ -1,7 +1,7 @@
 
 import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./Expressions";
 import { DataSet } from "./Dataset";
-import { Guid } from "./Schema";
+import { Guid } from "./schema";
 
 export class LazyArrayVisitor extends ExpressionVisitor {
     private source: any;

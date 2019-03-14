@@ -1,4 +1,4 @@
-import { RestClient } from "./RestClient";
+import { RestClient } from "./restclient";
 export declare class Http extends RestClient {
     constructor();
 }

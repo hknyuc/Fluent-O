@@ -1,4 +1,4 @@
-import { ExpressionVisitor, Filter, Order, Property, EqBinary, Select, SelectMany, Method, ModelMethod, Expand } from './../Expressions';
+import { ExpressionVisitor, Filter, Order, Property, EqBinary, Select, SelectMany, Method, ModelMethod, Expand } from '../expressions';
 export class SelectPropertyFinder extends ExpressionVisitor {
     properties: Array<Property> = [];
     filter(filter: Filter) {

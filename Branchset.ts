@@ -1,7 +1,7 @@
 import { SelectPropertyFinder } from './visitors/selectPropertyFinder';
-import { MemSet } from './MemArrayVisitor';
-import { Expand, Property, Find, Order, Top, Skip, Filter, Select } from './Expressions';
-import { DataSet, IDataSet } from './Dataset';
+import { MemSet } from './memarrayvisitor';
+import { Expand, Property, Find, Order, Top, Skip, Filter, Select } from './expressions';
+import { DataSet, IDataSet } from './dataset';
 class BranchContext {
     source: IDataSet<any>;
     branchName: string;

@@ -1,6 +1,6 @@
-import { MemSet } from './MemArrayVisitor';
-import { DataSet, IDataSet } from './Dataset';
-import { MemOperation } from './MemOperation';
+import { MemSet } from './memarrayvisitor';
+import { DataSet, IDataSet } from './dataset';
+import { MemOperation } from './memoperation';
 /**
  * Query kısmına extradan lokalde yapılan işlemler eklenebilir. O işlemden sonra diğer işlem memset üzeriden gider.
  */

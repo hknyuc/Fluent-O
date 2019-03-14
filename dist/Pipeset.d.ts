@@ -1,4 +1,4 @@
-import { DataSet, IDataSet } from './Dataset';
+import { DataSet, IDataSet } from './dataset';
 /**
  * Query kısmına extradan lokalde yapılan işlemler eklenebilir. O işlemden sonra diğer işlem memset üzeriden gider.
  */

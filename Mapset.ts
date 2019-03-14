@@ -1,6 +1,6 @@
-import { DataSet } from './Dataset';
-import { MemSet } from './MemArrayVisitor';
-import { Select, Expand, Filter, Top, Skip, Property, Order } from './Expressions';
+import { DataSet } from './dataset';
+import { MemSet } from './memarrayvisitor';
+import { Select, Expand, Filter, Top, Skip, Property, Order } from './expressions';
 export class MapSet<T> extends DataSet<T>{
     constructor(private source: DataSet<T>, private mapFn: ((element: T, index: number, items: T[]) => any) | string, expressions: Array<any> = [],private mapFnEx?:((element: T, beforeElement:any, index: Number, items: T[]) => any)) {
         super(expressions);

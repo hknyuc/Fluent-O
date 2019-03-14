@@ -1,17 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Core_1 = require("./Core");
-const Dataset_1 = require("./Dataset");
-class ChangeSet extends Dataset_1.DataSet {
+const core_1 = require("./core");
+const dataset_1 = require("./dataset");
+class ChangeSet extends dataset_1.DataSet {
     constructor(source) {
         super(source.getExpressions());
         this.source = source;
-        this.onAdding = new Core_1.Emitter('sync');
-        this.onAdded = new Core_1.Emitter('async');
-        this.onDeleting = new Core_1.Emitter('sync');
-        this.onDeleted = new Core_1.Emitter('async');
-        this.onUpdating = new Core_1.Emitter('sync');
-        this.onUpdated = new Core_1.Emitter('async');
+        this.onAdding = new core_1.Emitter('sync');
+        this.onAdded = new core_1.Emitter('async');
+        this.onDeleting = new core_1.Emitter('sync');
+        this.onDeleted = new core_1.Emitter('async');
+        this.onUpdating = new core_1.Emitter('sync');
+        this.onUpdated = new core_1.Emitter('async');
     }
     onAdd(callback) {
         this.onAdding.hook(callback);

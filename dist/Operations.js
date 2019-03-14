@@ -1,27 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const TrackingMemset_1 = require("./TrackingMemset");
-const ChangeSet_1 = require("./ChangeSet");
-const Pointset_1 = require("./Pointset");
-const Mapset_1 = require("./Mapset");
-const Schema_1 = require("./Schema");
-const MemArrayVisitor_1 = require("./MemArrayVisitor");
-const OData_1 = require("./OData");
-const Expressions_1 = require("./Expressions");
-const DataSet_1 = require("./DataSet");
-const Cacheset_1 = require("./Cacheset");
-const Branchset_1 = require("./Branchset");
-const Pipeset_1 = require("./Pipeset");
-class EqBinaryExtend extends Expressions_1.EqBinary {
+const trackingmemset_1 = require("./trackingmemset");
+const changeSet_1 = require("./changeSet");
+const pointset_1 = require("./pointset");
+const mapset_1 = require("./mapset");
+const schema_1 = require("./schema");
+const memarrayvisitor_1 = require("./memarrayvisitor");
+const odata_1 = require("./odata");
+const expressions_1 = require("./expressions");
+const dataset_1 = require("./dataset");
+const cacheset_1 = require("./cacheset");
+const branchset_1 = require("./branchset");
+const pipeset_1 = require("./pipeset");
+class EqBinaryExtend extends expressions_1.EqBinary {
     constructor(eqBinary) {
         super(eqBinary.left, eqBinary.op, eqBinary.right);
     }
     create(op, value) {
         let v = value;
-        if (Expressions_1.Value.isValid(value)) {
-            v = new Expressions_1.Value(value);
+        if (expressions_1.Value.isValid(value)) {
+            v = new expressions_1.Value(value);
         }
-        return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
+        return new EqBinaryExtend(new expressions_1.EqBinary(this, new expressions_1.Operation(op), v));
     }
     and(value) {
         return this.create('and', value);
@@ -49,7 +49,7 @@ class EqBinaryExtend extends Expressions_1.EqBinary {
     }
 }
 exports.EqBinaryExtend = EqBinaryExtend;
-class ModelMethodExtend extends Expressions_1.ModelMethod {
+class ModelMethodExtend extends expressions_1.ModelMethod {
     constructor(name, property, args) {
         super(name, property, args);
     }
@@ -183,25 +183,25 @@ exports.ModelMethodExtend = ModelMethodExtend;
  * @returns {ODataSet} OData data set
  */
 exports.odataset = function (options) {
-    return new OData_1.ODataSet(options);
+    return new odata_1.ODataSet(options);
 };
 const method = function (name, ...properties) {
     let props = [];
     properties.forEach((elem) => {
-        if (Expressions_1.Value.isValid(elem))
-            props.push(new Expressions_1.Value(elem));
+        if (expressions_1.Value.isValid(elem))
+            props.push(new expressions_1.Value(elem));
         else
             props.push(elem);
     });
     return new ModelMethodExtend(name, this, props);
 };
-class PropertyExtend extends Expressions_1.Property {
+class PropertyExtend extends expressions_1.Property {
     create(op, value) {
         let v = value;
-        if (!(value instanceof Expressions_1.Property)) {
-            v = new Expressions_1.Value(value);
+        if (!(value instanceof expressions_1.Property)) {
+            v = new expressions_1.Value(value);
         }
-        return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
+        return new EqBinaryExtend(new expressions_1.EqBinary(this, new expressions_1.Operation(op), v));
     }
     createMethod(name, ...properties) {
         return method.apply(this, arguments);
@@ -327,15 +327,15 @@ class PropertyExtend extends Expressions_1.Property {
     }
 }
 exports.PropertyExtend = PropertyExtend;
-class SelectManyExtend extends Expressions_1.SelectMany {
+class SelectManyExtend extends expressions_1.SelectMany {
     constructor(name, property) {
         super(name, property);
     }
     create(op, value) {
         let v = value;
-        if (Expressions_1.Value.isValid(value))
-            v = new Expressions_1.Value(value);
-        return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
+        if (expressions_1.Value.isValid(value))
+            v = new expressions_1.Value(value);
+        return new EqBinaryExtend(new expressions_1.EqBinary(this, new expressions_1.Operation(op), v));
     }
     createMethod(name, ...properties) {
         return method.apply(this, arguments);
@@ -470,12 +470,12 @@ class ThisExtend extends PropertyExtend {
     }
 }
 exports.ThisExtend = ThisExtend;
-class CountExtend extends Expressions_1.Count {
+class CountExtend extends expressions_1.Count {
     create(op, value) {
         let v = value;
-        if (Expressions_1.Value.isValid(value))
-            v = new Expressions_1.Value(value);
-        return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
+        if (expressions_1.Value.isValid(value))
+            v = new expressions_1.Value(value);
+        return new EqBinaryExtend(new expressions_1.EqBinary(this, new expressions_1.Operation(op), v));
     }
     and(value) {
         return this.create('and', value);
@@ -503,13 +503,13 @@ class CountExtend extends Expressions_1.Count {
     }
 }
 exports.CountExtend = CountExtend;
-class RootExtend extends Expressions_1.Root {
+class RootExtend extends expressions_1.Root {
     create(op, value) {
         let v = value;
-        if (!(value instanceof Expressions_1.Root)) {
-            v = new Expressions_1.Value(value);
+        if (!(value instanceof expressions_1.Root)) {
+            v = new expressions_1.Value(value);
         }
-        return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
+        return new EqBinaryExtend(new expressions_1.EqBinary(this, new expressions_1.Operation(op), v));
     }
     createMethod(name, ...properties) {
         return method.apply(this, arguments);
@@ -629,16 +629,16 @@ class RootExtend extends Expressions_1.Root {
     }
 }
 exports.RootExtend = RootExtend;
-class ItExtend extends Expressions_1.It {
+class ItExtend extends expressions_1.It {
     constructor() {
         super();
     }
     create(op, value) {
         let v = value;
-        if (!(value instanceof Expressions_1.Root)) {
-            v = new Expressions_1.Value(value);
+        if (!(value instanceof expressions_1.Root)) {
+            v = new expressions_1.Value(value);
         }
-        return new EqBinaryExtend(new Expressions_1.EqBinary(this, new Expressions_1.Operation(op), v));
+        return new EqBinaryExtend(new expressions_1.EqBinary(this, new expressions_1.Operation(op), v));
     }
     createMethod(name, ...properties) {
         return method.apply(this, arguments);
@@ -764,20 +764,20 @@ exports.ItExtend = ItExtend;
 exports.othis = new ThisExtend();
 exports.$root = new RootExtend();
 function count() {
-    return new Expressions_1.Count(null);
+    return new expressions_1.Count(null);
 }
 exports.count = count;
 function o(left, op, right) {
     let opValue = op;
     let leftValue = left;
     if (typeof op === "string")
-        opValue = new Expressions_1.Operation(op);
+        opValue = new expressions_1.Operation(op);
     if (typeof left === "string")
-        leftValue = new Expressions_1.Property(left);
+        leftValue = new expressions_1.Property(left);
     let r = right;
-    if (Expressions_1.Value.isValid(right))
-        r = new Expressions_1.Value(right);
-    return new EqBinaryExtend(new Expressions_1.EqBinary(leftValue, opValue, r));
+    if (expressions_1.Value.isValid(right))
+        r = new expressions_1.Value(right);
+    return new EqBinaryExtend(new expressions_1.EqBinary(leftValue, opValue, r));
 }
 exports.o = o;
 function p(name, parent) {
@@ -803,7 +803,7 @@ function prop(name, parent) {
 }
 exports.prop = prop;
 function filter(expression) {
-    return new Expressions_1.Filter(expression);
+    return new expressions_1.Filter(expression);
 }
 exports.filter = filter;
 function select(...args) {
@@ -811,13 +811,13 @@ function select(...args) {
     let appendAsString = function () {
         args.forEach(function (arg) {
             results.push({
-                property: arg instanceof Expressions_1.Property ? arg : prop(arg)
+                property: arg instanceof expressions_1.Property ? arg : prop(arg)
             });
         });
     };
     let singleProperty = function () {
         results.push({
-            property: args[0] instanceof Expressions_1.Property ? args[0] : prop(args[0]),
+            property: args[0] instanceof expressions_1.Property ? args[0] : prop(args[0]),
             expression: args[1]
         });
     };
@@ -835,7 +835,7 @@ function select(...args) {
     else {
         let indexOfNonString = args.findIndex(function (item) {
             let isString = typeof item === "string";
-            let isProperty = item instanceof Expressions_1.Property;
+            let isProperty = item instanceof expressions_1.Property;
             return !(isString || isProperty);
         });
         if (indexOfNonString >= 0) {
@@ -843,26 +843,26 @@ function select(...args) {
         }
         appendAsString();
     }
-    return new Expressions_1.Select(results);
+    return new expressions_1.Select(results);
 }
 exports.select = select;
 function top(value) {
-    return new Expressions_1.Top(value);
+    return new expressions_1.Top(value);
 }
 exports.top = top;
 function skip(value) {
-    return new Expressions_1.Skip(value);
+    return new expressions_1.Skip(value);
 }
 exports.skip = skip;
 function value(value) {
-    return new Expressions_1.Value(value);
+    return new expressions_1.Value(value);
 }
 exports.value = value;
 function it() {
     return new ItExtend();
 }
 exports.it = it;
-class FindExtend extends Expressions_1.Find {
+class FindExtend extends expressions_1.Find {
     selectMany(name) {
         return selectMany(name, this);
     }
@@ -896,15 +896,15 @@ function order(property, type) {
     let propem = property;
     if (typeof property == "string")
         propem = prop(property);
-    if (!(propem instanceof Expressions_1.Property))
+    if (!(propem instanceof expressions_1.Property))
         throw new Error('order :property is not valid');
     if (type == null)
-        return new Expressions_1.Order(propem);
+        return new expressions_1.Order(propem);
     let validTypes = ["asc", "desc"];
     if (!validTypes.some(x => x == type)) {
         throw new Error('order: type is not valid');
     }
-    return new Expressions_1.Order(propem, type);
+    return new expressions_1.Order(propem, type);
 }
 exports.order = order;
 function orderDesc(propery) {
@@ -914,17 +914,17 @@ exports.orderDesc = orderDesc;
 function expand(property, ...expression) {
     let prop = property;
     if (typeof property == "string")
-        prop = new Expressions_1.Property(property);
-    if (!(prop instanceof Expressions_1.Property))
+        prop = new expressions_1.Property(property);
+    if (!(prop instanceof expressions_1.Property))
         throw new Error("property is not valid");
-    return new Expressions_1.Expand([{
+    return new expressions_1.Expand([{
             property: prop,
             expressions: expression
         }]);
 }
 exports.expand = expand;
 function inlineCount() {
-    return new Expressions_1.InlineCount();
+    return new expressions_1.InlineCount();
 }
 exports.inlineCount = inlineCount;
 function find(value) {
@@ -933,13 +933,13 @@ function find(value) {
 exports.find = find;
 class GlobalExtend {
     get maxdatetime() {
-        return new Expressions_1.GlobalMethod("maxdatetime");
+        return new expressions_1.GlobalMethod("maxdatetime");
     }
     get mindatetime() {
-        return new Expressions_1.GlobalMethod("mindatetime");
+        return new expressions_1.GlobalMethod("mindatetime");
     }
     get now() {
-        return new Expressions_1.GlobalMethod("now");
+        return new expressions_1.GlobalMethod("now");
     }
 }
 exports.GlobalExtend = GlobalExtend;
@@ -950,7 +950,7 @@ exports.GlobalExtend = GlobalExtend;
  */
 function memset(source, baseFilter) {
     let r = source == null ? [] : source;
-    return new MemArrayVisitor_1.MemSet(r, baseFilter);
+    return new memarrayvisitor_1.MemSet(r, baseFilter);
 }
 exports.memset = memset;
 /**
@@ -959,35 +959,35 @@ exports.memset = memset;
  * @returns {Guid}
  */
 function guid(raw) {
-    if (raw instanceof Schema_1.Guid)
+    if (raw instanceof schema_1.Guid)
         return raw;
-    return new Schema_1.Guid(raw);
+    return new schema_1.Guid(raw);
 }
 exports.guid = guid;
 function action(name, ...params) {
     let args = [];
     params.forEach((param) => {
-        if (param instanceof Expressions_1.Value) {
+        if (param instanceof expressions_1.Value) {
             args.push(param);
             return true;
         }
-        args.push(new Expressions_1.Value(param));
+        args.push(new expressions_1.Value(param));
         return true;
     });
-    return new Expressions_1.Action(name, args);
+    return new expressions_1.Action(name, args);
 }
 exports.action = action;
 function func(name, ...params) {
     let args = [];
     params.forEach((param) => {
-        if (param instanceof Expressions_1.Value) {
+        if (param instanceof expressions_1.Value) {
             args.push(param);
             return true;
         }
-        args.push(new Expressions_1.Value(param));
+        args.push(new expressions_1.Value(param));
         return true;
     });
-    return new Expressions_1.Func(name, args);
+    return new expressions_1.Func(name, args);
 }
 exports.func = func;
 /**
@@ -997,7 +997,7 @@ exports.func = func;
  * @param observer operations on source
  */
 function dataset(source, observer) {
-    return new DataSet_1.DecorateSet(source, observer);
+    return new dataset_1.DecorateSet(source, observer);
 }
 exports.dataset = dataset;
 /**
@@ -1006,7 +1006,7 @@ exports.dataset = dataset;
  * @param dataset source dataset for processing
  */
 function cacheset(dataset) {
-    return new Cacheset_1.CacheSet(dataset);
+    return new cacheset_1.CacheSet(dataset);
 }
 exports.cacheset = cacheset;
 /**
@@ -1015,7 +1015,7 @@ exports.cacheset = cacheset;
  * @param mapFn invokes map function after data fetched
  */
 function mapset(source, mapFn, mapExFn) {
-    return new Mapset_1.MapSet(source, mapFn, [], mapExFn);
+    return new mapset_1.MapSet(source, mapFn, [], mapExFn);
 }
 exports.mapset = mapset;
 /**
@@ -1023,14 +1023,14 @@ exports.mapset = mapset;
  * @param force provides order,skip,top,filter expression after data fetching
  */
 function branchset(source, branchName, strategy) {
-    return new Branchset_1.Branchset(source, branchName, [], strategy || Branchset_1.Branchset.SmartStrategy);
+    return new branchset_1.Branchset(source, branchName, [], strategy || branchset_1.Branchset.SmartStrategy);
 }
 exports.branchset = branchset;
 /**
  * Query kısmına extradan lokalde yapılan işlemler eklenebilir. O işlemden sonra diğer işlem memset üzeriden gider.
  */
 function pipeset(source) {
-    return new Pipeset_1.Pipeset(source);
+    return new pipeset_1.Pipeset(source);
 }
 exports.pipeset = pipeset;
 /**
@@ -1038,7 +1038,7 @@ exports.pipeset = pipeset;
  * @param source
  */
 function pointset(source) {
-    return new Pointset_1.Pointset(source);
+    return new pointset_1.Pointset(source);
 }
 exports.pointset = pointset;
 /**
@@ -1047,11 +1047,11 @@ exports.pointset = pointset;
  * @returns {ChangeSet}
  */
 function changeset(source) {
-    return new ChangeSet_1.ChangeSet(source);
+    return new changeSet_1.ChangeSet(source);
 }
 exports.changeset = changeset;
 function trackingMemset(source) {
-    return new TrackingMemset_1.TrackingMemset(memset(source));
+    return new trackingmemset_1.TrackingMemset(memset(source));
 }
 exports.trackingMemset = trackingMemset;
 /**
@@ -1064,7 +1064,7 @@ function first(source) {
         get: function (expressions) {
             expressions = expressions || [];
             let exp = this.dataset.getExpressions().concat(expressions);
-            let anyFirst = exp.find(a => a instanceof Expressions_1.Find);
+            let anyFirst = exp.find(a => a instanceof expressions_1.Find);
             if (anyFirst) { // eğer find yazılmışşsa tek gelecek demek zaten
                 return this.next();
             }

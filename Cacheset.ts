@@ -1,5 +1,5 @@
-import { DataSet } from "./Dataset";
-import { QuerySet } from "./OData";
+import { DataSet } from "./dataset";
+import { QuerySet } from "./odata";
 
 export class CacheSet<T> extends DataSet<T>{
     private static caches:any = {};

@@ -1,5 +1,5 @@
 import { DataSet } from './Dataset';
-import { Guid } from "./Schema";
+import { Guid } from "./schema";
 
 export class Operation {
     constructor(public type: string) {

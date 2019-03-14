@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const selectPropertyFinder_1 = require("./visitors/selectPropertyFinder");
-const MemArrayVisitor_1 = require("./MemArrayVisitor");
-const Expressions_1 = require("./Expressions");
-const Dataset_1 = require("./Dataset");
+const memarrayvisitor_1 = require("./memarrayvisitor");
+const expressions_1 = require("./expressions");
+const dataset_1 = require("./dataset");
 class BranchContext {
     constructor(source, branchName, expressions) {
         this.source = source;
@@ -52,7 +52,7 @@ class BrachsetUtility {
     static isWillObject(expressions) {
         if (expressions == null)
             return false;
-        return expressions.some(a => a instanceof Expressions_1.Find);
+        return expressions.some(a => a instanceof expressions_1.Find);
     }
 }
 /**
@@ -60,7 +60,7 @@ class BrachsetUtility {
  */
 class DirectStrategy {
     constructor() {
-        this.afterExpressions = [Expressions_1.Find];
+        this.afterExpressions = [expressions_1.Find];
     }
     escapeAfterExpressions(expressions) {
         return expressions.filter(x => !this.afterExpressions.some(e => x instanceof e));
@@ -68,11 +68,11 @@ class DirectStrategy {
     get(context) {
         let exps = this.escapeAfterExpressions(context.expressions);
         let expsWithUsedExpressions = exps.concat(BrachsetUtility.getSelectOrExpandByUsedProperies(exps));
-        return context.source.get.apply(context.source, [new Expressions_1.Expand([{
-                    property: new Expressions_1.Property(context.branchName),
+        return context.source.get.apply(context.source, [new expressions_1.Expand([{
+                    property: new expressions_1.Property(context.branchName),
                     expressions: expsWithUsedExpressions
                 }])]).then((response) => {
-            return new MemArrayVisitor_1.MemSet(BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response), expsWithUsedExpressions).get();
+            return new memarrayvisitor_1.MemSet(BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response), expsWithUsedExpressions).get();
         });
     }
 }
@@ -83,19 +83,19 @@ exports.DirectStrategy = DirectStrategy;
  */
 class SSCollectorStrategy {
     getExpandAndSelect(expressions) {
-        let items = [Expressions_1.Select, Expressions_1.Expand];
+        let items = [expressions_1.Select, expressions_1.Expand];
         return expressions.filter(a => items.some(i => a instanceof i));
     }
     get(context) {
         // let exps =  this.escapeAfterExpressions(context.expressions).concat(this.getDoubleSourceExpressions(context.expressions));
-        return context.source.get(new Expressions_1.Expand([{
-                property: new Expressions_1.Property(context.branchName),
+        return context.source.get(new expressions_1.Expand([{
+                property: new expressions_1.Property(context.branchName),
                 expressions: this.getExpandAndSelect(context.expressions)
             }]))
             .then((response) => {
             let items = BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response);
             // let allExpressions = context.expressions.concat(this.getDoubleSourceExpressions(context.expressions));
-            return new MemArrayVisitor_1.MemSet(items || [], //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
+            return new memarrayvisitor_1.MemSet(items || [], //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
             context.expressions).then((r) => {
                 return r;
             });
@@ -108,8 +108,8 @@ class SSCollectorStrategy {
  */
 class DSFCollectorStrategy {
     constructor() {
-        this.afterExpressions = [Expressions_1.Order, Expressions_1.Top, Expressions_1.Skip, Expressions_1.Filter, Expressions_1.Find];
-        this.usesDoubleSourceExpressions = [Expressions_1.Filter];
+        this.afterExpressions = [expressions_1.Order, expressions_1.Top, expressions_1.Skip, expressions_1.Filter, expressions_1.Find];
+        this.usesDoubleSourceExpressions = [expressions_1.Filter];
     }
     /**
      *
@@ -123,14 +123,14 @@ class DSFCollectorStrategy {
     }
     get(context) {
         let exps = this.escapeAfterExpressions(context.expressions).concat(this.getDoubleSourceExpressions(context.expressions));
-        return context.source.get(new Expressions_1.Expand([{
-                property: new Expressions_1.Property(context.branchName),
+        return context.source.get(new expressions_1.Expand([{
+                property: new expressions_1.Property(context.branchName),
                 expressions: exps
             }]))
             .then((response) => {
             let items = BrachsetUtility.getPropertyAndGuaranteeResultIsArray(context.branchName, response);
             // let allExpressions = context.expressions.concat(this.getDoubleSourceExpressions(context.expressions));
-            return new MemArrayVisitor_1.MemSet(items, //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
+            return new memarrayvisitor_1.MemSet(items, //hepsi alındıktan sonra filter,order,find,gibi diğer işlemler yapılıyor
             context.expressions).then((r) => {
                 return r;
             });
@@ -139,7 +139,7 @@ class DSFCollectorStrategy {
 }
 class SmartStrategy {
     getStrategy(context) {
-        if (context.source.getExpressions().some(x => x instanceof Expressions_1.Find))
+        if (context.source.getExpressions().some(x => x instanceof expressions_1.Find))
             return new DirectStrategy();
         return new SSCollectorStrategy();
     }
@@ -151,7 +151,7 @@ class SmartStrategy {
  * Herhangi bir source üzerindeki objenin expend edilen propertsini tek bir source gibi kullanmak için kullanılır.
  *
  */
-class Branchset extends Dataset_1.DataSet {
+class Branchset extends dataset_1.DataSet {
     constructor(source, branchName, expressions = [], strategy = new SmartStrategy()) {
         super(expressions);
         this.source = source;

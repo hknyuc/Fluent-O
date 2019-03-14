@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Dataset_1 = require("./Dataset");
-const MemArrayVisitor_1 = require("./MemArrayVisitor");
-const Expressions_1 = require("./Expressions");
-class MapSet extends Dataset_1.DataSet {
+const dataset_1 = require("./dataset");
+const memarrayvisitor_1 = require("./memarrayvisitor");
+const expressions_1 = require("./expressions");
+class MapSet extends dataset_1.DataSet {
     constructor(source, mapFn, expressions = [], mapFnEx) {
         super(expressions);
         this.source = source;
@@ -16,7 +16,7 @@ class MapSet extends Dataset_1.DataSet {
             return this.source.query.apply(this.source, expressions.filter(this.onlyRange))
                 .then((response) => {
                 let result = Array.isArray(response) ? response.map(this.mapFn) : this.mapFn(response, -1, null);
-                let set = new MemArrayVisitor_1.MemSet(result);
+                let set = new memarrayvisitor_1.MemSet(result);
                 set = set.query.apply(set, expressions.filter(this.onlySelect));
                 let memset = filters.length != 0 ? set.query.apply(set, filters) : set;
                 return {
@@ -26,8 +26,8 @@ class MapSet extends Dataset_1.DataSet {
         }
         if (typeof this.mapFn === "string") {
             let filters = expressions.filter(this.onlySortandElimination);
-            let exps = expressions.filter(this.onlyRange).concat([new Expressions_1.Expand([{
-                        property: new Expressions_1.Property(this.mapFn),
+            let exps = expressions.filter(this.onlyRange).concat([new expressions_1.Expand([{
+                        property: new expressions_1.Property(this.mapFn),
                         expressions: expressions.filter(this.onlySelect)
                     }])]);
             return this.source.query.apply(this.source, exps).then((response) => {
@@ -43,7 +43,7 @@ class MapSet extends Dataset_1.DataSet {
                     }
                     return result;
                 };
-                let set = new MemArrayVisitor_1.MemSet(result);
+                let set = new memarrayvisitor_1.MemSet(result);
                 return {
                     set: (filters.length != 0 ? set.query.apply(set, filters) : set)
                 };
@@ -55,15 +55,15 @@ class MapSet extends Dataset_1.DataSet {
         return new MapSet(this.source, this.mapFn, [].concat(this.expressions).concat(expression || []));
     }
     onlySelect(x) {
-        let types = [Expressions_1.Select, Expressions_1.Expand];
+        let types = [expressions_1.Select, expressions_1.Expand];
         return types.some(t => x instanceof t);
     }
     onlyRange(x) {
-        let types = [Expressions_1.Skip, Expressions_1.Top];
+        let types = [expressions_1.Skip, expressions_1.Top];
         return types.some(t => x instanceof t);
     }
     onlySortandElimination(x) {
-        let types = [Expressions_1.Filter, Expressions_1.Order];
+        let types = [expressions_1.Filter, expressions_1.Order];
         return types.some(t => x instanceof t);
     }
     add(item) {

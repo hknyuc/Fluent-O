@@ -1,4 +1,4 @@
-import { DataSet, IDataSet } from './Dataset';
+import { DataSet, IDataSet } from './dataset';
 export declare class ChangeSet<T> extends DataSet<T> {
     private source;
     private onAdding;

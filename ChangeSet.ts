@@ -1,5 +1,5 @@
-import { Emitter } from './Core';
-import { DataSet, IDataSet } from './Dataset';
+import { Emitter } from './core';
+import { DataSet, IDataSet } from './dataset';
 export class ChangeSet<T> extends DataSet<T>{
     private onAdding = new Emitter('sync');
     private onAdded = new Emitter('async');

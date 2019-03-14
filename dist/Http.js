@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const RestClient_1 = require("./RestClient");
-class Http extends RestClient_1.RestClient {
+const restclient_1 = require("./restclient");
+class Http extends restclient_1.RestClient {
     constructor() {
         super({
             create: function () {

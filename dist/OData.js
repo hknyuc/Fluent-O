@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const DataSet_1 = require("./DataSet");
-const Schema_1 = require("./Schema");
+const schema_1 = require("./schema");
 const Expressions_1 = require("./Expressions");
-const Http_1 = require("./Http");
+const http_1 = require("./http");
 class ODataVisitor extends Expressions_1.ExpressionVisitor {
     constructor() {
         super(...arguments);
@@ -187,7 +187,7 @@ class ODataVisitor extends Expressions_1.ExpressionVisitor {
             r = v;
         else if (v instanceof Date)
             r = v.toISOString();
-        else if (v instanceof Schema_1.Guid)
+        else if (v instanceof schema_1.Guid)
             r = "" + v.toString() + "";
         else if (v instanceof Object) {
             let params = [];
@@ -298,7 +298,7 @@ class ODataCombineVisitor extends Expressions_1.ExpressionVisitor {
     }
     push(value) {
         this.expressions.push({
-            key: Schema_1.Guid.new().toString(),
+            key: schema_1.Guid.new().toString(),
             value: value
         });
     }
@@ -514,7 +514,7 @@ class ODataSet extends DataSet_1.DataSet {
     __convert(values) {
         if (values == null)
             return null;
-        if (values instanceof Schema_1.Guid)
+        if (values instanceof schema_1.Guid)
             return values.value;
         if (values instanceof Date)
             return ODataSet.__dateToIsoUTC(values);
@@ -562,8 +562,8 @@ class ODataSet extends DataSet_1.DataSet {
         }
         let v = element[this.options.primary.name];
         let type = this.options.primary.type;
-        if (type === Schema_1.Guid && typeof v === "string") {
-            v = new Schema_1.Guid(v);
+        if (type === schema_1.Guid && typeof v === "string") {
+            v = new schema_1.Guid(v);
         }
         else if (type === Date && typeof v === "string") {
             v = new Date(v);
@@ -625,7 +625,7 @@ exports.entity = function (name) {
 };
 class ODataConfig {
     static createHttp() {
-        return new Http_1.Http();
+        return new http_1.Http();
     }
 }
 exports.ODataConfig = ODataConfig;

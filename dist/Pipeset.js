@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const MemArrayVisitor_1 = require("./MemArrayVisitor");
-const Dataset_1 = require("./Dataset");
-const MemOperation_1 = require("./MemOperation");
+const memarrayvisitor_1 = require("./memarrayvisitor");
+const dataset_1 = require("./dataset");
+const memoperation_1 = require("./memoperation");
 /**
  * Query kısmına extradan lokalde yapılan işlemler eklenebilir. O işlemden sonra diğer işlem memset üzeriden gider.
  */
-class Pipeset extends Dataset_1.DataSet {
+class Pipeset extends dataset_1.DataSet {
     constructor(source, expressions = []) {
         super(expressions);
         this.source = source;
@@ -18,10 +18,10 @@ class Pipeset extends Dataset_1.DataSet {
         return this.expressions.filter(this.notPipeQuery);
     }
     notPipeQuery(item) {
-        return !((item instanceof MemOperation_1.MemOperation) || typeof item === "function");
+        return !((item instanceof memoperation_1.MemOperation) || typeof item === "function");
     }
     isPipeQuery(item) {
-        return ((item instanceof MemOperation_1.MemOperation) || typeof item === "function");
+        return ((item instanceof memoperation_1.MemOperation) || typeof item === "function");
     }
     splitExpressionsByPipeQuery(expressions) {
         let indexOfItem = expressions.findIndex(this.isPipeQuery);
@@ -75,12 +75,12 @@ class Pipeset extends Dataset_1.DataSet {
                 : expressions.pipeQuery(r);
             if (pipeResult instanceof Promise) {
                 return pipeResult.then((response) => {
-                    return new Pipeset(new MemArrayVisitor_1.MemSet(response, expressions.right)).then((response) => {
+                    return new Pipeset(new memarrayvisitor_1.MemSet(response, expressions.right)).then((response) => {
                         return response;
                     });
                 });
             }
-            return new Pipeset(new MemArrayVisitor_1.MemSet(pipeResult, expressions.right)).then((response) => {
+            return new Pipeset(new memarrayvisitor_1.MemSet(pipeResult, expressions.right)).then((response) => {
                 return response;
             });
         });

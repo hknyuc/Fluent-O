@@ -1,4 +1,4 @@
-import { RestClient } from './RestClient';
+import { RestClient } from './restclient';
 import { DataSet } from './DataSet';
 import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, It, Action, Func } from './Expressions';
 export declare class ODataVisitor extends ExpressionVisitor {

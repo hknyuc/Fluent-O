@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Dataset_1 = require("./Dataset");
-const OData_1 = require("./OData");
-class CacheSet extends Dataset_1.DataSet {
+const dataset_1 = require("./dataset");
+const odata_1 = require("./odata");
+class CacheSet extends dataset_1.DataSet {
     constructor(dataset) {
         if (dataset == null)
             throw new Error('dataset is null for caching');
@@ -19,7 +19,7 @@ class CacheSet extends Dataset_1.DataSet {
         return this.dataset.delete.apply(this.dataset, arguments);
     }
     get(expressions) {
-        let query = OData_1.QuerySet.get(expressions);
+        let query = odata_1.QuerySet.get(expressions);
         if (CacheSet.caches[query] != null) {
             return Promise.resolve(CacheSet.caches[query]);
         }

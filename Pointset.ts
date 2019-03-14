@@ -1,6 +1,6 @@
-import { MemSet } from './MemArrayVisitor';
-import { IDataSet, DataSet } from './Dataset';
-import { MemOperation } from './MemOperation';
+import { MemSet } from './memarrayvisitor';
+import { IDataSet, DataSet } from './dataset';
+import { MemOperation } from './memoperation';
 /**
  * Ne kadar Expression eklenirse eklenirsin WhenMemorized kısmı sonra çalışır.  Pipesetde ise MemOperationdan sonra işlemler memory üzerinden gerçekleşir.
  */

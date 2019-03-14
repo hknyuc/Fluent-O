@@ -1,7 +1,7 @@
-import { Utility } from './Core';
-import { Select, Property } from './Expressions';
-import { MemSet } from './MemArrayVisitor';
-import { select } from './Operations';
+import { Utility } from './core';
+import { Select, Property } from './expressions';
+import { MemSet } from './memarrayvisitor';
+import { select } from './operations';
 export class TrackingMemset extends MemSet{
     constructor(private memset:MemSet){
         super(memset["source"],memset.getExpressions());

@@ -1,5 +1,5 @@
-import { Guid } from './Schema';
-import { LazyArrayVisitor } from './LazyArrayVisitor';
+import { Guid } from './schema';
+import { LazyArrayVisitor } from './lazyarrayvisitor';
 import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./Expressions";
 import { DataSet } from "./Dataset";
 
