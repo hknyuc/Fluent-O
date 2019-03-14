@@ -1,4 +1,4 @@
-import { DataSet } from './Dataset';
+import { DataSet } from './dataset';
 export declare class Operation {
     type: string;
     constructor(type: string);

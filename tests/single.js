@@ -1,9 +1,9 @@
 var easyAssert = require("./extends").EasyAssert;
 var assert = require('assert');
-var memset = require('../MemArrayVisitor').MemSet;
-var schema = require('../Schema');
-var operations = require('../Operations');
-var mem = require('../Operations').memset;
+var memset = require('../memarrayvisitor').MemSet;
+var schema = require('../schema');
+var operations = require('../operations');
+var mem = require('../operations').memset;
 
 easyAssert.use(assert);
 

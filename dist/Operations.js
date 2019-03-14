@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const trackingmemset_1 = require("./trackingmemset");
-const changeSet_1 = require("./changeSet");
+const changeset_1 = require("./changeset");
 const pointset_1 = require("./pointset");
 const mapset_1 = require("./mapset");
 const schema_1 = require("./schema");
@@ -1047,7 +1047,7 @@ exports.pointset = pointset;
  * @returns {ChangeSet}
  */
 function changeset(source) {
-    return new changeSet_1.ChangeSet(source);
+    return new changeset_1.ChangeSet(source);
 }
 exports.changeset = changeset;
 function trackingMemset(source) {

@@ -1,5 +1,5 @@
 import { TrackingMemset } from './trackingmemset';
-import { ChangeSet } from './changeSet';
+import { ChangeSet } from './changeset';
 import { Pointset } from './pointset';
 import { IDataSet } from './dataset';
 import { MapSet } from './mapset';

@@ -1,5 +1,5 @@
 var assert = require('assert');
-var Rest = require('../RestClient');
+var Rest = require('../restClient');
 var XMLHttpRequest = require('../node_modules/xmlhttprequest').XMLHttpRequest;
 describe('client', function () {
   let client = new Rest.RestClient({

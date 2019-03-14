@@ -1,5 +1,5 @@
 import { RestClient } from './restclient';
-import { DataSet } from './DataSet';
+import { DataSet } from './dataset';
 import { Guid } from './schema';
 
 import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It, Action, Func } from './Expressions';

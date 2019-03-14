@@ -1,5 +1,5 @@
 import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod } from "./Expressions";
-import { DataSet } from "./Dataset";
+import { DataSet } from "./dataset";
 export declare class MemArrayVisitor extends ExpressionVisitor {
     private source;
     result: any;

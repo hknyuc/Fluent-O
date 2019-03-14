@@ -1,6 +1,6 @@
 {
   "name": "fluento",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Queryable data structure",
   "main": "index.js",
   "scripts": {
