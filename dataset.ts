@@ -1,41 +1,3 @@
-export interface IDataSet<T>{
-    getExpressions():Array<any>;
-     /**
-     * fetches data as array from source.
-     * @param expressions specifies events that will operate on the resource.
-     */
-    get(...expressions:Array<any>):Promise<any>;
-    /**
-     * adds element to source 
-     * @param element 
-     */
-    add(element:T):Promise<any>;
-    /**
-     * deletes element from source
-     * @param element 
-     */
-    delete(element:T):Promise<any>;
-
-    /**
-     * updates element
-     * @param element 
-     */
-    update(element:T):Promise<any>;
-    /**
-     * creates a new dataset after it applied expression on it
-     * @param expressions specifies events that will operate on the resource.
-     */
-    query(...expressions:Array<any>):IDataSet<T>;
-    /**
-     * fetches data as array from source.
-     * @returns Promise
-     */
-    then(callback,errorCallback?):Promise<any>;
-
-    map(mapFn:(element:any)=>any):Promise<any>;
-
-    insertTo(params:Array<any>|object):Promise<any>;
-}
 
 
 /**
@@ -197,3 +159,41 @@ export class DecorateSet<T> extends DataSet<T>{
     }
 }
 
+export interface IDataSet<T>{
+    getExpressions():Array<any>;
+     /**
+     * fetches data as array from source.
+     * @param expressions specifies events that will operate on the resource.
+     */
+    get(...expressions:Array<any>):Promise<any>;
+    /**
+     * adds element to source 
+     * @param element 
+     */
+    add(element:T):Promise<any>;
+    /**
+     * deletes element from source
+     * @param element 
+     */
+    delete(element:T):Promise<any>;
+
+    /**
+     * updates element
+     * @param element 
+     */
+    update(element:T):Promise<any>;
+    /**
+     * creates a new dataset after it applied expression on it
+     * @param expressions specifies events that will operate on the resource.
+     */
+    query(...expressions:Array<any>):IDataSet<T>;
+    /**
+     * fetches data as array from source.
+     * @returns Promise
+     */
+    then(callback,errorCallback?):Promise<any>;
+
+    map(mapFn:(element:any)=>any):Promise<any>;
+
+    insertTo(params:Array<any>|object):Promise<any>;
+}

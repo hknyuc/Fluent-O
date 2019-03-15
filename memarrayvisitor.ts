@@ -1,6 +1,6 @@
 import { Guid } from './schema';
 import { LazyArrayVisitor } from './lazyarrayvisitor';
-import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./Expressions";
+import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./expressions";
 import { DataSet } from "./dataset";
 
 export class MemArrayVisitor extends ExpressionVisitor {

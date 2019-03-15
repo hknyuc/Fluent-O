@@ -1,4 +1,4 @@
-import { DataSet } from './Dataset';
+import { DataSet } from './dataset';
 import { Guid } from "./schema";
 
 export class Operation {

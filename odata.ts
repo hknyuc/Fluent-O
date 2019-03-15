@@ -2,7 +2,7 @@ import { RestClient } from './restclient';
 import { DataSet } from './dataset';
 import { Guid } from './schema';
 
-import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It, Action, Func } from './Expressions';
+import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It, Action, Func } from './expressions';
 import {Http} from './http';
 export class ODataVisitor extends ExpressionVisitor {
     private _result: string = null;
