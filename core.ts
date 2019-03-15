@@ -123,20 +123,17 @@ export class Utility {
         let castOf = instance instanceof castingObject;
         if (castOf)
             return true;
-        let constructor = instance["constructor"];
-        if (constructor == null)
-            return false;
-        let name = constructor["name"];
-        if (name == null)
-            return false;
         if (castingObject.name == null)
             return false;
-        let obj = instance.prototype;
+        let name = castingObject.name;
+        let obj =  instance.__proto__;
         let currentName;
         while (true) {
-            if (obj == null) return false;
+            if (obj == null)
+                return false;
             currentName = obj.constructor.name;
-            if (name === currentName) return true;
+            if (name === currentName)
+                return true;
             obj = obj.__proto__;
         }
     }
