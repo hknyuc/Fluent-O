@@ -1,7 +1,7 @@
 import { Guid } from './schema';
 import { LazyArrayVisitor } from './lazyarrayvisitor';
 import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./Expressions";
-import { DataSet } from "./Dataset";
+import { DataSet } from "./dataset";
 
 export class MemArrayVisitor extends ExpressionVisitor {
     private source: any;
