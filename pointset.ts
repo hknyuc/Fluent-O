@@ -1,6 +1,7 @@
 import { MemSet } from './memarrayvisitor';
 import { IDataSet, DataSet } from './dataset';
 import { MemOperation } from './memoperation';
+import { Utility } from './core';
 /**
  * Ne kadar Expression eklenirse eklenirsin WhenMemorized kısmı sonra çalışır.  Pipesetde ise MemOperationdan sonra işlemler memory üzerinden gerçekleşir.
  */
@@ -14,7 +15,7 @@ export class Pointset<T> extends DataSet<T>{
     }
 
     private static insureAsPromise(value) {
-        return value instanceof Promise ? value : Promise.resolve(value);
+        return Utility.instanceof(value,Promise)? value : Promise.resolve(value);
     }
 
     /**
@@ -37,7 +38,7 @@ export class Pointset<T> extends DataSet<T>{
                 });
             });
         }
-        if (pipe instanceof MemOperation)
+        if (Utility.instanceof(pipe,MemOperation))
             return Pointset.insureAsPromise(pipe.pipe(response)).then((response) => {
                 return this.applyMemOps(operations, response).then((resp)=>{
                     return resp;

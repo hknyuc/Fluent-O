@@ -1,11 +1,11 @@
 {
     "compilerOptions": {
         "target": "es6",
-        "module": "amd",
+        "module": "commonjs",
         "sourceMap": false,
         "experimentalDecorators": true,
         "outDir": "dist",
-        "outFile":"./dist/index.js",
+      //  "outFile":"./dist/index.js",
         "declaration": true,
        // "file-name-casing": [true, "camel-case"]
         "forceConsistentCasingInFileNames":true

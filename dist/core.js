@@ -1,14 +1,11 @@
-export class Emitter {
-    type;
-    _events;
-    _async;
-    _sync;
-    _strategy;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class Emitter {
     /**
-     * 
+     *
      * @param {string} type is sync or async. if async emits values as asynchronously otherwise synchronously
      */
-    constructor(type: 'async' | 'sync') {
+    constructor(type) {
         this.type = type;
         this._events = [];
         this._async = (events, args) => {
@@ -18,8 +15,7 @@ export class Emitter {
                 }, 0);
             });
             return true;
-        }
-
+        };
         this._sync = (events, args) => {
             let result = true;
             events.forEach(function (event) {
@@ -30,19 +26,18 @@ export class Emitter {
                 return true;
             });
             return result;
-        }
-
+        };
         this._strategy = type === 'sync' ? this._sync : this._async;
     }
     /**
      * hooks to actions
-     * @param {Function} callbackFn 
+     * @param {Function} callbackFn
      */
     hook(callbackFn) {
-        if (typeof callbackFn !== "function") throw new Error('callbackFn is not function');
+        if (typeof callbackFn !== "function")
+            throw new Error('callbackFn is not function');
         this._events.push(callbackFn);
     }
-
     /**
      * Creates new emitter builder for observing.
      * @param {Object} obj object to be watched
@@ -50,35 +45,32 @@ export class Emitter {
     for(obj) {
         return new EmitterObjectBuilder(obj, this);
     }
-
     /**
      * emits to all observers . if strategy is sync, result can break value. if returns false it must be break
      * @returns {Boolean}  break value. if true continue otherwise break.
      */
-    emit(...params: Array<any>): boolean {
+    emit(...params) {
         return this._strategy(this._events, arguments);
     }
 }
-
-export class EmitterObjectBuilder {
-    emitter;
-    obj;
+exports.Emitter = Emitter;
+class EmitterObjectBuilder {
     /**
-     * 
-     * @param {Object} obj 
-     * @param {Emitter} emitter 
+     *
+     * @param {Object} obj
+     * @param {Emitter} emitter
      */
     constructor(obj, emitter) {
         this.obj = obj;
         this.emitter = emitter;
     }
-
     /**
      * When props change. It emits changed object
      * @param {Array} props properties
      */
     peek(props) {
-        if (!Array.isArray(props)) throw new Error('EmitterObjectBuilder in on method : argument is not valid');
+        if (!Array.isArray(props))
+            throw new Error('EmitterObjectBuilder in on method : argument is not valid');
         let self = this;
         props.forEach((prop) => {
             Object.defineProperty(this.obj, prop, {
@@ -93,31 +85,26 @@ export class EmitterObjectBuilder {
         });
     }
 }
-
-
-export class Utility {
-    static ObjectDefineProperty(o: any, p: PropertyKey, attributes: PropertyDescriptor & ThisType<any>) {
+exports.EmitterObjectBuilder = EmitterObjectBuilder;
+class Utility {
+    static ObjectDefineProperty(o, p, attributes) {
         let set = attributes.set;
         let oldAttributes = Object.getOwnPropertyDescriptor(o, p) || {};
         // let oldGet = oldAttributes.get;
         let oldSet = oldAttributes.set;
-
         attributes.set = function (newValue) {
             if (oldSet != null)
                 oldSet.apply(oldAttributes, [newValue]);
             set.apply(attributes, [newValue]);
-        }
-
+        };
         Object.defineProperty(o, p, attributes);
-
         /**
          *        configurable:attributes.configurable,
             writable:attributes.writable,
             enumerable:attributes.enumerable
          */
     }
-
-    static instanceof(instance, castingObject): boolean {
+    static instanceof(instance, castingObject) {
         if (instance == null)
             return false;
         let castOf = instance instanceof castingObject;
@@ -134,65 +121,60 @@ export class Utility {
         let obj = instance.prototype;
         let currentName;
         while (true) {
-            if (obj == null) return false;
+            if (obj == null)
+                return false;
             currentName = obj.constructor.name;
-            if (name === currentName) return true;
+            if (name === currentName)
+                return true;
             obj = obj.__proto__;
         }
     }
 }
-
-
-
-
-
-export class TaskHandler {
-    static runSequent<T>(items: Array<T>, fn: (item: T) => Promise<any>, force: boolean = false): Promise<any> {
+exports.Utility = Utility;
+class TaskHandler {
+    static runSequent(items, fn, force = false) {
         return new SequentTaskHandler(items, fn, force).run();
     }
-
-    static runAsync<T>(items: Array<T>, fn: (item: T) => Promise<any>, taskCount: number = 0, timeout: number = 0): Promise<any> {
+    static runAsync(items, fn, taskCount = 0, timeout = 0) {
         return new AsyncTaskHandler(items, fn, taskCount, timeout).run();
     }
-
-    static runFirstSuccess<T>(items: Array<T>, fn: (item: T) => Promise<any>) {
+    static runFirstSuccess(items, fn) {
         return new TaskHandlerFirstSuccess(items, fn);
     }
-
     /**
-     * 
+     *
      * @param timeout task can cancel in timeout(ms)
      */
-    static createCancellable(timeout: number = 0): CancellableTaskHandler {
+    static createCancellable(timeout = 0) {
         return new CancellableTaskHandler(timeout);
     }
-
 }
-
+exports.TaskHandler = TaskHandler;
 class SequentTaskHandlerEvent {
-    isCancelled: boolean = false;
-    cancel(): void {
+    constructor() {
+        this.isCancelled = false;
+    }
+    cancel() {
         this.isCancelled = true;
     }
 }
-
-class SequentTaskHandler<T> {
-    private returnPromise: Promise<any>;
-    private arg: SequentTaskHandlerEvent;
-    constructor(private items: Array<T>, private fn: (item: T, controller) => Promise<any>, private force: boolean = false) {
-
+class SequentTaskHandler {
+    constructor(items, fn, force = false) {
+        this.items = items;
+        this.fn = fn;
+        this.force = force;
     }
-    run(): Promise<any> {
+    run() {
         this.arg = new SequentTaskHandlerEvent();
-        if (this.noPromise()) return Promise.resolve();
+        if (this.noPromise())
+            return Promise.resolve();
         let self = this;
         let newItems = this.createNewCollectionPromise();
         return new Promise((resolve, reject) => {
             self.bind(resolve, reject, newItems, newItems.pop());
         });
     }
-
-    private bind(resolve: Function, reject, items: Array<Promise<any>>, value: any): void {
+    bind(resolve, reject, items, value) {
         this.returnPromise = this.fn(value, this.arg);
         if (this.arg.isCancelled) {
             reject("cancelled");
@@ -208,7 +190,7 @@ class SequentTaskHandler<T> {
                 reject("cancelled");
                 return;
             }
-            self.bind(resolve, reject, items, items.pop())
+            self.bind(resolve, reject, items, items.pop());
         }, (error) => {
             if (self.force) {
                 if (items.length == 0) {
@@ -224,141 +206,132 @@ class SequentTaskHandler<T> {
             }
             reject(error);
         });
-
     }
-
-
-    private createNewCollectionPromise(): Array<Promise<any>> {
-        return this.items.map(x => x) as any;
+    createNewCollectionPromise() {
+        return this.items.map(x => x);
     }
-
-    private noPromise(): boolean {
+    noPromise() {
         return this.items.length == 0;
     }
-
 }
-
-
-class AsyncTaskHandler<T> {
-    constructor(private items: Array<T>, private fn: (item: T) => Promise<any>, private taskCount: number = 0, private timeout = 0) {
+class AsyncTaskHandler {
+    constructor(items, fn, taskCount = 0, timeout = 0) {
+        this.items = items;
+        this.fn = fn;
+        this.taskCount = taskCount;
+        this.timeout = timeout;
         if (!this.isTaskCountValid())
             throw new Error("taskCount is not valid for operation");
     }
-
-    private isTaskCountValid(): boolean {
-        if (this.taskCount < 0) return false;
+    isTaskCountValid() {
+        if (this.taskCount < 0)
+            return false;
         return true;
     }
-
-    private getCount(): number {
+    getCount() {
         if (this.taskCount === 0)
             return this.items.length;
         if (this.taskCount > this.items.length)
             return this.items.length;
         return this.taskCount;
     }
-
-    run(): Promise<any> {
+    run() {
         let parts = this.getAllParts();
-        if (parts.length == 0) return Promise.resolve();
+        if (parts.length == 0)
+            return Promise.resolve();
         return new SequentTaskHandler(parts.reverse(), (items) => {
-            if (items.length == 0) return Promise.resolve();
+            if (items.length == 0)
+                return Promise.resolve();
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
                     let ps = items.map(x => this.fn(x));
                     Promise.all(ps).then(r => {
                         resolve(r);
                     }, (error) => {
-                        reject(error)
+                        reject(error);
                     });
-                }, this.timeout)
-            })
+                }, this.timeout);
+            });
         }, true).run();
     }
-
-
-    private isEmpty(): boolean {
+    isEmpty() {
         return this.items.length == 0;
     }
-
-    private getParts(): Array<any> {
-        if (this.isEmpty()) return [];
+    getParts() {
+        if (this.isEmpty())
+            return [];
         let returns = new Array();
         for (let i = 0; i < this.getCount(); i++) {
-            if (this.isEmpty()) break;
+            if (this.isEmpty())
+                break;
             returns.push(this.items.pop());
         }
         return returns;
     }
-
-    private getAllParts(): Array<Array<any>> {
+    getAllParts() {
         let results = new Array();
         while (!this.isEmpty())
             results.push(this.getParts());
         return results;
     }
-
 }
-
 class CancellableTaskMediator {
-    private _isCancel = false;
-    get isCancelled(): boolean {
+    constructor() {
+        this._isCancel = false;
+    }
+    get isCancelled() {
         return this._isCancel;
     }
-
-    cancel(): void {
+    cancel() {
         this._isCancel = true;
     }
 }
-export class CancellableTaskHandler {
-    private mediators: Array<CancellableTaskMediator> = [];
+class CancellableTaskHandler {
     /**
-     * 
-     * @param timeout invoke time 
+     *
+     * @param timeout invoke time
      */
-    constructor(private timeout: number) {
-
+    constructor(timeout) {
+        this.timeout = timeout;
+        this.mediators = [];
     }
-
     /**
      * adds new actions and cancels before actions
      * @param fn new action
      */
-    runOnly(fn: Function): void {
+    runOnly(fn) {
         this.cancel();
         this.insertAction(fn);
     }
-
-    private insertAction(fn: Function): void {
+    insertAction(fn) {
         var mediator = this.pullMediator();
         setTimeout(() => {
-            if (mediator.isCancelled) return;
+            if (mediator.isCancelled)
+                return;
             fn();
         }, this.timeout);
     }
     /**
      * cancels all actions
      */
-    cancel(): void {
+    cancel() {
         this.mediators.forEach(mediator => {
             mediator.cancel();
-        })
+        });
     }
-
-    private pullMediator(): CancellableTaskMediator {
+    pullMediator() {
         var mediator = new CancellableTaskMediator();
         this.mediators.push(mediator);
         return mediator;
     }
 }
-
+exports.CancellableTaskHandler = CancellableTaskHandler;
 class TaskHandlerFirstSuccess {
-    constructor(private items: Array<any>, private fn: (item: any) => Promise<any>) {
-
+    constructor(items, fn) {
+        this.items = items;
+        this.fn = fn;
     }
-
-
-    run(): Promise<any> {
+    run() {
         let self = this;
         let errorCount = 0;
         return new Promise((resolve, reject) => {
@@ -374,11 +347,10 @@ class TaskHandlerFirstSuccess {
                         return;
                     }
                     return error;
-                })
+                });
             }, true).run().catch(() => {
                 //ignore
             });
-        })
-
+        });
     }
 }

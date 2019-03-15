@@ -11,6 +11,7 @@ import { DecorateSet} from './dataset';
 import {CacheSet} from './cacheset';
 import { Branchset, IBranchStrategy } from './branchset';
 import { Pipeset } from './pipeset';
+import { Utility } from './core';
 
 export class EqBinaryExtend extends EqBinary {
     constructor(eqBinary: EqBinary) {
@@ -243,7 +244,7 @@ export class PropertyExtend extends Property {
     
     private create(op: string, value):EqBinaryExtend {
         let v = value;
-        if (!(value instanceof Property)) {
+        if (!(Utility.instanceof(value,Property))) {
             v = new Value(value);
         }
         return new EqBinaryExtend(new EqBinary(this, new Operation(op), v));
@@ -629,7 +630,7 @@ export class CountExtend extends Count{
 export class RootExtend extends Root{
     private create(op: string, value):EqBinaryExtend {
         let v = value;
-        if (!(value instanceof Root)) {
+        if (!(Utility.instanceof(value,Root))) {
             v = new Value(value);
         }
         return new EqBinaryExtend(new EqBinary(this, new Operation(op), v));
@@ -790,7 +791,7 @@ export class ItExtend extends It{
     }
     private create(op: string, value):EqBinaryExtend {
         let v = value;
-        if (!(value instanceof Root)) {
+        if (!(Utility.instanceof(value,Root))) {
             v = new Value(value);
         }
         return new EqBinaryExtend(new EqBinary(this, new Operation(op), v));
@@ -1000,14 +1001,14 @@ export function select(...args: any[]): Select {
    let appendAsString = function (){
        args.forEach(function (arg){
           results.push({
-              property:arg instanceof Property?arg:prop(arg)
+              property:Utility.instanceof(arg,Property)?arg:prop(arg)
           });
        });
    }
 
    let singleProperty = function (){
      results.push({
-         property: args[0] instanceof Property?args[0]:prop(args[0]),
+         property: Utility.instanceof(args[0],Property)?args[0]:prop(args[0]),
          expression:args[1] 
      });
    }
@@ -1023,7 +1024,7 @@ export function select(...args: any[]): Select {
     }else{
         let indexOfNonString = args.findIndex(function (item){
             let isString = typeof item === "string";
-            let isProperty = item instanceof Property;
+            let isProperty = Utility.instanceof(item,Property);
             return !(isString || isProperty);
         });
 
@@ -1085,14 +1086,14 @@ export function order(property: string | Property, type?: 'asc' | 'desc'): Order
     let propem = property;
     if (typeof property == "string")
         propem = prop(property)
-    if (!(propem instanceof Property))
+    if (!(Utility.instanceof(propem,Property)))
         throw new Error('order :property is not valid');
-    if(type == null) return new Order(propem);
+    if(type == null) return new Order(propem as any);
     let validTypes = ["asc", "desc"];
     if (!validTypes.some(x => x == type)) {
         throw new Error('order: type is not valid');
     }
-    return new Order(propem, type);
+    return new Order(propem as any, type);
 }
 
 
@@ -1104,7 +1105,7 @@ export function expand(property: string | Property, ...expression: any[]): Expan
     let prop = property;
     if (typeof property == "string")
         prop = new Property(property);
-    if (!(prop instanceof Property))
+    if (!(Utility.instanceof(prop,Property)))
         throw new Error("property is not valid");
     return new Expand([{
         property:prop as any,
@@ -1152,14 +1153,14 @@ export function memset(source:Array<any>,baseFilter?){
  * @returns {Guid}
  */
 export function guid(raw: string | Guid): Guid{
-    if(raw instanceof Guid) return raw;
-   return new Guid(raw);
+    if(Utility.instanceof(raw,Guid)) return raw as any;
+   return new Guid(raw as any);
 }
 
 export function action(name:string,...params){
     let args = [];
     params.forEach((param)=>{
-        if(param instanceof Value) {
+        if(Utility.instanceof(param,Value)) {
             args.push(param);
             return true;
         }
@@ -1172,7 +1173,7 @@ export function action(name:string,...params){
 export function func(name:string,...params){
     let args = [];
     params.forEach((param)=>{
-        if(param instanceof Value) {
+        if(Utility.instanceof(param,Value)) {
             args.push(param);
             return true;
         }
@@ -1259,7 +1260,7 @@ export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any
         get:function (expressions){
             expressions = expressions || [];
             let exp = this.dataset.getExpressions().concat(expressions);
-            let anyFirst = exp.find(a=> a instanceof Find);
+            let anyFirst = exp.find(a=> Utility.instanceof(a,Find));
             if(anyFirst) { // eğer find yazılmışşsa tek gelecek demek zaten
                 return this.next();
             }

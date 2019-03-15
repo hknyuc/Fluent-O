@@ -58,7 +58,7 @@ export class TrackingMemset extends MemSet{
 
     private selectTrackId(expressionsArr:Array<any>){
         let expressions = [].concat(expressionsArr);
-        let indexOfLast = expressions.lastIndexOf(x=>x instanceof Select);
+        let indexOfLast = expressions.lastIndexOf(x=>Utility.instanceof(x,Select));
         if(indexOfLast < 0){
             return expressions; // gets all
         }

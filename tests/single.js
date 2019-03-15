@@ -5,6 +5,7 @@ var schema = require('../schema');
 var operations = require('../operations');
 var mem = require('../operations').memset;
 
+
 easyAssert.use(assert);
 
 var select = operations.select;

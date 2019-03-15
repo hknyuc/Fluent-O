@@ -1,36 +1,35 @@
-import { Guid } from './schema';
-import { LazyArrayVisitor } from './lazyarrayvisitor';
-import { ExpressionVisitor, Select, SelectMany, Order, Property, ModelMethod, Value, Expand, Skip, Find, Count, EqBinary, Operation, RefExpression, Root, Filter, It, GlobalMethod, Top } from "./expressions";
-import { DataSet } from "./dataset";
-import { Utility } from './core';
-
-export class MemArrayVisitor extends ExpressionVisitor {
-    private source: any;
-    public result: any;
-    private rootValue: any;
-    constructor(array: any, root: any) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const schema_1 = require("./schema");
+const lazyarrayvisitor_1 = require("./lazyarrayvisitor");
+const expressions_1 = require("./expressions");
+const dataset_1 = require("./dataset");
+const core_1 = require("./core");
+class MemArrayVisitor extends expressions_1.ExpressionVisitor {
+    constructor(array, root) {
         super();
         this.source = array;
         this.result = [];
         this.rootValue = root;
     }
-    private getSource() {
-        if (Utility.instanceof(this.source,Promise)) return this.source;
+    getSource() {
+        if (core_1.Utility.instanceof(this.source, Promise))
+            return this.source;
         return Promise.resolve(this.source);
     }
-
-    select(select: Select) {
+    select(select) {
         return this.getSource().then((source) => {
             if (Array.isArray(source)) {
                 this.result = this.source.map(element => {
-                    let result = {} as any;
+                    let result = {};
                     select.args.forEach(arg => {
                         this.__createNestedProperty(result, arg.property)
                             .set(this.__getNestedProperty(element, arg.property));
                     });
                     return result;
                 });
-            } else {
+            }
+            else {
                 this.result = {};
                 select.args.forEach((arg) => {
                     this.__createNestedProperty(this.result, arg.property).set(this.__getNestedProperty(this.source, arg.property));
@@ -39,8 +38,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
             }
         });
     }
-
-    filter(filter: Filter) {
+    filter(filter) {
         return this.getSource().then((source) => {
             let result = [];
             let allPromise = [];
@@ -49,7 +47,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
                 allPromise.push(visitor.visit(filter.expression).then(x => {
                     if (x === true)
                         result.push(element);
-                }))
+                }));
             });
             return Promise.all(allPromise).then(() => {
                 this.result = result;
@@ -57,15 +55,14 @@ export class MemArrayVisitor extends ExpressionVisitor {
             });
         });
     }
-
-    _selectManyArray(selectMany: SelectMany, source: Array<any>) {
+    _selectManyArray(selectMany, source) {
         if (selectMany.parent != null) {
             let visitor = this.createMemVisitor(source);
             visitor.visit(selectMany.parent);
             source = visitor.result;
         }
-
-        if (!Array.isArray(source)) return source;
+        if (!Array.isArray(source))
+            return source;
         let rs = [];
         source.forEach(element => {
             let arr = element[selectMany.name];
@@ -79,14 +76,14 @@ export class MemArrayVisitor extends ExpressionVisitor {
         });
         this.result = rs;
     }
-    _selectManyObject(selectMany: SelectMany, source: Object) {
+    _selectManyObject(selectMany, source) {
         if (selectMany.parent != null) {
             let visitor = this.createMemVisitor(source);
             visitor.visit(selectMany.parent);
             source = visitor.result;
         }
         if (Array.isArray(source)) // array i nested
-        {
+         {
             let rs = [];
             source.forEach(element => {
                 let arr = element[selectMany.name];
@@ -101,36 +98,33 @@ export class MemArrayVisitor extends ExpressionVisitor {
             return rs;
         }
         for (let i in source) { // object
-            if (i === selectMany.name) return source[i];
+            if (i === selectMany.name)
+                return source[i];
         }
-
         throw new Error(selectMany.name + " is not found in object");
     }
-
-    selectMany(selectMany: SelectMany) {
+    selectMany(selectMany) {
         return this.getSource().then((source) => {
             if (Array.isArray(source))
                 this.result = this._selectManyArray(selectMany, source);
-            else this.result = this._selectManyObject(selectMany, source);
+            else
+                this.result = this._selectManyObject(selectMany, source);
             return this.result;
         });
     }
-
-    skip(skip: Skip) {
+    skip(skip) {
         return this.getSource().then((source) => {
             this.result = this.source.slice(skip.value, source.length);
             return this.result;
         });
     }
-
-    top(top: Value) {
+    top(top) {
         return this.getSource().then((source) => {
             this.result = source.slice(0, top.value);
             return this.result;
         });
     }
-
-    find(find: Find) {
+    find(find) {
         return this.getSource().then((source) => {
             let value = find.value;
             if (typeof value !== "object") {
@@ -139,7 +133,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
             else {
                 let firstValueofObject = null;
                 for (let i in find.value) {
-                    firstValueofObject = { name: i, value: find.value[i] }
+                    firstValueofObject = { name: i, value: find.value[i] };
                     break;
                 }
                 this.result = source.find((x => x[firstValueofObject.name] == firstValueofObject.value));
@@ -152,11 +146,10 @@ export class MemArrayVisitor extends ExpressionVisitor {
             return this.result;
         });
     }
-    createMemVisitor(source: any): MemArrayVisitor {
+    createMemVisitor(source) {
         return new MemArrayVisitor(source, this.rootValue);
     }
-
-    count(count: Count) {
+    count(count) {
         return this.getSource().then((source) => {
             this.result = source.length;
             if (count.expression != null) {
@@ -169,48 +162,46 @@ export class MemArrayVisitor extends ExpressionVisitor {
             return this.result;
         });
     }
-
-    expendProperties(source, properties: Array<Property>) {
+    expendProperties(source, properties) {
         let all = [];
         source.forEach((item) => {
             properties.forEach((prop) => {
                 all.push(this.createMemVisitor(item)
                     .visit(prop)
                     .then((value) => {
-                        let applier = this.__createNestedProperty(item, prop);
-                        applier.set(value);
-                        return value;
-                    }));
+                    let applier = this.__createNestedProperty(item, prop);
+                    applier.set(value);
+                    return value;
+                }));
             });
         });
         return Promise.all(all).then(() => source);
     }
-
-    order(order: Order) {
+    order(order) {
         return this.getSource().then((source) => {
-            if (!Array.isArray(source)) throw new Error("order: order support only array");
+            if (!Array.isArray(source))
+                throw new Error("order: order support only array");
             return this.expendProperties(source, [order.property]).then((source) => {
                 this.result = source.map(x => x).sort((left, right) => {
                     let l = this.__getNestedProperty(left, order.property);
-                    let r = this.__getNestedProperty(right, order.property)
+                    let r = this.__getNestedProperty(right, order.property);
                     if (order.type === null || order.type === "asc")
                         return l - r;
-                    return r - l
+                    return r - l;
                 });
                 return this.result;
             });
         });
     }
-
-    property(property: Property) {
+    property(property) {
         return this.getSource().then((source) => {
             let result = this.__getNestedProperty(source, property);
             return result;
         });
     }
-
-    __createNestedProperty(source, property: Property) {
-        if (source == null) return null;
+    __createNestedProperty(source, property) {
+        if (source == null)
+            return null;
         let props = [];
         let parent = property.parent;
         while (parent != null) {
@@ -232,17 +223,16 @@ export class MemArrayVisitor extends ExpressionVisitor {
                 let current = source;
                 for (let i = 0; i < props.length; i++) {
                     if (i === (props.length - 1)) {
-                        if (current[props[i]] == null) throw new Error(props[i] + " is undefined for set in model");
+                        if (current[props[i]] == null)
+                            throw new Error(props[i] + " is undefined for set in model");
                         current[props[i]] = value;
                     }
-
                     current = current[props[i]];
                 }
             }
-        }
+        };
     }
-
-    __getNestedProperty(source, property: Property) {
+    __getNestedProperty(source, property) {
         let props = [];
         let parent = property.parent;
         while (parent != null) {
@@ -262,29 +252,27 @@ export class MemArrayVisitor extends ExpressionVisitor {
         });
         return current;
     }
-
-    it(it: It) {
+    it(it) {
         this.result = this.getSource();
     }
-
     getModelMethod() {
         let stringFuncs = {
             contains: function (value) {
                 return this.context.indexOf(value) >= 0;
             },
-            endswith: function (value: string) {
+            endswith: function (value) {
                 return this.context.endsWith(value);
             },
-            indexof: function (value: string) {
+            indexof: function (value) {
                 return this.context.indexOf(value);
             },
             length: function () {
                 return this.context.length;
             },
-            startswith: function (value: string) {
+            startswith: function (value) {
                 return this.context.startsWith(value);
             },
-            substring: function (start: any, end?: any) {
+            substring: function (start, end) {
                 return this.context.substring(start, end);
             },
             tolower: function () {
@@ -296,8 +284,7 @@ export class MemArrayVisitor extends ExpressionVisitor {
             trim: function () {
                 return this.context.trim();
             }
-        }
-
+        };
         let dateFuncs = {
             date: function () {
                 return this.context.getDate();
@@ -326,22 +313,20 @@ export class MemArrayVisitor extends ExpressionVisitor {
             year: function () {
                 return this.context.getFullYear();
             }
-        }
-
+        };
         return {
             string: stringFuncs,
             date: dateFuncs
-        }
+        };
     }
-
-    globalMethod(globalMethod: GlobalMethod) {
+    globalMethod(globalMethod) {
         return this.getSource().then((source) => {
             let methods = {
                 maxdatetime: function () {
                     return new Date(8640000000000000);
                 },
                 mindatetime: function () {
-                    return new Date(-8640000000000000)
+                    return new Date(-8640000000000000);
                 },
                 now: function () {
                     return new Date(Date.now());
@@ -349,26 +334,26 @@ export class MemArrayVisitor extends ExpressionVisitor {
                 ceiling: function (value) {
                     return Math.ceil(value);
                 },
-                floor: function (x: number) {
+                floor: function (x) {
                     return Math.floor(x);
                 },
-                round: function (x: number) {
+                round: function (x) {
                     return Math.round(x);
                 }
-            }
-            if (methods[globalMethod.name] == null) throw new Error(globalMethod.name + " is not exists in global method");
+            };
+            if (methods[globalMethod.name] == null)
+                throw new Error(globalMethod.name + " is not exists in global method");
             let props = [];
             globalMethod.args.forEach((elem) => {
                 let visitor = this.createMemVisitor(source);
-                props.push(visitor.visit(elem))
-            })
+                props.push(visitor.visit(elem));
+            });
             return Promise.all(props).then(() => {
-                return methods[globalMethod.name].apply(null, props)
+                return methods[globalMethod.name].apply(null, props);
             });
         });
     }
-
-    modelMethod(modelMethod: ModelMethod) {
+    modelMethod(modelMethod) {
         this.getSource().then((source) => {
             let visitor = this.createMemVisitor(source);
             return visitor.visit(modelMethod.property).then((value) => {
@@ -378,7 +363,6 @@ export class MemArrayVisitor extends ExpressionVisitor {
                     let v = self.createMemVisitor(self.source);
                     allProps.push(v.visit(arg));
                 });
-
                 return Promise.all(allProps).then((props) => {
                     if (typeof value === "string") {
                         let methods = this.getModelMethod().string;
@@ -387,7 +371,8 @@ export class MemArrayVisitor extends ExpressionVisitor {
                             this.result = Promise.resolve(methods[modelMethod.name].apply(methods, props));
                             return this.result;
                         }
-                    } else if (Utility.instanceof(value,Date)) {
+                    }
+                    else if (core_1.Utility.instanceof(value, Date)) {
                         let methods = this.getModelMethod().date;
                         methods["context"] = value;
                         if (methods[modelMethod.name] != null) {
@@ -395,7 +380,8 @@ export class MemArrayVisitor extends ExpressionVisitor {
                             return this.result;
                         }
                     }
-                    if (value == null) return this.result;
+                    if (value == null)
+                        return this.result;
                     if (value[modelMethod.name] == null) {
                         return this.result;
                         // throw new Error(modelMethod.name + " method not found in context");
@@ -406,13 +392,11 @@ export class MemArrayVisitor extends ExpressionVisitor {
             });
         });
     }
-
-    value(value: Value) {
+    value(value) {
         this.result = Promise.resolve(value.value);
         return this.result;
     }
-
-    expand(expand: Expand) {
+    expand(expand) {
         return this.getSource().then((source) => {
             source.forEach(element => {
                 expand.args.forEach((arg) => {
@@ -427,19 +411,18 @@ export class MemArrayVisitor extends ExpressionVisitor {
                             return true;
                         });
                         applier.set(resultValue);
-                    } else applier.set(oldValue);
+                    }
+                    else
+                        applier.set(oldValue);
                 });
             });
             this.result = this.source.map(x => x);
             return this.result;
         });
     }
-
-    operation(operation: Operation) {
-
+    operation(operation) {
     }
-
-    eqBinary(eqBinary: EqBinary) {
+    eqBinary(eqBinary) {
         let source = this.source;
         let leftVisitor = this.createMemVisitor(source);
         let rightVisitor = this.createMemVisitor(source);
@@ -478,12 +461,10 @@ export class MemArrayVisitor extends ExpressionVisitor {
         }
         this.result = result;
     }
-
-    root(root: Root) {
+    root(root) {
         this.result = this.rootValue;
     }
-
-    refExpression(refExpression: RefExpression) {
+    refExpression(refExpression) {
         let visitor = this.createMemVisitor(this.source);
         visitor.visit(refExpression.expression);
         this.result = visitor.result;
@@ -494,80 +475,65 @@ export class MemArrayVisitor extends ExpressionVisitor {
         }
     }
 }
-
-
-
-export class MemSet extends DataSet<any>{
-    private _trackingId;
-    get trackingId():Symbol{
+exports.MemArrayVisitor = MemArrayVisitor;
+class MemSet extends dataset_1.DataSet {
+    constructor(source, expressions = []) {
+        super(expressions);
+        this.source = source;
+        this.expressions = expressions || [];
+        this.trackingId = Symbol.for(schema_1.Guid.newString().toString());
+        (Array.isArray(source) ? source : []).forEach((item) => {
+            this.addTrackingId(item);
+        });
+    }
+    get trackingId() {
         return this._trackingId;
-    };
-
-     set trackingId(newValue){
+    }
+    ;
+    set trackingId(newValue) {
         this._trackingId = newValue;
     }
-    constructor(protected source:Array<any>, expressions: Array<any> = []) {
-        super(expressions);
-        this.expressions = expressions || [];
-        this.trackingId = Symbol.for(Guid.newString().toString());
-        (Array.isArray(source)?source:[]).forEach((item)=>{
-            this.addTrackingId(item);
-        })
+    addTrackingId(element) {
+        if (element != null)
+            element[this.trackingId] = schema_1.Guid.newString();
     }
-
-
-    private addTrackingId(element){
-        if(element != null)
-              element[this.trackingId as any] = Guid.newString();
-    }
-
-  
-    query(...expressions: any[]): MemSet {
-        let result =  new MemSet([], this.expressions.map(x => x).concat(expressions));
+    query(...expressions) {
+        let result = new MemSet([], this.expressions.map(x => x).concat(expressions));
         result.source = this.source;
         result.trackingId = this.trackingId;
         return result;
     }
-    get(...expressions: any[]): Promise<any> {
+    get(...expressions) {
         let expression = this.expressions.map(x => x).concat(expressions);
-        return LazyArrayVisitor.get(this.source, expression).then((response)=>{
+        return lazyarrayvisitor_1.LazyArrayVisitor.get(this.source, expression).then((response) => {
             return response;
         });
     }
-    add(element: any): Promise<any> {
+    add(element) {
         this.addTrackingId(element);
         this.source.push(element);
         return Promise.resolve(element);
     }
-
-
-    private __getValueOf(value) {
+    __getValueOf(value) {
         return value != null && typeof value.valueOf === "function" ? value.valueOf() : value;
     }
-
-    __is(base, element: any) {
-        let ids = ["ID", "id", "Id", "iD",this.trackingId as any];
+    __is(base, element) {
+        let ids = ["ID", "id", "Id", "iD", this.trackingId];
         return base === element || ids.some(x => element[x] != null && this.__getValueOf(element[x]) === this.__getValueOf(base[x]));
     }
-
-
-    delete(element: any): Promise<any> {
+    delete(element) {
         let indexOfItem = this.source.find((elem) => this.__is(elem, element));
-        if (indexOfItem === -1) return Promise.reject('element not found');
+        if (indexOfItem === -1)
+            return Promise.reject('element not found');
         this.source.splice(indexOfItem, 1);
         return Promise.resolve();
     }
-    update(element: any): Promise<any> {
+    update(element) {
         let indexOfItem = this.source.findIndex((elem) => this.__is(elem, element));
-        if (indexOfItem === -1) return Promise.reject('element not found');
+        if (indexOfItem === -1)
+            return Promise.reject('element not found');
         this.source[indexOfItem] = element;
         return Promise.resolve();
     }
-
-  
-
-
-
-
-  
 }
+exports.MemSet = MemSet;

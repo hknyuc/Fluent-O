@@ -1,5 +1,6 @@
 import { DataSet } from './dataset';
 import { Guid } from "./schema";
+import { Utility } from './core';
 
 export class Operation {
     constructor(public type: string) {
@@ -142,9 +143,9 @@ export class Value {
             case 'boolean':
             return true;
         }
-        if(value instanceof Date)
+        if(Utility.instanceof(value,Date))
           return true;
-        if(value instanceof Guid)
+        if(Utility.instanceof(value,Guid))
           return true;
       return false;
     }
@@ -187,51 +188,55 @@ export class RefExpression {
 
 export class ExpressionVisitor {
     visit(host: any) :any {
-        if(host instanceof Root)
+
+        let is = function (a){
+            return Utility.instanceof(host,a);
+        }
+        if(is(Root))
           return  this.root(host);
-        if(host instanceof This)
+        if(is(This))
            return this.this(host);
-         if(host instanceof Property)
+         if(is(Property))
            return this.property(host);
-         if (host instanceof Operation)
+         if (is(Operation))
            return this.operation(host);
-         if(host instanceof Select)
+         if(is(Select))
             return this.select(host);
-         if(host instanceof SelectMany)
+         if(is(SelectMany))
             return this.selectMany(host);
-         if(host instanceof Filter)
+         if(is(Filter))
            return this.filter(host);
-         if(host instanceof Find)
+         if(is(Find))
            return this.find(host);
-         if(host instanceof Count)
+         if(is(Count))
            return this.count(host);
-         if(host instanceof Order)
+         if(is(Order))
            return this.order(host);
-         if(host instanceof Expand)
+         if(is(Expand))
             return this.expand(host);
-         if(host instanceof Top)
+         if(is(Top))
             return this.top(host);
-         if(host instanceof Skip)
+         if(is(Skip))
             return this.skip(host);
-         if(host instanceof InlineCount)
+         if(is(InlineCount))
             return this.inlineCount(host);
-         if (host instanceof Method)
+         if (is(Method))
             return this.method(host);
-         if (host instanceof Value)
+         if (is(Value))
            return this.value(host);
          if(Value.isValid(host))
            return this.value(new Value(host));
-         if (host instanceof ModelMethod)
+         if (is(ModelMethod))
            return this.modelMethod(host);
-         if (host instanceof EqBinary)
+         if (is(EqBinary))
             return this.eqBinary(host);
-         if(host instanceof It)
+         if(is(It))
             return this.it(host);
-         if(host instanceof GlobalMethod)
+         if(is(GlobalMethod))
             return this.globalMethod(host);
-         if(host instanceof Action)
+         if(is(Action))
             return this.action(host);
-         if(host instanceof Func)
+         if(is(Func))
            return  this.func(host);
       return Promise.reject('not found');
     }

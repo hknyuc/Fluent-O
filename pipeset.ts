@@ -1,6 +1,7 @@
 import { MemSet } from './memarrayvisitor';
 import { DataSet, IDataSet } from './dataset';
 import { MemOperation } from './memoperation';
+import { Utility } from './core';
 /**
  * Query kısmına extradan lokalde yapılan işlemler eklenebilir. O işlemden sonra diğer işlem memset üzeriden gider.
  */
@@ -18,11 +19,11 @@ export class Pipeset<T> extends DataSet<T>{
     }
 
     private notPipeQuery(item) {
-        return !((item instanceof MemOperation) || typeof item === "function");
+        return !((Utility.instanceof(item,MemOperation)) || typeof item === "function");
     }
 
     private isPipeQuery(item) {
-        return ((item instanceof MemOperation) || typeof item === "function");
+        return ((Utility.instanceof(item,MemOperation)) || typeof item === "function");
     }
 
     private splitExpressionsByPipeQuery(expressions: Array<any>): {
@@ -65,7 +66,7 @@ export class Pipeset<T> extends DataSet<T>{
     get(...expression: Array<any>) {
         let getResultFromPipesAsPromise = function (pipes: Array<any>, value) {
             let pArray = [].concat(Array.isArray(pipes) ? pipes : [pipes]).filter(fn => typeof fn === "function");
-            let valuePromise = (value instanceof Promise) ? value : Promise.resolve(value);
+            let valuePromise = (Utility.instanceof(value,Promise)) ? value : Promise.resolve(value);
             if (pArray.length === 0) return valuePromise;
             return valuePromise.then((v) => {
                 let pipefunc = pArray.pop();
@@ -80,7 +81,7 @@ export class Pipeset<T> extends DataSet<T>{
             let pipeResult = !this.isFunction(expressions.pipeQuery) ?
                 (expressions.pipeQuery as MemOperation).pipe(r)
                 : (expressions.pipeQuery as Function)(r);
-             if(pipeResult instanceof Promise){
+             if(Utility.instanceof(pipeResult,Promise)){
                 return pipeResult.then((response)=>{
                     return new Pipeset(new MemSet(response, expressions.right)).then((response) => {
                         return response;

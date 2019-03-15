@@ -1,7 +1,8 @@
-import { SelectPropertyFinder } from './visitors/selectPropertyFinder';
+import { SelectPropertyFinder } from './selectpropertyfinder';
 import { MemSet } from './memarrayvisitor';
 import { Expand, Property, Find, Order, Top, Skip, Filter, Select } from './expressions';
 import { DataSet, IDataSet } from './dataset';
+import { Utility } from './core';
 class BranchContext {
     source: IDataSet<any>;
     branchName: string;
@@ -53,7 +54,7 @@ class BrachsetUtility {
 
     static isWillObject(expressions: Array<any>) {
         if (expressions == null) return false;
-        return expressions.some(a => a instanceof Find);
+        return expressions.some(a => Utility.instanceof(a,Find));
     }
 }
 
@@ -70,7 +71,7 @@ export class DirectStrategy implements IBranchStrategy {
     private afterExpressions = [Find];
 
     private escapeAfterExpressions(expressions: Array<any>) {
-        return expressions.filter(x => !this.afterExpressions.some(e => x instanceof e));
+        return expressions.filter(x => !this.afterExpressions.some(e => Utility.instanceof(x,e)));
     }
 
     get(context: BranchContext) {
@@ -93,7 +94,7 @@ class SSCollectorStrategy implements IBranchStrategy {
 
     private getExpandAndSelect(expressions: Array<any>) {
         let items = [Select, Expand];
-        return expressions.filter(a => items.some(i => a instanceof i));
+        return expressions.filter(a => items.some(i => Utility.instanceof(a,i)));
     }
     get(context: BranchContext): Promise<any> {
         // let exps =  this.escapeAfterExpressions(context.expressions).concat(this.getDoubleSourceExpressions(context.expressions));
@@ -126,11 +127,11 @@ class DSFCollectorStrategy implements IBranchStrategy {
      * @param expressions 
      */
     private escapeAfterExpressions(expressions: Array<any>) {
-        return expressions.filter(x => !this.afterExpressions.some(e => x instanceof e));
+        return expressions.filter(x => !this.afterExpressions.some(e => Utility.instanceof(x,e)));
     }
 
     private getDoubleSourceExpressions(expressions: Array<any>) {
-        return expressions.filter(x => this.usesDoubleSourceExpressions.some(a => x instanceof a));
+        return expressions.filter(x => this.usesDoubleSourceExpressions.some(a => Utility.instanceof(x,a)));
     }
 
     get(context: BranchContext): Promise<any> {
@@ -151,7 +152,7 @@ class DSFCollectorStrategy implements IBranchStrategy {
 }
 class SmartStrategy implements IBranchStrategy {
     getStrategy(context: BranchContext) {
-        if (context.source.getExpressions().some(x => x instanceof Find)) return new DirectStrategy();
+        if (context.source.getExpressions().some(x => Utility.instanceof(x,Find))) return new DirectStrategy();
         return new SSCollectorStrategy();
     }
     get(context: BranchContext): Promise<any> {
