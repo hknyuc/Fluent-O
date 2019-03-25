@@ -1271,3 +1271,19 @@ export function mapset(source,mapFn:((item:any,index:number,arr:Array<any>)=>any
         }
     })
  }
+
+ /*
+ export function projection(...params:Array<any>):Array<any>{
+    let __projection = function (expands:Expand,selects:Select,arg:string){
+       let indexOfDot = arg.indexOf('.');
+       if(indexOfDot == -1){
+           let prop = selects.args.find(x=>x.property.name == arg);
+           if(prop != null)
+               return;
+           selects.args.push({property:new Property(arg)});
+           return;
+       }
+    }
+}
+*/
+ 

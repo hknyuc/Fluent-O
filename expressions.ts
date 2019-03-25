@@ -53,12 +53,14 @@ export class Order extends Method {
 export class Top extends Method {
     constructor(public value: number) {
         super();
+        if(value < 0) throw new RangeError(value + ' is not in range for top operation');
     }
 }
 
 export class Skip extends Method {
     constructor(public value: number) {
         super();
+        if(value < 0) throw new RangeError(value + ' is not in range for skip operation');
     }
 }
 
