@@ -1,4 +1,4 @@
-# Fluent'O
+# fluento
 Queryable data structure
 
 ## Install
