@@ -1,0 +1,16 @@
+## Fluento | Queryable Data Structure
+
+### Supports OData V4.
+Fluento converts query to odata query string. 
+
+1. Filter
+ ```js
+   import {odataset,filter,prop} from 'fluento/operations';
+   let options = {
+       url:'http://example.com/products'
+   }
+   let odataset = odataset(options);
+   let qr = odataset.query(filter(prop('Id').eq(5))).toString();
+   console.log(qr); 
+   //products?$filter=Id eq 5;
+```

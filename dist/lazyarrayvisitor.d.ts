@@ -70,7 +70,7 @@ export declare class LazyArrayVisitor extends ExpressionVisitor {
     static getOnlyStucts(element: any): {};
     private static __invokeExpandAndSelects;
     private static filterExpressions;
-    isDataSet(dataSetable: any): any;
+    isDataSet(dataSetable: any): boolean;
     static get(source: any, ...expressions: any[]): Promise<any>;
     private static _get;
     static _pruneAndGet(source: any, expr: any): Promise<any>;

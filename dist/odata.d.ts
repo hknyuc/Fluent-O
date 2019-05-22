@@ -1,12 +1,13 @@
 import { RestClient } from './restclient';
 import { DataSet } from './dataset';
-import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, It, Action, Func } from './expressions';
+import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, It, Action, Func, GlobalMethod } from './expressions';
 export declare class ODataVisitor extends ExpressionVisitor {
     private _result;
     readonly visited: boolean;
     readonly result: string;
     private set;
     method(method: Method): void;
+    globalMethod(global: GlobalMethod): void;
     action(action: Action): void;
     func(func: Func): void;
     find(find: Find): void;

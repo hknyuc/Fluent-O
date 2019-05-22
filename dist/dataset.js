@@ -81,12 +81,16 @@ class DataSet {
     static is(dataSetable) {
         if (dataSetable == null)
             return false;
-        let name = "DataSet";
-        if (dataSetable.constructor == null)
-            return false;
-        if (dataSetable.constructor.name === name)
-            return true;
+        let methods = ['then', 'map', 'query', 'add', 'delete', 'update'];
+        return methods.every((a => dataSetable[a] != null));
+        /*
+         if(dataSetable == null) return false;
+         let name = "DataSet";
+        if(dataSetable.constructor == null) return false;
+        if(dataSetable.constructor.name === name) return true;
+        
         return this.is(dataSetable.__proto__);
+        */
     }
 }
 exports.DataSet = DataSet;

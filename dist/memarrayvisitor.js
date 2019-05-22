@@ -522,7 +522,7 @@ class MemSet extends dataset_1.DataSet {
         return base === element || ids.some(x => element[x] != null && this.__getValueOf(element[x]) === this.__getValueOf(base[x]));
     }
     delete(element) {
-        let indexOfItem = this.source.find((elem) => this.__is(elem, element));
+        let indexOfItem = this.source.findIndex((elem) => this.__is(elem, element));
         if (indexOfItem === -1)
             return Promise.reject('element not found');
         this.source.splice(indexOfItem, 1);

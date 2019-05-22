@@ -552,7 +552,7 @@ export class MemSet extends DataSet<any>{
 
 
     delete(element: any): Promise<any> {
-        let indexOfItem = this.source.find((elem) => this.__is(elem, element));
+        let indexOfItem = this.source.findIndex((elem) => this.__is(elem, element));
         if (indexOfItem === -1) return Promise.reject('element not found');
         this.source.splice(indexOfItem, 1);
         return Promise.resolve();

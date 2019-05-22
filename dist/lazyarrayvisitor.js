@@ -537,7 +537,8 @@ class LazyArrayVisitor extends expressions_1.ExpressionVisitor {
         return expressions.filter(a => core_1.Utility.instanceof(a, type));
     }
     isDataSet(dataSetable) {
-        return dataset_1.DataSet.is(dataSetable);
+        let result = dataset_1.DataSet.is(dataSetable);
+        return result;
     }
     static get(source, ...expressions) {
         if (Array.isArray(expressions) && expressions.length === 1 && expressions[0] && Array.isArray(expressions[0]))
@@ -587,8 +588,8 @@ class LazyArrayVisitor extends expressions_1.ExpressionVisitor {
     static _prune(o) {
         if (o == null)
             return null;
-        if (core_1.Utility.instanceof(o, dataset_1.DataSet))
-            return null;
+        if (dataset_1.DataSet.is(o))
+            return o;
         if (Array.isArray(o))
             return o;
         if (typeof o === "object") {
@@ -604,7 +605,8 @@ class LazyArrayVisitor extends expressions_1.ExpressionVisitor {
     expand(expand) {
         return this.getSource().then((source) => {
             let addValue = (baseValue, arg, oldValue, allExpands, applier) => {
-                if (this.isDataSet(baseValue)) {
+                let isDataset = this.isDataSet(baseValue);
+                if (isDataset) {
                     allExpands.push(baseValue.get.apply(baseValue, arg.expressions).then((response) => {
                         applier.set(response);
                         return response;

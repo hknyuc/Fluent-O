@@ -2,8 +2,8 @@ import { RestClient } from './restclient';
 import { DataSet } from './dataset';
 import { Guid } from './schema';
 
-import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It, Action, Func } from './expressions';
-import {Http} from './http';
+import { ExpressionVisitor, Operation, Method, Expand, Value, InlineCount, Order, Skip, ModelMethod, Property, EqBinary, RefExpression, Select, Top, Filter, Count, Find, SelectMany, This, Root, DataSource, It, Action, Func, GlobalMethod } from './expressions';
+import { Http } from './http';
 import { Utility } from './core';
 export class ODataVisitor extends ExpressionVisitor {
     private _result: string = null;
@@ -24,8 +24,23 @@ export class ODataVisitor extends ExpressionVisitor {
         // console.log(method["prototype"]["consructor"]["name"]);
     }
 
-    action(action:Action):void{
-        let result = "/"+action.name;
+    globalMethod(global: GlobalMethod) {
+        if (global.args.length == 0) {
+            this.set(global.name+("()"));
+        }
+        else {
+            let args = [];
+            global.args.forEach((arg)=>{
+                let visitor = new ODataVisitor();
+                visitor.visit(arg);
+                args.push(visitor.result);
+            });
+            this.set(global.name +"("+args.join(',') +")");
+        }
+    }
+
+    action(action: Action): void {
+        let result = "/" + action.name;
         /*
         let params = [];
         action.parameters.forEach((param)=>{
@@ -39,16 +54,16 @@ export class ODataVisitor extends ExpressionVisitor {
         this.set(result);
     }
 
-    func(func:Func):void{
-        let result = "/"+func.name;
+    func(func: Func): void {
+        let result = "/" + func.name;
         let params = [];
-        func.parameters.forEach((param)=>{
+        func.parameters.forEach((param) => {
             let visitor = new ODataVisitor();
             visitor.visit(param);
             params.push(visitor.result);
         });
-        if(params.length != 0)
-          result += "(" + params.join(',') +")";
+        if (params.length != 0)
+            result += "(" + params.join(',') + ")";
 
         this.set(result);
     }
@@ -126,14 +141,14 @@ export class ODataVisitor extends ExpressionVisitor {
             results.push(propertyVisitor.result + "(" + expressionVisitor.result + ")");
             return true;
         });
-        let distinct = (value, index, self)=>self.indexOf(value) === index;
+        let distinct = (value, index, self) => self.indexOf(value) === index;
         this.set("$select=" + results.filter(distinct).join(','));
     }
 
     order(order: Order): void {
         let odataVisitor = new ODataVisitor();
         odataVisitor.visit(order.property);
-        this.set('$orderby=' +odataVisitor.result + (order.type != null ? " " + order.type : ''));
+        this.set('$orderby=' + odataVisitor.result + (order.type != null ? " " + order.type : ''));
     }
 
     top(top: Top): void {
@@ -193,19 +208,19 @@ export class ODataVisitor extends ExpressionVisitor {
             r = "'" + v + "'";
         else if (type === "number")
             r = v;
-        else if (Utility.instanceof(v,Date))
+        else if (Utility.instanceof(v, Date))
             r = v.toISOString();
-        else if (Utility.instanceof(v,Guid))
+        else if (Utility.instanceof(v, Guid))
             r = "" + v.toString() + "";
-        else if (Utility.instanceof(v,Object)){
+        else if (Utility.instanceof(v, Object)) {
             let params = [];
-            for(let i in v){
+            for (let i in v) {
                 let value = v[i];
-                if(!(Utility.instanceof(value,Value)))
+                if (!(Utility.instanceof(value, Value)))
                     value = new Value(value);
                 let visitor = new ODataVisitor();
                 visitor.visit(value);
-                params.push(i+"="+visitor.result);
+                params.push(i + "=" + visitor.result);
             }
             r = params.join(',');
         }
@@ -213,22 +228,22 @@ export class ODataVisitor extends ExpressionVisitor {
     }
 
     modelMethod(value: ModelMethod): void {
-        let propertyVisitor = new ODataVisitor();
-        propertyVisitor.visit(value.property);
-        if (!propertyVisitor.visited) throw new Error('modelMethod: property could not be resolved');
-        if (value.args.length == 0) {
-            this.set(value.name + "(" + propertyVisitor.result + ")");
-            return;
-        }
-        let argsArray = [];
-        value.args.forEach(function (arg, index) {
-            let argsVisitor = new ODataVisitor();
-            argsVisitor.visit(arg);
-            if (!argsVisitor.visited) throw new Error('modelMethod: argument index of ' + index + ' could not be resolved :'+JSON.stringify(arg));
-            argsArray.push(argsVisitor.result);
+            let propertyVisitor = new ODataVisitor();
+            propertyVisitor.visit(value.property);
+            if (!propertyVisitor.visited) throw new Error('modelMethod: property could not be resolved');
+            if (value.args.length == 0) {
+                this.set(value.name + "(" + propertyVisitor.result + ")");
+                return;
+            }
+            let argsArray = [];
+            value.args.forEach(function (arg, index) {
+                let argsVisitor = new ODataVisitor();
+                argsVisitor.visit(arg);
+                if (!argsVisitor.visited) throw new Error('modelMethod: argument index of ' + index + ' could not be resolved :' + JSON.stringify(arg));
+                argsArray.push(argsVisitor.result);
 
-        });
-        this.set(value.name + "(" + propertyVisitor.result + "," + argsArray.join(',') + ")");
+            });
+            this.set(value.name + "(" + propertyVisitor.result + "," + argsArray.join(',') + ")");
     }
 
     property(property: Property): void {
@@ -249,7 +264,7 @@ export class ODataVisitor extends ExpressionVisitor {
         let rightVisitor = new ODataVisitor();
         rightVisitor.visit(eqBinary.right);
         if (!rightVisitor.visited) throw new Error('eqBinary: right expression could not be resolved');
-        this.set("("+leftVisitor.result + " " + eqBinary.op.type + " " + rightVisitor.result+")");
+        this.set("(" + leftVisitor.result + " " + eqBinary.op.type + " " + rightVisitor.result + ")");
     }
 
     it(it: It): void {
@@ -278,12 +293,12 @@ export class ODataCombineVisitor extends ExpressionVisitor {
         return result;
     }
 
-    action(action){
-        this.set('action',()=>action,()=>action);
+    action(action) {
+        this.set('action', () => action, () => action);
     }
 
-    func(func){
-        this.set('func',()=>func,()=>func);
+    func(func) {
+        this.set('func', () => func, () => func);
     }
 
     private distinct(arr: Array<any>): Array<any> {
@@ -361,7 +376,7 @@ export class ODataCombineVisitor extends ExpressionVisitor {
 
     expand(expand: Expand): void {
         this.set('expand', () => expand, (elem: Expand) => {
-            let args = elem.args.map(x=>x).concat(expand.args);
+            let args = elem.args.map(x => x).concat(expand.args);
             let result = new Expand(args);
             return result;
         });
@@ -369,7 +384,7 @@ export class ODataCombineVisitor extends ExpressionVisitor {
 
     filter(filter: Filter): void {
         this.set("filter", () => filter, (f: Filter) => {
-               if(f.expression == null) return new Filter(filter.expression);
+            if (f.expression == null) return new Filter(filter.expression);
             return new Filter(new EqBinary(f.expression, new Operation('and'), filter.expression));
         });
     }
@@ -433,56 +448,56 @@ export class ODataSet<T> extends DataSet<T> {
             url: this.options.url,
             http: this.options.http,
             arrayable: this.options.arrayable,
-            expressions:this.appylExpression(expressions),
+            expressions: this.appylExpression(expressions),
             primary: this.options.primary
         }
         return new ODataSet(newOptions);
     }
 
-    toString(){
-      return QuerySet.get.apply(null,this.options.expressions);
+    toString() {
+        return QuerySet.get.apply(null, this.options.expressions);
     }
 
-    private appylExpression(expressions:Array<any>){
+    private appylExpression(expressions: Array<any>) {
         let optExpressions = this.options.expressions || [];
-        if(Utility.instanceof(expressions[0],Find)){ // filter after find. filter is not necassary
-           optExpressions = optExpressions.filter(x=>!(Utility.instanceof(x,Filter)) && !(Utility.instanceof(x,Order)));
+        if (Utility.instanceof(expressions[0], Find)) { // filter after find. filter is not necassary
+            optExpressions = optExpressions.filter(x => !(Utility.instanceof(x, Filter)) && !(Utility.instanceof(x, Order)));
         };
-       return Array.isArray(optExpressions) ? optExpressions.map(x=>x).concat(expressions) : expressions.map(x=>x);
+        return Array.isArray(optExpressions) ? optExpressions.map(x => x).concat(expressions) : expressions.map(x => x);
     }
 
-    getBody(expressions:Array<any>){
-        let body =  expressions.filter(x=>Utility.instanceof(x,Action)).map(x=>x.parameters).reduce((c,n)=>{
+    getBody(expressions: Array<any>) {
+        let body = expressions.filter(x => Utility.instanceof(x, Action)).map(x => x.parameters).reduce((c, n) => {
             return c.concat(n);
-        },[]).reduce((c,n)=>{
-            return new Value(Object.assign({},c.value,n.value))
-        },new Value({}));
+        }, []).reduce((c, n) => {
+            return new Value(Object.assign({}, c.value, n.value))
+        }, new Value({}));
         return body.value;
     }
 
-    anyBody(expressions:Array<any>){
-        return expressions.some(a=>Utility.instanceof(a,Action));
+    anyBody(expressions: Array<any>) {
+        return expressions.some(a => Utility.instanceof(a, Action));
     }
 
-    private getMethod(expressions){
-        if(this.anyBody(expressions)) return  this.createHttp().post;
+    private getMethod(expressions) {
+        if (this.anyBody(expressions)) return this.createHttp().post;
         return this.createHttp().get;
     }
 
-    private invokeHttpMethod(expressions:Array<any>){
+    private invokeHttpMethod(expressions: Array<any>) {
         let http = this.createHttp();
-        let fn = this.anyBody(expressions)?http.post:http.get;
-        let result = fn.apply(http,[this.options.url + QuerySet.get.apply(QuerySet, expressions),this.getBody(expressions)]);
+        let fn = this.anyBody(expressions) ? http.post : http.get;
+        let result = fn.apply(http, [this.options.url + QuerySet.get.apply(QuerySet, expressions), this.getBody(expressions)]);
         return result;
     }
 
- 
+
 
     get(...expressions: any[]): Promise<any> {
         let optExpressions = this.appylExpression(expressions);
         let result = this.invokeHttpMethod(optExpressions);
         if (this.options.arrayable == null || this.options.arrayable === false) return result;
-        let anyCount = optExpressions.some((exp) => Utility.instanceof(exp,Count));
+        let anyCount = optExpressions.some((exp) => Utility.instanceof(exp, Count));
         if (anyCount) {
             return result.then((response) => {
                 return response.json()["@odata.count"];
@@ -494,8 +509,8 @@ export class ODataSet<T> extends DataSet<T> {
                     for (let i in r) {
                         if (!(i.startsWith("@odata") || i === "value")) return false;
                     }
-                    if(r==null) return false;
-                    if(r === "") return false;
+                    if (r == null) return false;
+                    if (r === "") return false;
                     return r["value"] != null && Array.isArray(r["value"]);
                 }
                 if (isArray()) {
@@ -512,54 +527,54 @@ export class ODataSet<T> extends DataSet<T> {
                 }
                 let result = prune(r);
                 let onlyValue = Object.keys(result).length === 1 && result["value"] != null;
-                return onlyValue?result["value"]:result;
+                return onlyValue ? result["value"] : result;
             });
         }
     }
-    __convertObject(value){
-       let result = {} as any;
-          for(let i in value){
-            if(value[i] == null) continue;
-            if(DataSet.is(value[i])) continue;
-            if(this.__isEmptyObject(value[i])) continue;
-             result[i] = this.__convert(value[i]);
-         }
-       return result;
+    __convertObject(value) {
+        let result = {} as any;
+        for (let i in value) {
+            if (value[i] == null) continue;
+            if (DataSet.is(value[i])) continue;
+            if (this.__isEmptyObject(value[i])) continue;
+            result[i] = this.__convert(value[i]);
+        }
+        return result;
     }
-    
 
-    __isEmptyObject(obj){
-        if(obj == null) return true;
-        if(Array.isArray(obj) && obj.length == 0) return true;
-        if(Array.isArray(obj)) return false;
-        for(let i in obj){
-            if(obj[i] != null) return false;
-            if(this.__isEmptyObject(obj[i])) return true;
+
+    __isEmptyObject(obj) {
+        if (obj == null) return true;
+        if (Array.isArray(obj) && obj.length == 0) return true;
+        if (Array.isArray(obj)) return false;
+        for (let i in obj) {
+            if (obj[i] != null) return false;
+            if (this.__isEmptyObject(obj[i])) return true;
         }
         return false;
     }
 
-    __convertArray(values){
+    __convertArray(values) {
         let result = [];
-        values.forEach((elem)=>{
-              result.push(this.__convert(elem));
+        values.forEach((elem) => {
+            result.push(this.__convert(elem));
         });
         return result;
     }
 
-    __convert(values){
-        if(values == null) return null;
-        if(Utility.instanceof(values,Guid)) return values.value;
-        if(Utility.instanceof(values,Date)) return  ODataSet.__dateToIsoUTC(values);
-       if(Array.isArray(values)) return this.__convertArray(values);
-       if(typeof values ==="object") return this.__convertObject(values);
-       return values;
+    __convert(values) {
+        if (values == null) return null;
+        if (Utility.instanceof(values, Guid)) return values.value;
+        if (Utility.instanceof(values, Date)) return ODataSet.__dateToIsoUTC(values);
+        if (Array.isArray(values)) return this.__convertArray(values);
+        if (typeof values === "object") return this.__convertObject(values);
+        return values;
     }
 
-    private static __dateToIsoUTC(date:Date){
+    private static __dateToIsoUTC(date: Date) {
         let tzo = -date.getTimezoneOffset(),
             dif = tzo >= 0 ? '+' : '-',
-            pad = function(num) {
+            pad = function (num) {
                 let norm = Math.floor(Math.abs(num));
                 return (norm < 10 ? '0' : '') + norm;
             };
@@ -582,10 +597,10 @@ export class ODataSet<T> extends DataSet<T> {
         return this.createHttp().put(this.options.url + this.getPrimaryValue(element), this.__convert(element));
     }
 
-    private getIdsValue(element){
-        let valids = ["id","ID","Id","iD"];
-        for(let i in element)
-            if(valids.some((elem)=>elem === i)) return element[i];
+    private getIdsValue(element) {
+        let valids = ["id", "ID", "Id", "iD"];
+        for (let i in element)
+            if (valids.some((elem) => elem === i)) return element[i];
         return null;
     }
 
@@ -626,7 +641,7 @@ export class QuerySet {
             let visitor = new ODataVisitor();
             visitor.visit(expression);
             if (visitor.visited) {
-                if (Utility.instanceof(expression,Method))
+                if (Utility.instanceof(expression, Method))
                     right.push(visitor.result);
                 else left.push(visitor.result);
             }

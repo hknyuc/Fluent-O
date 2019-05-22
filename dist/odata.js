@@ -22,6 +22,20 @@ class ODataVisitor extends expressions_1.ExpressionVisitor {
     method(method) {
         // console.log(method["prototype"]["consructor"]["name"]);
     }
+    globalMethod(global) {
+        if (global.args.length == 0) {
+            this.set(global.name + ("()"));
+        }
+        else {
+            let args = [];
+            global.args.forEach((arg) => {
+                let visitor = new ODataVisitor();
+                visitor.visit(arg);
+                args.push(visitor.result);
+            });
+            this.set(global.name + "(" + args.join(',') + ")");
+        }
+    }
     action(action) {
         let result = "/" + action.name;
         /*

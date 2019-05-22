@@ -37,7 +37,7 @@ export declare class DataSet<T> implements IDataSet<T> {
     then(callback: any, errorCallback?: any): Promise<any>;
     map(mapFn: (element: any) => any): Promise<any>;
     insertTo(params: Array<any> | object): Promise<any>;
-    static is(dataSetable: any): any;
+    static is(dataSetable: any): boolean;
 }
 export declare class DecorateSet<T> extends DataSet<T> {
     dataSet: DataSet<T>;

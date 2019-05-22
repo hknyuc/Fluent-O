@@ -1,4 +1,4 @@
-import { memset, select, expand } from '../../operations';
+import { memset, select, expand, filter, prop } from '../../operations';
 import { assert } from 'chai';
 
 let getSource = function () {
@@ -20,6 +20,30 @@ let getSource = function () {
 
 
 describe('expand', function () {
+
+    describe('expand inner dataset',function (){
+        it('child dataset works',function (done){
+        let model = {id:5,items:memset([{id:7}])};
+        let source = memset([model]);
+          source.query(expand('items')).then((result)=>{
+             let items = result[0].items;
+             assert.equal(items.length,1);
+            done();
+        })
+       });
+
+       it('child dataset filter working',function (done){
+        let model = {id:5,items:memset([{id:7},{id:8},{id:10}]).query(filter(prop('id').ge(8)))};
+        let source = memset([model]);
+          source.query(expand('items')).then((result)=>{
+             let items = result[0].items;
+             assert.equal(items.length,2);
+            done();
+        })
+       });
+
+    })
+
     describe('single', function () {
         it('get object with all properties 1', function (done) {
             let source = getSource();
@@ -60,4 +84,5 @@ describe('expand', function () {
             });
         });
    });
+   
 });

@@ -48,6 +48,8 @@ class Top extends Method {
     constructor(value) {
         super();
         this.value = value;
+        if (value < 0)
+            throw new RangeError(value + ' is not in range for top operation');
     }
 }
 exports.Top = Top;
@@ -55,6 +57,8 @@ class Skip extends Method {
     constructor(value) {
         super();
         this.value = value;
+        if (value < 0)
+            throw new RangeError(value + ' is not in range for skip operation');
     }
 }
 exports.Skip = Skip;
