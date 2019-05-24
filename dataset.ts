@@ -1,3 +1,4 @@
+import { IDataSet } from './dataset';
 
 
 /**
@@ -102,8 +103,25 @@ export class DataSet<T> implements IDataSet<T>{
     }
 }
 
+export interface DecorateObserverCallback<T>{
+  dataset:IDataSet<T>,
+  next:()=>Promise<T>
+}
+
+
 export class DecorateSet<T> extends DataSet<T>{
-    constructor(public dataSet:DataSet<T>,public observer:{get?:Function,add?:Function,delete?:Function,update?:Function,addUpdate?:Function}){
+    /**
+     * 
+     * @param dataSet 
+     * @param observer 
+     */
+    constructor(public dataSet:DataSet<T>,public observer:{
+        get?:Function,
+
+        add?:(element:T,next?:()=>Promise<any>)=>Promise<any>,
+        delete?:(element:T,next?:()=>Promise<any>)=>Promise<any>,
+        update?:(element:T,next?:()=>Promise<any>)=>Promise<any>,
+        addUpdate?:(element:T,next?:()=>Promise<any>)=>Promise<any>}){
         super(dataSet.getExpressions());
        this.dataSet = dataSet;
     }
@@ -111,12 +129,13 @@ export class DecorateSet<T> extends DataSet<T>{
         if(this.observer.get == null) return this.dataSet.get.apply(this.dataSet,arguments);
         let self = this;
         let arg = arguments;
+        let next = function (value){
+            value = value || arg;
+            return self.dataSet.get.apply(self.dataSet,value);
+        }
         return this.observer.get.apply({
             dataset:this.dataSet,
-            next:function (value){
-                value = value || arg;
-                return self.dataSet.get.apply(self.dataSet,value);
-            }
+            next
         },arguments);
     }
 
@@ -128,37 +147,41 @@ export class DecorateSet<T> extends DataSet<T>{
         return this.dataSet.insertTo(params);
     }
     add(element:T):Promise<any>{
-        if(this.observer.add == null && this.observer.addUpdate == null) return this.dataSet.add.apply(this.dataSet,arguments);
-        if(this.observer.add != null)
-          return this.observer.add.apply(this.dataSet,arguments);
         let arg = arguments;
         let self = this;
-        return this.observer.addUpdate.apply({dataset:this.dataSet,next:function (value){
+        if(this.observer.add == null && this.observer.addUpdate == null) return this.dataSet.add.apply(this.dataSet,arguments);
+        let next  = function (value){
             value = value || arg;
-           return self.dataSet.add.apply(self.dataSet,value);
-        }},arguments);
+            return self.dataSet.add.apply(self.dataSet,value);
+        }
+        if(this.observer.add != null)
+          return this.observer.add.apply({dataset:this.dataSet,next},[element,next]);
+        return this.observer.addUpdate.apply({dataset:this.dataSet,next},[element,next]);
     }
     delete(element:T){
         if(this.observer.delete == null) return this.dataSet.delete.apply(this.dataSet,arguments);
         let self = this;
         let arg = arguments;
+        let next  = function (value){
+            value = value || arg;
+            return self.dataSet.delete.apply(self.dataSet,value);
+        }
         return this.observer.delete.apply({
             dataset:this.dataSet,
-            next:function (){
-                return self.dataSet.delete.apply(self.dataSet,arg);
-            }
-        },arguments);
+            next
+        },[element,next]);
     }
     update(element:T){
         if(this.observer.update == null && this.observer.addUpdate == null) return this.dataSet.update.apply(this.dataSet,arguments);
+        let next  = function (value){
+            value = value || arg;
+            return self.dataSet.update.apply(self.dataSet,value);
+        }
         if(this.observer.update != null)
-             return this.observer.update.apply(this.dataSet,arguments);
+             return this.observer.update.apply({dataset:this.dataSet,next},[element,next]);
      let arg = arguments;
      let self = this;
-     return this.observer.addUpdate.apply({dataset:this.dataSet,next:function (value){
-           value = value || arg;
-           return self.dataSet.update.apply(self.dataSet,value);
-        }},arguments);
+     return this.observer.addUpdate.apply({dataset:this.dataSet,next},[element,next]);
     }
     query(...expressions:Array<any>){
         return new DecorateSet(this.dataSet.query.apply(this.dataSet,arguments),this.observer) as any;

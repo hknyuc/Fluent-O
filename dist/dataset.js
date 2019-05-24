@@ -95,6 +95,11 @@ class DataSet {
 }
 exports.DataSet = DataSet;
 class DecorateSet extends DataSet {
+    /**
+     *
+     * @param dataSet
+     * @param observer
+     */
     constructor(dataSet, observer) {
         super(dataSet.getExpressions());
         this.dataSet = dataSet;
@@ -106,12 +111,13 @@ class DecorateSet extends DataSet {
             return this.dataSet.get.apply(this.dataSet, arguments);
         let self = this;
         let arg = arguments;
+        let next = function (value) {
+            value = value || arg;
+            return self.dataSet.get.apply(self.dataSet, value);
+        };
         return this.observer.get.apply({
             dataset: this.dataSet,
-            next: function (value) {
-                value = value || arg;
-                return self.dataSet.get.apply(self.dataSet, value);
-            }
+            next
         }, arguments);
     }
     map(mapFn) {
@@ -121,40 +127,44 @@ class DecorateSet extends DataSet {
         return this.dataSet.insertTo(params);
     }
     add(element) {
-        if (this.observer.add == null && this.observer.addUpdate == null)
-            return this.dataSet.add.apply(this.dataSet, arguments);
-        if (this.observer.add != null)
-            return this.observer.add.apply(this.dataSet, arguments);
         let arg = arguments;
         let self = this;
-        return this.observer.addUpdate.apply({ dataset: this.dataSet, next: function (value) {
-                value = value || arg;
-                return self.dataSet.add.apply(self.dataSet, value);
-            } }, arguments);
+        if (this.observer.add == null && this.observer.addUpdate == null)
+            return this.dataSet.add.apply(this.dataSet, arguments);
+        let next = function (value) {
+            value = value || arg;
+            return self.dataSet.add.apply(self.dataSet, value);
+        };
+        if (this.observer.add != null)
+            return this.observer.add.apply({ dataset: this.dataSet, next }, [element, next]);
+        return this.observer.addUpdate.apply({ dataset: this.dataSet, next }, [element, next]);
     }
     delete(element) {
         if (this.observer.delete == null)
             return this.dataSet.delete.apply(this.dataSet, arguments);
         let self = this;
         let arg = arguments;
+        let next = function (value) {
+            value = value || arg;
+            return self.dataSet.delete.apply(self.dataSet, value);
+        };
         return this.observer.delete.apply({
             dataset: this.dataSet,
-            next: function () {
-                return self.dataSet.delete.apply(self.dataSet, arg);
-            }
-        }, arguments);
+            next
+        }, [element, next]);
     }
     update(element) {
         if (this.observer.update == null && this.observer.addUpdate == null)
             return this.dataSet.update.apply(this.dataSet, arguments);
+        let next = function (value) {
+            value = value || arg;
+            return self.dataSet.update.apply(self.dataSet, value);
+        };
         if (this.observer.update != null)
-            return this.observer.update.apply(this.dataSet, arguments);
+            return this.observer.update.apply({ dataset: this.dataSet, next }, [element, next]);
         let arg = arguments;
         let self = this;
-        return this.observer.addUpdate.apply({ dataset: this.dataSet, next: function (value) {
-                value = value || arg;
-                return self.dataSet.update.apply(self.dataSet, value);
-            } }, arguments);
+        return this.observer.addUpdate.apply({ dataset: this.dataSet, next }, [element, next]);
     }
     query(...expressions) {
         return new DecorateSet(this.dataSet.query.apply(this.dataSet, arguments), this.observer);

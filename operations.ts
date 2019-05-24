@@ -1,7 +1,7 @@
 import { TrackingMemset } from './trackingmemset';
 import { ChangeSet } from './changeset';
 import { Pointset } from './pointset';
-import { IDataSet } from './dataset';
+import { IDataSet, DecorateObserverCallback } from './dataset';
 import { MapSet } from './mapset';
 import { Guid } from './schema';
 import { MemSet } from './memarrayvisitor';
@@ -1189,9 +1189,16 @@ export function func(name:string,...params){
  * @param source source dataset for processing
  * @param observer operations on source
  */
-export function dataset(source,observer:{get?:Function,add?:Function,delete?:Function,update?:Function,addUpdate?:Function}):DecorateSet<any>{
+export function dataset(source,observer:{
+    get?:Function,
+    add?:(element:any,next?:()=>Promise<any>)=>Promise<any>,
+    delete?:(element:any,next?:()=>Promise<any>)=>Promise<any>,
+    update?:(element:any,next?:()=>Promise<any>)=>Promise<any>,
+    addUpdate?:(element:any,next?:()=>Promise<any>)=>Promise<any>}):DecorateSet<any>{
    return new DecorateSet(source,observer);
 }
+
+
 
 /**
  * 

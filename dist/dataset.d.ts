@@ -1,3 +1,4 @@
+import { IDataSet } from './dataset';
 /**
  * Base data source for applying operations
  */
@@ -39,21 +40,30 @@ export declare class DataSet<T> implements IDataSet<T> {
     insertTo(params: Array<any> | object): Promise<any>;
     static is(dataSetable: any): boolean;
 }
+export interface DecorateObserverCallback<T> {
+    dataset: IDataSet<T>;
+    next: () => Promise<T>;
+}
 export declare class DecorateSet<T> extends DataSet<T> {
     dataSet: DataSet<T>;
     observer: {
         get?: Function;
-        add?: Function;
-        delete?: Function;
-        update?: Function;
-        addUpdate?: Function;
+        add?: (element: T, next?: () => Promise<any>) => Promise<any>;
+        delete?: (element: T, next?: () => Promise<any>) => Promise<any>;
+        update?: (element: T, next?: () => Promise<any>) => Promise<any>;
+        addUpdate?: (element: T, next?: () => Promise<any>) => Promise<any>;
     };
+    /**
+     *
+     * @param dataSet
+     * @param observer
+     */
     constructor(dataSet: DataSet<T>, observer: {
         get?: Function;
-        add?: Function;
-        delete?: Function;
-        update?: Function;
-        addUpdate?: Function;
+        add?: (element: T, next?: () => Promise<any>) => Promise<any>;
+        delete?: (element: T, next?: () => Promise<any>) => Promise<any>;
+        update?: (element: T, next?: () => Promise<any>) => Promise<any>;
+        addUpdate?: (element: T, next?: () => Promise<any>) => Promise<any>;
     });
     get(...expressions: Array<any>): any;
     map(mapFn: any): Promise<any>;

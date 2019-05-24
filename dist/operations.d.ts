@@ -309,10 +309,10 @@ export declare function func(name: string, ...params: any[]): Func;
  */
 export declare function dataset(source: any, observer: {
     get?: Function;
-    add?: Function;
-    delete?: Function;
-    update?: Function;
-    addUpdate?: Function;
+    add?: (element: any, next?: () => Promise<any>) => Promise<any>;
+    delete?: (element: any, next?: () => Promise<any>) => Promise<any>;
+    update?: (element: any, next?: () => Promise<any>) => Promise<any>;
+    addUpdate?: (element: any, next?: () => Promise<any>) => Promise<any>;
 }): DecorateSet<any>;
 /**
  *
