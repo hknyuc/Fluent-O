@@ -462,6 +462,8 @@ class ODataSet extends dataset_1.DataSet {
         else {
             return result.then((response) => {
                 let r = response.json();
+                if (Array.isArray(r))
+                    return r;
                 let isArray = function () {
                     for (let i in r) {
                         if (!(i.startsWith("@odata") || i === "value"))
